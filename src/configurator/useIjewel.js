@@ -163,6 +163,28 @@ export function useIjewel() {
       hideResetView: true,
     });
 
+    // Continuously remove any iJewel branding/evaluation overlays injected into the container
+    const stripBranding = (root) => {
+      const HIDE_KEYWORDS = ['ijewel', 'logo', 'watermark', 'evaluation', 'brand'];
+      root.querySelectorAll('*').forEach((el) => {
+        if (el.tagName === 'CANVAS') return;
+        const cls = (el.className || '').toLowerCase();
+        const id  = (el.id || '').toLowerCase();
+        const txt = (el.textContent || '').toLowerCase();
+        const hit = HIDE_KEYWORDS.some((k) => cls.includes(k) || id.includes(k))
+          || txt.includes('evaluation version')
+          || txt.includes('ijewel');
+        if (hit) { el.style.cssText = 'display:none!important;opacity:0!important'; }
+      });
+    };
+
+    const observer = new MutationObserver(() => stripBranding(containerEl));
+    observer.observe(containerEl, { childList: true, subtree: true, attributes: true });
+    // Initial pass after a tick (loader may inject synchronously after this call)
+    setTimeout(() => stripBranding(containerEl), 0);
+    setTimeout(() => stripBranding(containerEl), 500);
+    setTimeout(() => stripBranding(containerEl), 2000);
+
     window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
       const viewer = detail.viewer;
       ringRef.current = viewer.getPluginByType('RingConfigurator');
