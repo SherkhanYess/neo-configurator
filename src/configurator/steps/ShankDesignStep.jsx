@@ -21,7 +21,7 @@ export function ShankDesignStep({ chosen, onChoose, onNext, onBack, variations, 
 
   return (
     <div className="cfg-step-content">
-      <StepHeader title="Shank" sub="Выберите дизайн шинки" />
+      <StepHeader title="Дизайн шинки" sub="Выберите форму ободка" />
 
       <div className="cfg-option-grid" style={{ '--grid-cols': 2 }}>
         {shanks.map((shank) => (

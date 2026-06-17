@@ -31,7 +31,7 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
   const rows = Object.entries(SUMMARY_LABELS).filter(([key]) => {
     const def = SUMMARY_LABELS[key];
     const val = choices[key];
-    return sequence.includes(def.step) && val !== null && val !== undefined;
+    return sequence.includes(def.step) && val !== null && val !== undefined && val !== '';
   });
 
   return (

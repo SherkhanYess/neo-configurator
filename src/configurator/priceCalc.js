@@ -31,7 +31,7 @@ export function calcPrice(choices, prices) {
   }
 
   // Metal color surcharge
-  if (choices.metalLabel) {
+  if (choices.metalLabel && typeof choices.metalLabel === 'string') {
     // Find by first word: "Розовое золото" → "Розовое"
     const firstWord = choices.metalLabel.split(' ')[0];
     const surcharge = prices.metals?.[firstWord] ?? 0;

@@ -85,6 +85,13 @@ export function LeadModal({ choices, onClose }) {
   const [success, setSuccess]   = useState(false);
   const [prices, setPrices]     = useState(null);
 
+  // Lock background scroll while modal is open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   // Fetch prices on modal open to include estimated price in the WhatsApp message
   useEffect(() => {
     fetch('/api/get-prices')
