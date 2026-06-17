@@ -29,7 +29,13 @@ export const handler = async () => {
 
 function getDefaultPrices() {
   return {
-    base: 150000,
+    baseByShank: {
+      'Neo':         200000,
+      'Neo Luxe':    250000,
+      'Sirius':      220000,
+      'Sirius Luxe': 280000,
+      'Bezel':       230000,
+    },
     shapes: {
       oval: 20000,
       pear: 20000,

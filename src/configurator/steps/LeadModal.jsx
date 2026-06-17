@@ -1,17 +1,31 @@
 import React, { useState, useCallback } from 'react';
 import { buildConfigUrl } from '../config.js';
 
+// Values must exactly match amoCRM enum values in the «Повод покупки» field
 const OCCASIONS = [
-  'Сделать предложение',
-  'В качестве подарка',
-  'Для себя любимой',
+  'Предложение',
+  'Подарок',
+  'Для себя',
 ];
 
+// Values must exactly match amoCRM enum values in the «Когда нужно» field
 const TIMINGS = [
-  'Срочно (3–4 дня)',
-  'В течение недели',
-  'В течение месяца',
-  'Более месяца',
+  'До 5-дней',
+  'В течений 10 дней',
+  'В течений месяца',
+  'Больше месяца',
+];
+
+// Values must exactly match amoCRM enum values in the «Город заказа» field
+const CITIES = [
+  'Алматы',
+  'Астана',
+  'Шымкент',
+  'Актобе',
+  'Актау',
+  'Атырау',
+  'Караганды',
+  'Другой город',
 ];
 
 function PillGroup({ options, value, onChange }) {
@@ -49,6 +63,7 @@ function SuccessScreen({ onClose }) {
 export function LeadModal({ choices, onClose }) {
   const [name, setName]         = useState('');
   const [phone, setPhone]       = useState('');
+  const [city, setCity]         = useState('');
   const [occasion, setOccasion] = useState('');
   const [timing, setTiming]     = useState('');
   const [loading, setLoading]   = useState(false);
@@ -62,16 +77,18 @@ export function LeadModal({ choices, onClose }) {
     e.preventDefault();
     setError('');
 
-    if (!name.trim()) { setError('Введите ваше имя'); return; }
+    if (!name.trim())  { setError('Введите ваше имя'); return; }
     if (!phone.trim()) { setError('Введите номер WhatsApp'); return; }
-    if (!occasion) { setError('Выберите повод покупки'); return; }
-    if (!timing) { setError('Выберите срок'); return; }
+    if (!city)         { setError('Выберите город'); return; }
+    if (!occasion)     { setError('Выберите повод покупки'); return; }
+    if (!timing)       { setError('Выберите срок'); return; }
 
     setLoading(true);
 
     const payload = {
       name: name.trim(),
       phone: phone.trim(),
+      city,
       occasion,
       timing,
       config: {
@@ -107,7 +124,7 @@ export function LeadModal({ choices, onClose }) {
       setError('Нет соединения. Попробуйте ещё раз.');
       setLoading(false);
     }
-  }, [name, phone, occasion, timing, choices, utm]);
+  }, [name, phone, city, occasion, timing, choices, utm]);
 
   return (
     <div className="lead-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -157,6 +174,21 @@ export function LeadModal({ choices, onClose }) {
                 onChange={(e) => setPhone(e.target.value)}
                 autoComplete="tel"
               />
+            </div>
+
+            <div className="lead-field">
+              <label className="lead-label" htmlFor="lead-city">Ваш город</label>
+              <select
+                id="lead-city"
+                className="lead-input lead-select"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              >
+                <option value="" disabled>Выберите город</option>
+                {CITIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
 
             <div className="lead-field">

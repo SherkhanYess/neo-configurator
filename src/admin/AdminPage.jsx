@@ -120,8 +120,15 @@ function PricesForm({ token }) {
   return (
     <div className="adm-form">
       <section className="adm-section">
-        <h3 className="adm-section-title">Базовая стоимость изготовления</h3>
-        <NumberField label="Базовая цена" value={prices.base} onChange={(v) => set('base', v)} />
+        <h3 className="adm-section-title">Базовая стоимость по дизайну шинки</h3>
+        {['Neo', 'Neo Luxe', 'Sirius', 'Sirius Luxe', 'Bezel'].map((shank) => (
+          <NumberField
+            key={shank}
+            label={shank}
+            value={prices.baseByShank?.[shank]}
+            onChange={(v) => set(`baseByShank.${shank}`, v)}
+          />
+        ))}
       </section>
 
       <section className="adm-section">
@@ -140,18 +147,6 @@ function PricesForm({ token }) {
         <h3 className="adm-section-title">Доплата по дизайну каста</h3>
         <NumberField label="Хало" value={prices.casts?.halo} onChange={(v) => set('casts.halo', v)} />
         <NumberField label="Безель" value={prices.casts?.bezel} onChange={(v) => set('casts.bezel', v)} />
-      </section>
-
-      <section className="adm-section">
-        <h3 className="adm-section-title">Доплата по дизайну шинки</h3>
-        {['Neo Luxe', 'Sirius Luxe', 'Bezel'].map((shank) => (
-          <NumberField
-            key={shank}
-            label={shank}
-            value={prices.shanks?.[shank]}
-            onChange={(v) => set(`shanks.${shank}`, v)}
-          />
-        ))}
       </section>
 
       <section className="adm-section">

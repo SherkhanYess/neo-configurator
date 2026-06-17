@@ -9,7 +9,8 @@
 export function calcPrice(choices, prices) {
   if (!prices || !choices.carat) return null;
 
-  let total = prices.base ?? 0;
+  // Base price depends on shank design
+  let total = prices.baseByShank?.[choices.shankLabel] ?? prices.base ?? 0;
 
   // Shape surcharge (all shapes except round)
   if (choices.shape && choices.shape !== 'round') {

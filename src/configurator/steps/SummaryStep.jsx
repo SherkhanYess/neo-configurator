@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LABEL_COLORS } from '../useIjewel.js';
-import { calcPrice, formatPrice } from '../priceCalc.js';
 import { LeadModal } from './LeadModal.jsx';
 
 function ColorSwatch({ label }) {
@@ -50,28 +49,6 @@ function UtmBlock() {
   );
 }
 
-function PriceBlock({ choices }) {
-  const [prices, setPrices] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/get-prices')
-      .then((r) => r.json())
-      .then(setPrices)
-      .catch(() => {});
-  }, []);
-
-  const estimated = prices ? calcPrice(choices, prices) : null;
-  if (!estimated) return null;
-
-  return (
-    <div className="cfg-price-block">
-      <span className="cfg-price-label">Примерная стоимость</span>
-      <span className="cfg-price-value">{formatPrice(estimated)}</span>
-      <span className="cfg-price-note">Окончательная цена уточняется у менеджера</span>
-    </div>
-  );
-}
-
 export function SummaryStep({ choices, sequence, onGoTo }) {
   const [showLead, setShowLead] = useState(false);
 
@@ -111,8 +88,6 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
           );
         })}
       </div>
-
-      <PriceBlock choices={choices} />
 
       <div className="cfg-summary-cta">
         <p className="cfg-summary-cta-note">
