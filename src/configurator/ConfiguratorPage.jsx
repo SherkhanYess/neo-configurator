@@ -41,21 +41,46 @@ export default function ConfiguratorPage() {
     }
   }, [ijewel.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Default white cast metal — fires when castMetalOptions first populate
+  // Restore gem colors from URL label OR apply white default
+  // Fires when gem1Options first populate (after viewer ready)
+  useEffect(() => {
+    if (!ijewel.isReady || choicesRef.current.gem1) return;
+    const c = choicesRef.current;
+
+    // If label came from URL — find matching option; otherwise fall back to white
+    const findGem = (opts, label) =>
+      label
+        ? opts.find((o) => o.label === label) ?? opts.find((o) => o.label.toLowerCase().includes('бел'))
+        : opts.find((o) => o.label.toLowerCase().includes('бел'));
+
+    const w1 = findGem(ijewel.gem1Options, c.gem1Label);
+    if (w1) { cfg.choose('gem1', w1.uuid, 'gem1Label', w1.label); ijewel.applyGem('gem1', w1.uuid); }
+
+    const w2 = findGem(ijewel.gem2Options, c.gem2Label);
+    if (w2) { cfg.choose('gem2', w2.uuid, 'gem2Label', w2.label); ijewel.applyGem('gem2', w2.uuid); }
+  }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Restore shank metal from URL label OR skip (no default — user must choose)
   useEffect(() => {
     if (!ijewel.isReady || choicesRef.current.metal) return;
+    const label = choicesRef.current.metalLabel;
+    if (!label) return; // no URL label — leave as iJewel default
+    const target = ijewel.shankMetalOptions.find((o) => o.label === label);
+    if (target) {
+      cfg.choose('metal', target.uuid, 'metalLabel', target.label);
+      ijewel.applyShankMetal(target.uuid);
+      // sync cast too
+      const castUuid = castUuidByLabel(target.label);
+      if (castUuid) ijewel.applyCastMetal(castUuid);
+    }
+  }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Default white cast — only when there's no URL config at all
+  useEffect(() => {
+    if (!ijewel.isReady || choicesRef.current.metal || choicesRef.current.metalLabel) return;
     const white = ijewel.castMetalOptions.find((o) => o.label.toLowerCase().includes('бел'));
     if (white) ijewel.applyCastMetal(white.uuid);
   }, [ijewel.castMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Default white gems — fires when gem1Options first populate
-  useEffect(() => {
-    if (!ijewel.isReady || choicesRef.current.gem1) return;
-    const w1 = ijewel.gem1Options.find((o) => o.label.toLowerCase().includes('бел'));
-    if (w1) { cfg.choose('gem1', w1.uuid, 'gem1Label', w1.label); ijewel.applyGem('gem1', w1.uuid); }
-    const w2 = ijewel.gem2Options.find((o) => o.label.toLowerCase().includes('бел'));
-    if (w2) { cfg.choose('gem2', w2.uuid, 'gem2Label', w2.label); ijewel.applyGem('gem2', w2.uuid); }
-  }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- Handlers: call iJewel immediately (same tick as setState) ---
 
