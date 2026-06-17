@@ -1,0 +1,115 @@
+/* ============================================================
+   NEO DIAMOND — Color tokens
+   Dark-first, navy-led palette with a cool "diamond ice" accent.
+   Premium signal comes from deep navy + glass, not gold.
+   ============================================================ */
+
+:root {
+  /* ---- Brand navy ramp (base = #0B2040 from the wordmark) ---- */
+  --navy-950: #060d1d;
+  --navy-900: #0b2040; /* brand core */
+  --navy-850: #0f2950;
+  --navy-800: #143461;
+  --navy-700: #1c4279;
+  --navy-600: #275495;
+  --navy-500: #356bb3;
+  --navy-400: #5a8bd0;
+  --navy-300: #8fb1e3;
+  --navy-200: #bdd3f0;
+  --navy-100: #e2ebf8;
+
+  /* ---- Diamond ice — cool azure accent (sparkle, interactive) ---- */
+  --ice-700: #1d7fb0;
+  --ice-600: #2898cb;
+  --ice-500: #46b1e0; /* primary accent */
+  --ice-400: #6fc4e9;
+  --ice-300: #9bd8f1;
+  --ice-200: #c7eaf8;
+
+  /* ---- Platinum neutrals (cool, faintly navy-tinted) ---- */
+  --white: #ffffff;
+  --platinum-50:  #f5f7fb;
+  --platinum-100: #eceff5;
+  --platinum-200: #dce2ec;
+  --platinum-300: #c3ccdb;
+  --platinum-400: #9aa7bd;
+  --platinum-500: #6e7d96;
+  --platinum-600: #4f5d75;
+  --platinum-700: #38445a;
+
+  /* ---- Champagne — rare premium highlight, used sparingly ---- */
+  --champagne-400: #e9d3a5;
+  --champagne-500: #d8bd84;
+
+  /* ---- Semantic status ---- */
+  --success-500: #2fbf8f;
+  --success-bg:  rgba(47, 191, 143, 0.14);
+  --warning-500: #e8b84b;
+  --warning-bg:  rgba(232, 184, 75, 0.14);
+  --danger-500:  #e2585b;
+  --danger-bg:   rgba(226, 88, 91, 0.14);
+  --info-500:    var(--ice-500);
+
+  /* ============================================================
+     SEMANTIC ALIASES — dark theme (default surface of the brand)
+     ============================================================ */
+  /* Backgrounds */
+  --bg-base: var(--navy-950);
+  --bg-gradient: radial-gradient(120% 120% at 50% 0%, #102a55 0%, #0b2040 42%, #060d1d 100%);
+  --surface-1: rgba(255, 255, 255, 0.05);
+  --surface-2: rgba(255, 255, 255, 0.08);
+  --surface-solid: var(--navy-850);
+
+  /* Glass (Apple-style translucency) */
+  --glass-fill: rgba(255, 255, 255, 0.06);
+  --glass-fill-strong: rgba(255, 255, 255, 0.11);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-border-strong: rgba(255, 255, 255, 0.22);
+
+  /* Text */
+  --text-primary: #f5f8fd;
+  --text-secondary: rgba(238, 243, 252, 0.68);
+  --text-tertiary: rgba(238, 243, 252, 0.44);
+  --text-on-accent: #06182f;
+
+  /* Accent roles */
+  --accent: var(--ice-500);
+  --accent-hover: var(--ice-400);
+  --accent-press: var(--ice-600);
+  --accent-soft: rgba(70, 177, 224, 0.16);
+  --focus-ring: rgba(70, 177, 224, 0.55);
+
+  /* Lines / dividers */
+  --border-subtle: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.20);
+}
+
+/* ============================================================
+   LIGHT SURFACE — opt-in scope for content on platinum bg
+   Wrap a subtree in [data-theme="light"] to flip semantics.
+   ============================================================ */
+[data-theme="light"] {
+  --bg-base: var(--platinum-50);
+  --bg-gradient: linear-gradient(180deg, #ffffff 0%, #f1f4f9 100%);
+  --surface-1: #ffffff;
+  --surface-2: #f5f7fb;
+  --surface-solid: #ffffff;
+
+  --glass-fill: rgba(11, 32, 64, 0.04);
+  --glass-fill-strong: rgba(11, 32, 64, 0.06);
+  --glass-border: rgba(11, 32, 64, 0.10);
+  --glass-border-strong: rgba(11, 32, 64, 0.16);
+
+  --text-primary: var(--navy-900);
+  --text-secondary: rgba(11, 32, 64, 0.66);
+  --text-tertiary: rgba(11, 32, 64, 0.42);
+  --text-on-accent: #ffffff;
+
+  --accent: var(--ice-600);
+  --accent-hover: var(--ice-500);
+  --accent-press: var(--ice-700);
+  --accent-soft: rgba(40, 152, 203, 0.12);
+
+  --border-subtle: rgba(11, 32, 64, 0.10);
+  --border-strong: rgba(11, 32, 64, 0.18);
+}

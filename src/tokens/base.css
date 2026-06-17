@@ -1,0 +1,70 @@
+/* ============================================================
+   NEO DIAMOND — Base layer
+   Light reset + default element styling on the design tokens.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--body-font);
+  font-weight: var(--body-weight);
+  font-size: var(--body-size);
+  line-height: var(--body-leading);
+  color: var(--text-primary);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings default to the display family */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  font-weight: var(--heading-weight);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-snug);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+p { margin: 0; text-wrap: pretty; }
+
+a { color: var(--accent); text-decoration: none; }
+
+button { font-family: inherit; }
+
+::selection { background: var(--accent-soft); color: var(--text-primary); }
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Brand helpers --------------------------------------------------- */
+
+/* Eyebrow / kicker label */
+.nd-eyebrow {
+  font-family: var(--eyebrow-font);
+  font-weight: var(--eyebrow-weight);
+  letter-spacing: var(--eyebrow-tracking);
+  font-size: var(--eyebrow-size);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Wordmark-style display lockup — wide tracking like the logo */
+.nd-wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--fw-light);
+  letter-spacing: var(--tracking-wordmark);
+  text-transform: uppercase;
+}
+
+/* Page background wash */
+.nd-bg {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+}

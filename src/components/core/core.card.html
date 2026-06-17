@@ -1,0 +1,101 @@
+<!-- @dsCard group="Components" viewport="700x470" name="Core — buttons, badges, tags, avatars" subtitle="Pill buttons, icon buttons, status badges, chips, avatars" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;}
+  body{background:var(--bg-gradient);min-height:100vh;padding:30px 32px;font-family:var(--font-sans);color:var(--text-primary);}
+  .sec{margin-bottom:26px;}
+  .sec > .nd-eyebrow{display:block;margin-bottom:12px;}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .row + .row{margin-top:12px;}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../card-boot.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+ndBoot(function () {
+const { Button, IconButton, Badge, Tag, Avatar } = window.NeoDiamondDesignSystem_7b0c33;
+
+const Gem = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>;
+const Heart = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A4.5 4.5 0 0 0 12 5.5 4.5 4.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg>;
+const Plus = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>;
+const Arrow = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>;
+
+function Demo(){
+  const [sel,setSel] = React.useState("round");
+  return (
+    <div>
+      <div className="sec">
+        <span className="nd-eyebrow">Button · variants</span>
+        <div className="row">
+          <Button variant="primary" iconRight={<Arrow/>}>Собрать украшение</Button>
+          <Button variant="secondary" iconLeft={<Gem/>}>Огранка</Button>
+          <Button variant="ghost">Отмена</Button>
+          <Button variant="outline">Подробнее</Button>
+          <Button variant="primary" disabled>Disabled</Button>
+        </div>
+        <div className="row">
+          <Button size="sm" variant="secondary">Small</Button>
+          <Button size="md" variant="secondary">Medium</Button>
+          <Button size="lg" variant="secondary">Large</Button>
+        </div>
+      </div>
+
+      <div className="sec">
+        <span className="nd-eyebrow">IconButton</span>
+        <div className="row">
+          <IconButton label="like" variant="glass"><Heart/></IconButton>
+          <IconButton label="add" variant="ghost"><Plus/></IconButton>
+          <IconButton label="add" variant="solid"><Plus/></IconButton>
+          <IconButton label="like" variant="glass" size="sm"><Heart/></IconButton>
+          <IconButton label="like" variant="glass" size="lg"><Heart/></IconButton>
+        </div>
+      </div>
+
+      <div className="sec">
+        <span className="nd-eyebrow">Badge</span>
+        <div className="row">
+          <Badge tone="neutral">VS2</Badge>
+          <Badge tone="accent">VVS1</Badge>
+          <Badge tone="success" dot>В наличии</Badge>
+          <Badge tone="warning">Под заказ</Badge>
+          <Badge tone="danger">1 шт</Badge>
+          <Badge tone="champagne">Premium</Badge>
+        </div>
+      </div>
+
+      <div className="sec">
+        <span className="nd-eyebrow">Tag · selectable</span>
+        <div className="row">
+          <Tag selected={sel==="round"} onClick={()=>setSel("round")} icon={<Gem/>}>Круглая</Tag>
+          <Tag selected={sel==="princess"} onClick={()=>setSel("princess")} icon={<Gem/>}>Принцесса</Tag>
+          <Tag selected={sel==="oval"} onClick={()=>setSel("oval")} icon={<Gem/>}>Овал</Tag>
+          <Tag onRemove={()=>{}}>Белое золото 750</Tag>
+        </div>
+      </div>
+
+      <div className="sec" style={{marginBottom:0}}>
+        <span className="nd-eyebrow">Avatar</span>
+        <div className="row">
+          <Avatar name="Анна Кей" size="xs"/>
+          <Avatar name="Иван Со" size="sm" status/>
+          <Avatar name="Мария Лед" size="md"/>
+          <Avatar name="Студия" size="lg"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+});
+</script>
+</body>
+</html>

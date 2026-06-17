@@ -1,0 +1,67 @@
+/* ============================================================
+   NEO DIAMOND — Typography tokens
+   Display: Jost (geometric, thin/light, wide tracking — echoes
+   the wordmark). UI & body: Manrope (modern, legible, friendly).
+   ============================================================ */
+
+:root {
+  /* Families */
+  --font-display: 'Jost', 'Century Gothic', system-ui, sans-serif;
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, 'Menlo', monospace;
+
+  /* Weights */
+  --fw-light: 300; /* @kind other */
+  --fw-regular: 400; /* @kind other */
+  --fw-medium: 500; /* @kind other */
+  --fw-semibold: 600; /* @kind other */
+  --fw-bold: 700; /* @kind other */
+
+  /* Type scale (1.225 ratio, rem) */
+  --text-2xs: 0.6875rem;  /* 11px */
+  --text-xs:  0.75rem;    /* 12px */
+  --text-sm:  0.875rem;   /* 14px */
+  --text-md:  1rem;       /* 16px — base */
+  --text-lg:  1.125rem;   /* 18px */
+  --text-xl:  1.375rem;   /* 22px */
+  --text-2xl: 1.75rem;    /* 28px */
+  --text-3xl: 2.25rem;    /* 36px */
+  --text-4xl: 3rem;       /* 48px */
+  --text-5xl: 4rem;       /* 64px */
+  --text-6xl: 5.5rem;     /* 88px */
+
+  /* Line heights */
+  --leading-tight: 1.08; /* @kind other */
+  --leading-snug: 1.22; /* @kind other */
+  --leading-normal: 1.5; /* @kind other */
+  --leading-relaxed: 1.65; /* @kind other */
+
+  /* Letter spacing — display runs wide & airy like the logo */
+  --tracking-wordmark: 0.34em;
+  --tracking-wide: 0.16em;
+  --tracking-display: 0.02em;
+  --tracking-normal: 0em;
+  --tracking-snug: -0.01em;
+  --tracking-tight: -0.02em;
+
+  /* ---- Semantic roles ---- */
+  --display-font: var(--font-display);
+  --display-weight: var(--fw-light);
+  --display-tracking: var(--tracking-display);
+
+  --heading-font: var(--font-display);
+  --heading-weight: var(--fw-regular);
+
+  --eyebrow-font: var(--font-sans);
+  --eyebrow-weight: var(--fw-semibold);
+  --eyebrow-tracking: var(--tracking-wide);
+  --eyebrow-size: var(--text-xs);
+
+  --body-font: var(--font-sans);
+  --body-weight: var(--fw-regular);
+  --body-size: var(--text-md);
+  --body-leading: var(--leading-relaxed);
+
+  --label-font: var(--font-sans);
+  --label-weight: var(--fw-semibold);
+}

@@ -1,0 +1,72 @@
+<!-- @dsCard group="Components" viewport="700x520" name="Constructor — steps, swatches, price" subtitle="StepIndicator, OptionSwatch, PriceTag, QuantityStepper" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;}
+  body{background:var(--bg-gradient);min-height:100vh;padding:30px 32px;font-family:var(--font-sans);color:var(--text-primary);}
+  .sec{margin-bottom:26px;}
+  .sec > .nd-eyebrow{display:block;margin-bottom:14px;}
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:520px;}
+  .row{display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../card-boot.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+ndBoot(function () {
+const { StepIndicator, OptionSwatch, PriceTag, QuantityStepper } = window.NeoDiamondDesignSystem_7b0c33;
+const Gem = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>;
+
+function Demo(){
+  const [cut,setCut]=React.useState("round");
+  const [metal,setMetal]=React.useState("wg");
+  return (
+    <div>
+      <div className="sec">
+        <span className="nd-eyebrow">StepIndicator</span>
+        <div style={{maxWidth:520}}>
+          <StepIndicator current={2} steps={["Огранка","Камень","Металл","Оправа","Гравировка"]} onStepClick={()=>{}}/>
+        </div>
+      </div>
+      <div className="sec">
+        <span className="nd-eyebrow">OptionSwatch · огранка</span>
+        <div className="swatches">
+          <OptionSwatch label="Круглая" icon={<Gem/>} selected={cut==="round"} onClick={()=>setCut("round")}/>
+          <OptionSwatch label="Принцесса" icon={<Gem/>} selected={cut==="princess"} onClick={()=>setCut("princess")}/>
+          <OptionSwatch label="Овал" icon={<Gem/>} selected={cut==="oval"} onClick={()=>setCut("oval")}/>
+          <OptionSwatch label="Изумруд" icon={<Gem/>} selected={cut==="emerald"} onClick={()=>setCut("emerald")}/>
+        </div>
+      </div>
+      <div className="sec">
+        <span className="nd-eyebrow">OptionSwatch · металл</span>
+        <div className="swatches">
+          <OptionSwatch label="Белое" sublabel="750" color="#E8ECF1" selected={metal==="wg"} onClick={()=>setMetal("wg")}/>
+          <OptionSwatch label="Жёлтое" sublabel="585" color="#E8C66A" selected={metal==="yg"} onClick={()=>setMetal("yg")}/>
+          <OptionSwatch label="Розовое" sublabel="585" color="#E7C3B0" price="+8 000 ₽" selected={metal==="rg"} onClick={()=>setMetal("rg")}/>
+          <OptionSwatch label="Платина" sublabel="950" color="#DDE2E8" price="+24 000 ₽" selected={metal==="pt"} onClick={()=>setMetal("pt")}/>
+        </div>
+      </div>
+      <div className="sec" style={{marginBottom:0}}>
+        <span className="nd-eyebrow">PriceTag · QuantityStepper</span>
+        <div className="row">
+          <PriceTag from value={142000} size="lg" accent/>
+          <PriceTag value={189000} oldValue={219000}/>
+          <QuantityStepper defaultValue={1} min={1} max={9}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+});
+</script>
+</body>
+</html>

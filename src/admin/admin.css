@@ -1,0 +1,179 @@
+/* ───────────────────────────────────────────────
+   Neo Diamond Admin Panel CSS
+   ─────────────────────────────────────────────── */
+
+:root {
+  --adm-bg:       #0d1421;
+  --adm-surface:  #162035;
+  --adm-border:   rgba(255,255,255,0.10);
+  --adm-text:     #e4eaf4;
+  --adm-muted:    #7a8aa5;
+  --adm-gold:     #C9A84C;
+  --adm-accent:   #46b1e0;
+  --adm-danger:   #ff6b6b;
+  --adm-success:  #4cce8a;
+}
+
+* { box-sizing: border-box; }
+
+.adm-root {
+  min-height: 100dvh;
+  background: var(--adm-bg);
+  color: var(--adm-text);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Header ── */
+.adm-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: var(--adm-surface);
+  border-bottom: 1px solid var(--adm-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.adm-logo { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+.adm-header-title { flex: 1; font-size: 14px; color: var(--adm-muted); }
+.adm-logout {
+  background: none;
+  border: 1px solid var(--adm-border);
+  color: var(--adm-muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.adm-logout:hover { color: var(--adm-text); border-color: rgba(255,255,255,0.25); }
+
+/* ── Main ── */
+.adm-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* ── Section ── */
+.adm-section {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.adm-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--adm-gold);
+  margin: 0 0 16px;
+}
+
+/* ── Field ── */
+.adm-field { margin-bottom: 14px; }
+.adm-field:last-child { margin-bottom: 0; }
+.adm-label {
+  display: block;
+  font-size: 13px;
+  color: var(--adm-muted);
+  margin-bottom: 6px;
+}
+.adm-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adm-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--adm-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--adm-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.adm-input:focus { border-color: var(--adm-accent); }
+.adm-input[type="password"] { font-size: 18px; letter-spacing: 3px; }
+.adm-suffix { font-size: 14px; color: var(--adm-muted); white-space: nowrap; }
+
+/* ── Buttons ── */
+.adm-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.adm-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.adm-btn--primary {
+  background: linear-gradient(135deg, #C9A84C, #e8c97a);
+  color: #0d1421;
+}
+.adm-btn--primary:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
+.adm-btn--save { margin-top: 8px; }
+
+/* ── Messages ── */
+.adm-msg {
+  text-align: center;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.adm-msg--ok  { background: rgba(76,206,138,0.12); color: var(--adm-success); }
+.adm-msg--err { background: rgba(255,107,107,0.12); color: var(--adm-danger); }
+.adm-error {
+  color: var(--adm-danger);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
+/* ── Login ── */
+.adm-login {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--adm-bg);
+  padding: 24px;
+}
+.adm-login-card {
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  border-radius: 20px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+.adm-login-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.adm-login-sub {
+  font-size: 14px;
+  color: var(--adm-muted);
+  margin: 0 0 28px;
+}
+.adm-login-card .adm-input { margin-bottom: 16px; text-align: center; }
+.adm-login-card .adm-btn { margin-top: 0; }
+
+/* ── Loading ── */
+.adm-loading {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--adm-muted);
+  font-size: 15px;
+}

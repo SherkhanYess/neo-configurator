@@ -1,0 +1,56 @@
+/* ============================================================
+   NEO DIAMOND — Effects: shadows, blur, glass, motion
+   Soft navy-tinted shadows. Apple-style backdrop blur. Calm,
+   quick easing — fades and gentle lifts, never bouncy.
+   ============================================================ */
+
+:root {
+  /* Elevation — shadows are tinted with deep navy, never neutral black */
+  --shadow-xs: 0 1px 2px rgba(6, 13, 29, 0.30);
+  --shadow-sm: 0 2px 8px rgba(6, 13, 29, 0.35);
+  --shadow-md: 0 8px 24px rgba(6, 13, 29, 0.40);
+  --shadow-lg: 0 18px 48px rgba(6, 13, 29, 0.48);
+  --shadow-xl: 0 32px 80px rgba(6, 13, 29, 0.55);
+
+  /* Accent glow — for the diamond sparkle / active states */
+  --glow-ice: 0 0 0 1px rgba(70, 177, 224, 0.35), 0 8px 32px rgba(70, 177, 224, 0.28);
+  --glow-ice-soft: 0 6px 28px rgba(70, 177, 224, 0.22);
+
+  /* Inner highlight that gives glass its "edge of light" */
+  --inset-top-light: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --inset-hairline: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  /* Backdrop blur strengths */
+  --blur-sm: 8px;
+  --blur-md: 18px;
+  --blur-lg: 32px;
+  --blur-xl: 48px;
+
+  /* Composable glass recipe (apply fill + border + blur together) */
+  --glass-blur: var(--blur-md);
+
+  /* Motion — calm and precise */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* @kind other */
+  --dur-fast: 120ms; /* @kind other */
+  --dur-base: 200ms; /* @kind other */
+  --dur-slow: 360ms; /* @kind other */
+  --dur-slower: 600ms; /* @kind other */
+
+  --transition-control: background-color var(--dur-fast) var(--ease-standard),
+                        border-color var(--dur-fast) var(--ease-standard),
+                        color var(--dur-fast) var(--ease-standard),
+                        box-shadow var(--dur-base) var(--ease-out),
+                        transform var(--dur-base) var(--ease-out);
+}
+
+/* Utility: the canonical Neo Diamond glass panel.
+   Use the class or copy the four declarations onto your surface. */
+.nd-glass {
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  box-shadow: var(--shadow-md), var(--inset-top-light);
+}
