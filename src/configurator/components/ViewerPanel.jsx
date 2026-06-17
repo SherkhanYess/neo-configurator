@@ -22,6 +22,8 @@ export function ViewerPanel({ onInit }) {
   return (
     <div className="cfg-viewer-panel">
       <div ref={containerRef} className="cfg-viewer-container" />
+      {/* Mask the bottom-left corner where iJewel injects its logo/evaluation banner */}
+      <div className="cfg-viewer-logo-mask" aria-hidden="true" />
       <div className="cfg-viewer-hint">Вращайте кольцо двумя пальцами</div>
     </div>
   );

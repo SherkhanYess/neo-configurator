@@ -163,27 +163,43 @@ export function useIjewel() {
       hideResetView: true,
     });
 
-    // Continuously remove any iJewel branding/evaluation overlays injected into the container
+    // Aggressively hide iJewel branding overlays (logo img + evaluation text).
+    // The logo is often an <img> with no text, so we also hide non-canvas positioned children.
     const stripBranding = (root) => {
-      const HIDE_KEYWORDS = ['ijewel', 'logo', 'watermark', 'evaluation', 'brand'];
+      const KEYWORDS = ['ijewel', 'logo', 'watermark', 'evaluation', 'brand'];
       root.querySelectorAll('*').forEach((el) => {
         if (el.tagName === 'CANVAS') return;
-        const cls = (el.className || '').toLowerCase();
-        const id  = (el.id || '').toLowerCase();
+        const cls = (el.className || '').toString().toLowerCase();
+        const id  = (el.id  || '').toLowerCase();
         const txt = (el.textContent || '').toLowerCase();
-        const hit = HIDE_KEYWORDS.some((k) => cls.includes(k) || id.includes(k))
-          || txt.includes('evaluation version')
+        const src = (el.src  || el.currentSrc || '').toLowerCase();
+        const hit =
+          KEYWORDS.some((k) => cls.includes(k) || id.includes(k) || src.includes(k))
+          || txt.includes('evaluation')
           || txt.includes('ijewel');
-        if (hit) { el.style.cssText = 'display:none!important;opacity:0!important'; }
+        if (hit) {
+          el.style.setProperty('display',    'none',    'important');
+          el.style.setProperty('opacity',    '0',       'important');
+          el.style.setProperty('visibility', 'hidden',  'important');
+        }
+      });
+      // Also hide any absolutely/fixed positioned non-canvas direct children
+      // (the logo sits in a positioned wrapper injected by iJewel)
+      Array.from(root.children).forEach((el) => {
+        if (el.tagName === 'CANVAS') return;
+        const pos = getComputedStyle(el).position;
+        if (pos === 'absolute' || pos === 'fixed') {
+          el.style.setProperty('display', 'none', 'important');
+        }
       });
     };
 
     const observer = new MutationObserver(() => stripBranding(containerEl));
-    observer.observe(containerEl, { childList: true, subtree: true, attributes: true });
-    // Initial pass after a tick (loader may inject synchronously after this call)
-    setTimeout(() => stripBranding(containerEl), 0);
-    setTimeout(() => stripBranding(containerEl), 500);
-    setTimeout(() => stripBranding(containerEl), 2000);
+    observer.observe(containerEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    // Run immediately, then every 250 ms for 20 s to catch late injections
+    stripBranding(containerEl);
+    const brandTimer = setInterval(() => stripBranding(containerEl), 250);
+    setTimeout(() => clearInterval(brandTimer), 20000);
 
     window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
       const viewer = detail.viewer;

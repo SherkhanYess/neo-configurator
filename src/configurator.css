@@ -61,20 +61,30 @@
   height: 100%;
 }
 
-/* Hide iJewel watermark / evaluation overlay — fires even during load flash */
-.cfg-viewer-container [class*="ijewel-logo"],
-.cfg-viewer-container [class*="ijewel-brand"],
+/* Hide iJewel watermark / evaluation overlay */
+.cfg-viewer-container [class*="ijewel"],
 .cfg-viewer-container [class*="watermark"],
 .cfg-viewer-container [class*="evaluation"],
-.cfg-viewer-container [id*="ijewel-logo"],
+.cfg-viewer-container [class*="logo"],
+.cfg-viewer-container [class*="brand"],
+.cfg-viewer-container [id*="ijewel"],
 .cfg-viewer-container [id*="watermark"] {
   display: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
 }
-/* Catch inline-positioned overlays injected by the iJewel loader before the viewer boots */
-.cfg-viewer-panel > div:not(.cfg-viewer-container):not(.cfg-viewer-hint) {
-  display: none !important;
+
+/* Physical mask over the bottom-left corner where iJewel places its logo */
+.cfg-viewer-logo-mask {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 160px;
+  height: 56px;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .cfg-viewer-hint {
