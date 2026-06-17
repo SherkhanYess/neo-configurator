@@ -190,8 +190,6 @@ export default function ConfiguratorPage() {
           <pre>{JSON.stringify(ijewel.debugInfo, null, 2)}</pre>
         </div>
       )}
-
-      {/* Header — always on top (mobile) / top-right (desktop) */}
       <header className="cfg-header">
         <img src={logoWhite} alt="Neo Diamond" className="cfg-logo" />
         {!isStart && cfg.stepNumber && (
@@ -201,16 +199,8 @@ export default function ConfiguratorPage() {
         )}
       </header>
 
-      {/* Viewer — below header (mobile) / full left column (desktop) */}
-      {!isStart && (
-        <div className="cfg-viewer-col">
-          <ViewerPanel onInit={handleInit} />
-        </div>
-      )}
-
-      {/* Steps content — below viewer (mobile) / right column (desktop) */}
-      <div className="cfg-content-col">
-        {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
+      {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
+      {!isStart && <ViewerPanel onInit={handleInit} />}
 
       <div className={`cfg-panel ${isStart ? 'cfg-panel--full' : ''}`}>
         {cfg.currentStep === 'start' && <StartStep onStart={cfg.start} />}
@@ -282,7 +272,6 @@ export default function ConfiguratorPage() {
           />
         )}
       </div>
-      </div>{/* /cfg-content-col */}
     </div>
   );
 }

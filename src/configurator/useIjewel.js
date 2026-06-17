@@ -187,22 +187,6 @@ export function useIjewel() {
       pendingRef.current = [];
       bump();
 
-      // Set initial camera: 45° top-down view (catalog angle)
-      try {
-        const cam = viewer.scene?.activeCamera;
-        if (cam) {
-          if (cam.orbitControls) {
-            cam.orbitControls.minPolarAngle = 0;
-            cam.orbitControls.maxPolarAngle = Math.PI / 2; // upper hemisphere only
-            cam.orbitControls.polarAngle = Math.PI / 4;   // 45° from top
-            cam.orbitControls.update?.();
-          } else if (typeof cam.setPosition === 'function') {
-            cam.setPosition(0, 1.2, 1.2, false);
-            cam.setTarget(0, 0, 0, false);
-          }
-        }
-      } catch (_) {}
-
       // Polling fallback: bump every 500ms for 10s in case events don't fire
       let attempts = 0;
       const poll = setInterval(() => {
