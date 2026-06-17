@@ -24,30 +24,6 @@ const SUMMARY_LABELS = {
   metalLabel:  { label: 'Цвет металла',     step: 'metal', isColor: true },
 };
 
-const UTM_LABELS = {
-  utm_source:   'Источник',
-  utm_medium:   'Канал',
-  utm_campaign: 'Кампания',
-  utm_term:     'Ключевое слово',
-  utm_content:  'Контент',
-};
-
-function UtmBlock() {
-  let utm = null;
-  try { utm = JSON.parse(sessionStorage.getItem('nd_utm') ?? 'null'); } catch (_) {}
-  if (!utm || !Object.keys(utm).length) return null;
-  return (
-    <div className="cfg-utm-block">
-      <div className="cfg-utm-title">UTM-данные</div>
-      {Object.entries(utm).map(([k, v]) => (
-        <div key={k} className="cfg-utm-row">
-          <span className="cfg-utm-key">{UTM_LABELS[k] ?? k}</span>
-          <span className="cfg-utm-val">{v}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function SummaryStep({ choices, sequence, onGoTo }) {
   const [showLead, setShowLead] = useState(false);
@@ -102,8 +78,6 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
           Получить стоимость на WhatsApp
         </button>
       </div>
-
-      <UtmBlock />
 
       {showLead && (
         <LeadModal choices={choices} onClose={() => setShowLead(false)} />
