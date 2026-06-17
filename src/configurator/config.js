@@ -65,7 +65,21 @@ export const IJEWEL_MATERIAL_GROUPS = {
 
 const SITE_URL = 'https://con.neodiamond.kz';
 
-// Encode config as compact base64 — single ?c= param, no Cyrillic in URL
+// URL-safe base64: replace +/= with -_~ so links survive WhatsApp/amoCRM/email
+const toUrlSafeB64 = (str) =>
+  btoa(unescape(encodeURIComponent(str)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+const fromUrlSafeB64 = (s) => {
+  // Restore standard base64 chars and padding
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64 + '=='.slice(0, (4 - b64.length % 4) % 4);
+  return decodeURIComponent(escape(atob(padded)));
+};
+
+// Encode config as URL-safe base64 — single ?c= param, survives link sharing
 export const buildConfigUrl = (choices) => {
   const data = {};
   if (choices.shape)      data.sh = choices.shape;
@@ -75,16 +89,19 @@ export const buildConfigUrl = (choices) => {
   if (choices.gem1Label)  data.g1 = choices.gem1Label;
   if (choices.gem2Label)  data.g2 = choices.gem2Label;
   if (choices.metalLabel) data.mt = choices.metalLabel;
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  return `${SITE_URL}/?c=${encoded}`;
+  return `${SITE_URL}/?c=${toUrlSafeB64(JSON.stringify(data))}`;
 };
 
 // Decode ?c= param back to choices (for share-link landing)
+// Supports both old standard base64 and new URL-safe base64
 export const parseConfigUrl = () => {
   try {
     const c = new URLSearchParams(window.location.search).get('c');
     if (!c) return null;
-    const data = JSON.parse(decodeURIComponent(escape(atob(c))));
+    const json = c.includes('-') || c.includes('_') || !c.includes('=')
+      ? fromUrlSafeB64(c)
+      : decodeURIComponent(escape(atob(c)));
+    const data = JSON.parse(json);
     return {
       shape:      data.sh ?? null,
       shank:      data.sk ?? null,
