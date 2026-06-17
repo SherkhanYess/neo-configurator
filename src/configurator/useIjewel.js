@@ -155,12 +155,17 @@ export function useIjewel() {
       showConfigurator: false,
       showCard: false,
       showLogo: false,
+      useIjewelLogo: false,
+      brandingSettings: { enable: false, showLoadingScreenLogo: false },
+      hideQuality: true,
       transparentBg: false,
       hideFullScreen: true,
       hideFitScene: true,
       hideCameraViews: true,
       hideRotateCamera: true,
       hideResetView: true,
+      hideGltfAnimations: true,
+      runRotateCamera: false,
     });
 
     window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
