@@ -1,75 +1,77 @@
 // Netlify Function: submit-lead
 // Creates a contact + lead in amoCRM with all form fields mapped to CRM custom fields
 
-// Module-level cache for custom fields (lives for the duration of the function instance)
-let _fieldsCache = null;
+// Hardcoded amoCRM field IDs and enum values (fetched via /api/debug-fields)
+const AMO_FIELDS = {
+  // «Город заказа» — field 409769
+  city: {
+    id: 409769,
+    enums: {
+      'Алматы':       268607,
+      'Астана':       268609,
+      'Шымкент':      268611,
+      'Актобе':       268613,
+      'Актау':        268615,
+      'Караганды':    284341,
+      'Атырау':       284343,
+      'Другой город': 284345,
+    },
+  },
+  // «Повод покупки» — field 420033
+  occasion: {
+    id: 420033,
+    enums: {
+      'Предложение': 284327,
+      'Подарок':     284329,
+      'Для себя':    284331,
+    },
+  },
+  // «Когда нужно» — field 420035
+  timing: {
+    id: 420035,
+    enums: {
+      'До 5-дней':           284333,
+      'В течений 10 дней':   284335,
+      'В течений месяца':    284337,
+      'Больше месяца':       284339,
+    },
+  },
+  // UTM_ID — field 417935 (textarea)
+  utmId: { id: 417935 },
+  // TRANID — field 417929 (textarea)
+  tranId: { id: 417929 },
+  // UTM tracking_data fields
+  utm_source:   { id: 61411 },
+  utm_medium:   { id: 61407 },
+  utm_campaign: { id: 61409 },
+  utm_content:  { id: 61405 },
+  utm_term:     { id: 61413 },
+};
 
-async function getLeadFields(amoBase, amoHeaders) {
-  if (_fieldsCache) return _fieldsCache;
-  const res = await fetch(`${amoBase}/leads/custom_fields`, { headers: amoHeaders });
-  if (!res.ok) return [];
-  const data = await res.json();
-  _fieldsCache = data._embedded?.custom_fields ?? [];
-  return _fieldsCache;
-}
-
-function buildCustomFields(fields, { occasion, timing, city, utm = {} }) {
+function buildCustomFields({ city, occasion, timing, utm = {} }) {
   const result = [];
 
-  const findField = (name) =>
-    fields.find((f) => f.name.toLowerCase().includes(name.toLowerCase()));
+  const addEnum = (fieldId, enumId) => {
+    if (enumId) result.push({ field_id: fieldId, values: [{ enum_id: enumId }] });
+  };
+  const addText = (fieldId, value) => {
+    if (value) result.push({ field_id: fieldId, values: [{ value: String(value) }] });
+  };
 
-  const enumId = (field, value) =>
-    field?.values?.find((v) => v.value === value)?.enum_id;
+  addEnum(AMO_FIELDS.city.id,     AMO_FIELDS.city.enums[city]);
+  addEnum(AMO_FIELDS.occasion.id, AMO_FIELDS.occasion.enums[occasion]);
+  addEnum(AMO_FIELDS.timing.id,   AMO_FIELDS.timing.enums[timing]);
 
-  const whenField      = findField('Когда нужно');
-  const occasionField  = findField('Повод покупки');
-  const cityField      = findField('Город заказа');
-  const utmIdField     = findField('UTM_ID');
-  const tranIdField    = findField('TRANID');
-  const utmSourceField    = findField('utm_source');
-  const utmMediumField    = findField('utm_medium');
-  const utmCampaignField  = findField('utm_campaign');
-  const utmContentField   = findField('utm_content');
-  const utmTermField      = findField('utm_term');
+  // UTM_ID = utm_source, TRANID = utm_campaign
+  addText(AMO_FIELDS.utmId.id,  utm.utm_source);
+  addText(AMO_FIELDS.tranId.id, utm.utm_campaign);
 
-  if (whenField && timing) {
-    const eId = enumId(whenField, timing);
-    if (eId) result.push({ field_id: whenField.id, values: [{ enum_id: eId }] });
-  }
-  if (occasionField && occasion) {
-    const eId = enumId(occasionField, occasion);
-    if (eId) result.push({ field_id: occasionField.id, values: [{ enum_id: eId }] });
-  }
-  if (cityField && city) {
-    const eId = enumId(cityField, city);
-    if (eId) result.push({ field_id: cityField.id, values: [{ enum_id: eId }] });
-  }
-
-  // UTM_ID — store utm_source as the primary UTM identifier
-  if (utmIdField && utm.utm_source) {
-    result.push({ field_id: utmIdField.id, values: [{ value: utm.utm_source }] });
-  }
-  // TRANID — store utm_campaign
-  if (tranIdField && utm.utm_campaign) {
-    result.push({ field_id: tranIdField.id, values: [{ value: utm.utm_campaign }] });
-  }
-  // Individual UTM fields (if configured in amoCRM)
-  if (utmSourceField && utm.utm_source) {
-    result.push({ field_id: utmSourceField.id, values: [{ value: utm.utm_source }] });
-  }
-  if (utmMediumField && utm.utm_medium) {
-    result.push({ field_id: utmMediumField.id, values: [{ value: utm.utm_medium }] });
-  }
-  if (utmCampaignField && utm.utm_campaign) {
-    result.push({ field_id: utmCampaignField.id, values: [{ value: utm.utm_campaign }] });
-  }
-  if (utmContentField && utm.utm_content) {
-    result.push({ field_id: utmContentField.id, values: [{ value: utm.utm_content }] });
-  }
-  if (utmTermField && utm.utm_term) {
-    result.push({ field_id: utmTermField.id, values: [{ value: utm.utm_term }] });
-  }
+  // Individual UTM tracking fields
+  addText(AMO_FIELDS.utm_source.id,   utm.utm_source);
+  addText(AMO_FIELDS.utm_medium.id,   utm.utm_medium);
+  addText(AMO_FIELDS.utm_campaign.id, utm.utm_campaign);
+  addText(AMO_FIELDS.utm_content.id,  utm.utm_content);
+  addText(AMO_FIELDS.utm_term.id,     utm.utm_term);
 
   return result;
 }
@@ -88,11 +90,10 @@ export const handler = async (event) => {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  const AMO_DOMAIN    = process.env.AMO_DOMAIN;
+  const AMO_DOMAIN     = process.env.AMO_DOMAIN;
   const AMO_LONG_TOKEN = process.env.AMO_LONG_TOKEN;
 
   if (!AMO_DOMAIN || !AMO_LONG_TOKEN) {
-    console.error('Missing AMO_DOMAIN or AMO_LONG_TOKEN env vars');
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfigured' }) };
   }
 
@@ -109,31 +110,24 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'name and phone are required' }) };
   }
 
-  const amoBase = `https://${AMO_DOMAIN}.amocrm.ru/api/v4`;
-  const amoHeaders = {
+  const amoBase   = `https://${AMO_DOMAIN}.amocrm.ru/api/v4`;
+  const amoHdrs   = {
     'Authorization': `Bearer ${AMO_LONG_TOKEN}`,
-    'Content-Type': 'application/json',
+    'Content-Type':  'application/json',
   };
 
   try {
-    // 1. Fetch lead custom fields (cached per instance)
-    const fields = await getLeadFields(amoBase, amoHeaders);
-
-    // 2. Create contact
+    // 1. Create contact
     const contactRes = await fetch(`${amoBase}/contacts`, {
       method: 'POST',
-      headers: amoHeaders,
-      body: JSON.stringify([
-        {
-          name,
-          custom_fields_values: [
-            {
-              field_code: 'PHONE',
-              values: [{ value: phone, enum_code: 'WORK' }],
-            },
-          ],
-        },
-      ]),
+      headers: amoHdrs,
+      body: JSON.stringify([{
+        name,
+        custom_fields_values: [{
+          field_code: 'PHONE',
+          values: [{ value: phone, enum_code: 'WORK' }],
+        }],
+      }]),
     });
 
     if (!contactRes.ok) {
@@ -143,9 +137,9 @@ export const handler = async (event) => {
     }
 
     const contactData = await contactRes.json();
-    const contactId = contactData?._embedded?.contacts?.[0]?.id;
+    const contactId   = contactData?._embedded?.contacts?.[0]?.id;
 
-    // 3. Build config note (ring details + link)
+    // 2. Build ring config note
     const configLines = [
       config.shapeLabel && `Огранка: ${config.shapeLabel}`,
       config.shankLabel && `Шинка: ${config.shankLabel}`,
@@ -162,31 +156,21 @@ export const handler = async (event) => {
       configUrl ? `\n🔗 Ссылка: ${configUrl}` : '',
     ].filter(Boolean).join('\n').trim();
 
-    // 4. Build lead name
-    const leadName = [
-      'Кольцо',
-      config.shapeLabel,
-      config.carat ? `${config.carat}кар` : null,
-      '—',
-      name,
-    ].filter(Boolean).join(' ');
+    // 3. Lead name
+    const leadName = ['Кольцо', config.shapeLabel, config.carat ? `${config.carat}кар` : null, '—', name]
+      .filter(Boolean).join(' ');
 
-    // 5. Build custom fields for the lead
-    const customFields = buildCustomFields(fields, { occasion, timing, city, utm });
-
-    // 6. Create lead
-    const leadPayload = [
-      {
-        name: leadName,
-        custom_fields_values: customFields,
-        ...(contactId ? { _embedded: { contacts: [{ id: contactId }] } } : {}),
-      },
-    ];
+    // 4. Create lead with mapped custom fields
+    const customFields = buildCustomFields({ city, occasion, timing, utm });
 
     const leadRes = await fetch(`${amoBase}/leads`, {
       method: 'POST',
-      headers: amoHeaders,
-      body: JSON.stringify(leadPayload),
+      headers: amoHdrs,
+      body: JSON.stringify([{
+        name: leadName,
+        custom_fields_values: customFields,
+        ...(contactId ? { _embedded: { contacts: [{ id: contactId }] } } : {}),
+      }]),
     });
 
     if (!leadRes.ok) {
@@ -196,28 +180,20 @@ export const handler = async (event) => {
     }
 
     const leadData = await leadRes.json();
-    const leadId = leadData?._embedded?.leads?.[0]?.id;
+    const leadId   = leadData?._embedded?.leads?.[0]?.id;
 
-    // 7. Add note with ring config to lead
+    // 5. Add ring config as note
     if (leadId && noteText) {
       await fetch(`${amoBase}/leads/${leadId}/notes`, {
         method: 'POST',
-        headers: amoHeaders,
+        headers: amoHdrs,
         body: JSON.stringify([{ note_type: 'common', params: { text: noteText } }]),
-      }).catch((e) => console.warn('amoCRM note failed:', e));
+      }).catch((e) => console.warn('note failed:', e));
     }
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ ok: true, leadId, contactId }),
-    };
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId }) };
   } catch (err) {
     console.error('submit-lead error:', err);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Internal error', detail: String(err) }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal error', detail: String(err) }) };
   }
 };
