@@ -155,7 +155,7 @@ export function useIjewel() {
       showConfigurator: false,
       showCard: false,
       showLogo: false,
-      transparentBg: true,
+      transparentBg: false,
       hideFullScreen: true,
       hideFitScene: true,
       hideCameraViews: true,
