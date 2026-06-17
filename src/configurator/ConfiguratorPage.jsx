@@ -251,11 +251,13 @@ export default function ConfiguratorPage() {
 
         {cfg.currentStep === 'metal' && (
           <MetalStep
+            purity={cfg.choices.purity}
             shankMetal={cfg.choices.metal}
             castMetal={cfg.choices.castMetal}
             combinedGold={cfg.choices.combinedGold}
             shankMetalOptions={ijewel.shankMetalOptions}
             castMetalOptions={ijewel.castMetalOptions}
+            onChoosePurity={(v) => cfg.choose('purity', v)}
             onChooseShankMetal={handleShankMetal}
             onToggleCombined={handleToggleCombined}
             onChooseCastMetal={handleCastMetal}

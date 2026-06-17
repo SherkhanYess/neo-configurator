@@ -21,6 +21,7 @@ const SUMMARY_LABELS = {
   carat:       { label: 'Каратность',        step: 'carat', format: (v) => `${v} кар` },
   gem1Label:   { label: 'Цвет центр. бриллианта', step: 'carat', isColor: true },
   gem2Label:   { label: 'Цвет россыпи',     step: 'carat', isColor: true },
+  purity:      { label: 'Проба золота',     step: 'metal', format: (v) => `${v}` },
   metalLabel:  { label: 'Цвет металла',     step: 'metal', isColor: true },
 };
 

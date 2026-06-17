@@ -3,6 +3,11 @@ import { LABEL_COLORS } from '../useIjewel.js';
 import { StepHeader } from '../components/StepHeader.jsx';
 import { Button } from '../../components/core/Button.jsx';
 
+const PURITY_OPTIONS = [
+  { value: '585', label: '585', hint: '14 карат · доступнее' },
+  { value: '750', label: '750', hint: '18 карат · премиум' },
+];
+
 function MetalPicker({ options, chosen, onChoose }) {
   if (!options?.length) return null;
   return (
@@ -28,16 +33,33 @@ function MetalPicker({ options, chosen, onChoose }) {
 }
 
 export function MetalStep({
-  shankMetal, castMetal, combinedGold,
+  purity, shankMetal, castMetal, combinedGold,
   shankMetalOptions, castMetalOptions,
-  onChooseShankMetal, onToggleCombined, onChooseCastMetal,
+  onChoosePurity, onChooseShankMetal, onToggleCombined, onChooseCastMetal,
   onNext, onBack,
 }) {
-  const canNext = !!shankMetal;
+  const canNext = !!purity && !!shankMetal;
 
   return (
     <div className="cfg-step-content">
-      <StepHeader title="Металл" sub="Цвет сплава" />
+      <StepHeader title="Металл" sub="Проба и цвет сплава" />
+
+      <div className="cfg-section">
+        <div className="cfg-section-label">Проба золота</div>
+        <div className="cfg-purity-row">
+          {PURITY_OPTIONS.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              className={['cfg-purity-btn', purity === p.value ? 'is-selected' : ''].filter(Boolean).join(' ')}
+              onClick={() => onChoosePurity(p.value)}
+            >
+              <span className="cfg-purity-value">{p.label}</span>
+              <span className="cfg-purity-sub">{p.hint}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="cfg-section">
         <div className="cfg-section-label">Цвет металла</div>

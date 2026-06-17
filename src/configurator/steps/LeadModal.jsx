@@ -85,11 +85,21 @@ export function LeadModal({ choices, onClose }) {
   const [success, setSuccess]   = useState(false);
   const [prices, setPrices]     = useState(null);
 
-  // Lock background scroll while modal is open
+  // Lock background scroll while modal is open (iOS-safe: save scroll position)
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    const scrollY = window.scrollY;
+    const body = document.body;
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    return () => {
+      body.style.position = '';
+      body.style.top = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
   }, []);
 
   // Fetch prices on modal open to include estimated price in the WhatsApp message
@@ -133,6 +143,7 @@ export function LeadModal({ choices, onClose }) {
         carat:      choices.carat,
         gem1Label:  choices.gem1Label,
         gem2Label:  choices.gem2Label,
+        purity:     choices.purity,
         metalLabel: choices.metalLabel,
       },
       configUrl: buildConfigUrl(choices),

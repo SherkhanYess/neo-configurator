@@ -151,6 +151,7 @@ export const handler = async (event) => {
       config.carat      && `Каратность: ${config.carat} кар`,
       config.gem1Label  && `Центр. бриллиант: ${config.gem1Label}`,
       config.gem2Label  && `Россыпь: ${config.gem2Label}`,
+      config.purity     && `Проба: ${config.purity}`,
       config.metalLabel && `Металл: ${config.metalLabel}`,
     ].filter(Boolean).join('\n');
 
