@@ -221,19 +221,31 @@ export const handler = async (event) => {
         'С уважением, Neo Diamond 🔷',
       ].join('\n').trim();
 
-      await fetch('https://api.wazzup24.com/v3/message', {
-        method: 'POST',
-        headers: {
-          'X-Wazzup-Api-Key': WAZZUP_KEY,
-          'Content-Type':     'application/json',
-        },
-        body: JSON.stringify({
-          channelId: WAZZUP_CHANNEL_ID,
-          chatType:  'whatsapp',
-          chatId:    phone,
-          text:      waText,
-        }),
-      }).catch((e) => console.warn('Wazzup send failed:', e));
+      let wazzupStatus = null;
+      let wazzupBody   = null;
+      try {
+        const wRes  = await fetch('https://api.wazzup24.com/v3/message', {
+          method: 'POST',
+          headers: {
+            'X-Wazzup-Api-Key': WAZZUP_KEY,
+            'Content-Type':     'application/json',
+          },
+          body: JSON.stringify({
+            channelId: WAZZUP_CHANNEL_ID,
+            chatType:  'whatsapp',
+            chatId:    phone,
+            text:      waText,
+          }),
+        });
+        wazzupStatus = wRes.status;
+        wazzupBody   = await wRes.text();
+        console.log('Wazzup response:', wazzupStatus, wazzupBody);
+      } catch (e) {
+        wazzupBody = String(e);
+        console.warn('Wazzup fetch error:', e);
+      }
+
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId, wazzupStatus, wazzupBody }) };
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId }) };
