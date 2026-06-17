@@ -190,17 +190,26 @@ export default function ConfiguratorPage() {
           <pre>{JSON.stringify(ijewel.debugInfo, null, 2)}</pre>
         </div>
       )}
-      <header className="cfg-header">
-        <img src={logoWhite} alt="Neo Diamond" className="cfg-logo" />
-        {!isStart && cfg.stepNumber && (
-          <span className="cfg-step-counter">
-            {cfg.stepNumber} / {cfg.totalSteps}
-          </span>
-        )}
-      </header>
 
-      {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
-      {!isStart && <ViewerPanel onInit={handleInit} />}
+      {/* Left column: 3D viewer (desktop) */}
+      {!isStart && (
+        <div className="cfg-viewer-col">
+          <ViewerPanel onInit={handleInit} />
+        </div>
+      )}
+
+      {/* Right column: header + steps */}
+      <div className="cfg-content-col">
+        <header className="cfg-header">
+          <img src={logoWhite} alt="Neo Diamond" className="cfg-logo" />
+          {!isStart && cfg.stepNumber && (
+            <span className="cfg-step-counter">
+              {cfg.stepNumber} / {cfg.totalSteps}
+            </span>
+          )}
+        </header>
+
+        {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
 
       <div className={`cfg-panel ${isStart ? 'cfg-panel--full' : ''}`}>
         {cfg.currentStep === 'start' && <StartStep onStart={cfg.start} />}
@@ -272,6 +281,9 @@ export default function ConfiguratorPage() {
           />
         )}
       </div>
+      </div>{/* /cfg-content-col */}
     </div>
+  );
+}
   );
 }

@@ -49,16 +49,21 @@
 .cfg-viewer-panel {
   flex-shrink: 0;
   position: relative;
-  width: 100%;
+  width: calc(100% - 32px);
+  margin: 0 16px;
   height: 46vh;
   min-height: 220px;
-  max-height: 380px;
+  max-height: 340px;
   background: transparent;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 .cfg-viewer-container {
   width: 100%;
   height: 100%;
+  touch-action: none;
 }
 
 .cfg-viewer-hint {
@@ -1134,3 +1139,69 @@
   transition: background 0.2s;
 }
 .lead-close-btn:hover { background: rgba(255,255,255,0.14); }
+
+/* ============================================================
+   Column wrappers (mobile: transparent pass-through)
+   ============================================================ */
+.cfg-viewer-col {
+  display: contents; /* no effect on mobile — viewer-panel styles apply directly */
+}
+
+.cfg-content-col {
+  display: contents; /* no effect on mobile */
+}
+
+/* ============================================================
+   Desktop layout — viewer left, controls right
+   ============================================================ */
+@media (min-width: 768px) {
+  .cfg-root {
+    flex-direction: row;
+    align-items: stretch;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Left column: sticky 3D viewer */
+  .cfg-viewer-col {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 55%;
+    height: 100dvh;
+    position: sticky;
+    top: 0;
+  }
+
+  .cfg-viewer-col .cfg-viewer-panel {
+    width: 100%;
+    margin: 0;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+    border-radius: 0;
+    box-shadow: none;
+    flex: 1;
+  }
+
+  /* Right column: header + steps */
+  .cfg-content-col {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 45%;
+    height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .cfg-content-col .cfg-header {
+    position: sticky;
+    top: 0;
+    flex-shrink: 0;
+    width: 100%;
+  }
+
+  .cfg-content-col .cfg-panel {
+    flex: 1;
+    height: auto;
+    overflow-y: visible;
+  }
+}
