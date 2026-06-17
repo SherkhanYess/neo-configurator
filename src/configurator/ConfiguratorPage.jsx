@@ -200,7 +200,7 @@ export default function ConfiguratorPage() {
       </header>
 
       {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
-      {!isStart && <ViewerPanel onInit={handleInit} />}
+      {!isStart && <ViewerPanel onInit={handleInit} isLoading={ijewel.isLoading} />}
 
       <div className={`cfg-panel ${isStart ? 'cfg-panel--full' : ''}`}>
         {cfg.currentStep === 'start' && <StartStep onStart={cfg.start} />}

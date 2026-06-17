@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
-export function ViewerPanel({ onInit }) {
+export function ViewerPanel({ onInit, isLoading }) {
   const containerRef = useRef(null);
   const initialised = useRef(false);
 
@@ -22,8 +22,7 @@ export function ViewerPanel({ onInit }) {
   return (
     <div className="cfg-viewer-panel">
       <div ref={containerRef} className="cfg-viewer-container" />
-      {/* Mask the bottom-left corner where iJewel injects its logo/evaluation banner */}
-      <div className="cfg-viewer-logo-mask" aria-hidden="true" />
+      {isLoading && <div className="cfg-viewer-loading" aria-hidden="true" />}
       <div className="cfg-viewer-hint">Вращайте кольцо двумя пальцами</div>
     </div>
   );
