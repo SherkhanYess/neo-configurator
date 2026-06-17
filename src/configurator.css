@@ -61,16 +61,6 @@
   height: 100%;
 }
 
-/* Loading overlay — shown during iJewel model transitions (hides evaluation watermark naturally) */
-.cfg-viewer-loading {
-  position: absolute;
-  inset: 0;
-  background: var(--bg-gradient);
-  background-attachment: fixed;
-  z-index: 5;
-  pointer-events: none;
-}
-
 .cfg-viewer-hint {
   position: absolute;
   bottom: 10px;

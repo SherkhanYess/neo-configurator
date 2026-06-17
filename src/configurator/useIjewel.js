@@ -98,9 +98,8 @@ export function useIjewel() {
   const ringRef = useRef(null);
   const matRef  = useRef(null);
 
-  const [isReady,   setIsReady]   = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [tick, setTick]           = useState(0); // incremented on every plugin event → triggers useMemo recompute
+  const [isReady, setIsReady] = useState(false);
+  const [tick, setTick]       = useState(0); // incremented on every plugin event → triggers useMemo recompute
 
   const isReadyRef = useRef(false);
   const pendingRef = useRef([]);
@@ -169,12 +168,11 @@ export function useIjewel() {
       ringRef.current = viewer.getPluginByType('RingConfigurator');
       matRef.current  = viewer.getPluginByType('MaterialConfiguratorPlugin');
 
-      // Plugin events — reset loading overlay + trigger useMemo recompute
-      const doneLoading = () => { setIsLoading(false); bump(); };
-      if (ringRef.current) ringRef.current.addEventListener('componentProcessed', doneLoading);
+      // Plugin events
+      if (ringRef.current) ringRef.current.addEventListener('componentProcessed', bump);
       if (matRef.current) {
-        matRef.current.addEventListener('deserialize', doneLoading);
-        matRef.current.addEventListener('refreshUi',  doneLoading);
+        matRef.current.addEventListener('deserialize', bump);
+        matRef.current.addEventListener('refreshUi',  bump);
       }
       // Scene event — fires when ring parts are added (advanced template pattern)
       try { viewer.scene?.addEventListener('addSceneObject', bump); } catch (_) {}
@@ -202,72 +200,64 @@ export function useIjewel() {
     const key = `${shapeTag ?? ''}|${castTag ?? ''}`;
     if (!shapeTag && !castTag) return;
     if (lastRef.current.head === key) return;
-    setIsLoading(true);
     run(async () => {
       const heads = getComponent('head');
-      if (!heads) { setIsLoading(false); return; }
+      if (!heads) return;
       const matchTag = (v, tag) => {
         if (!tag) return true;
         return (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag));
       };
       const variation = heads.variations?.find((v) => matchTag(v, shapeTag) && matchTag(v, castTag));
       if (variation) { lastRef.current.head = key; await heads.applyVariation(variation); }
-      else { setIsLoading(false); }
     });
-  }, [run, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   const applyShank = useCallback((name) => {
     if (!name || lastRef.current.shank === name) return;
-    setIsLoading(true);
     run(async () => {
       const shanks = getComponent('shank');
-      if (!shanks) { setIsLoading(false); return; }
+      if (!shanks) return;
       const variation = shanks.variations?.find(
         (v) => (v.title ?? v.name ?? '').replace('.glb', '') === name
       );
       if (variation) { lastRef.current.shank = name; await shanks.applyVariation(variation); }
-      else { setIsLoading(false); }
     });
-  }, [run, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   const applyCarat = useCallback((carat) => {
     const tag = `size: ${carat}ct`;
     if (lastRef.current.carat === tag) return;
-    setIsLoading(true);
     run(async () => {
       const heads = getComponent('head');
-      if (!heads) { setIsLoading(false); return; }
+      if (!heads) return;
       const variation = heads.variations?.find((v) =>
         (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag))
       );
       if (variation) { lastRef.current.carat = tag; await heads.applyVariation(variation); }
-      else { setIsLoading(false); }
     });
-  }, [run, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   const applyShankMetal = useCallback((uuid) => {
     if (!uuid || lastRef.current.shankMetal === uuid) return;
     // Reset cast cache so sync can apply new cast UUID even if color was previously set
     lastRef.current.castMetal = null;
-    setIsLoading(true);
     run(async () => {
       const group = getMaterialGroup(['шинки', 'shank', 'band', 'ring', 'metal shank']);
-      if (!group || !matRef.current) { setIsLoading(false); return; }
+      if (!group || !matRef.current) return;
       lastRef.current.shankMetal = uuid;
       await matRef.current.applyVariation(group, uuid);
     });
-  }, [run, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyCastMetal = useCallback((uuid) => {
     if (!uuid || lastRef.current.castMetal === uuid) return;
-    setIsLoading(true);
     run(async () => {
       const group = getMaterialGroup(['каста', 'cast', 'head metal', 'setting', 'prong']);
-      if (!group || !matRef.current) { setIsLoading(false); return; }
+      if (!group || !matRef.current) return;
       lastRef.current.castMetal = uuid;
       await matRef.current.applyVariation(group, uuid);
     });
-  }, [run, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyGem = useCallback((slot, uuid) => {
     const hints = slot === 'gem1'
@@ -275,17 +265,16 @@ export function useIjewel() {
       : ['боковых', 'gem2', 'side', 'scatter', 'россып'];
     const key = `gem_${slot}`;
     if (!uuid || lastRef.current[key] === uuid) return;
-    setIsLoading(true);
     run(async () => {
       const group = getMaterialGroup(hints);
-      if (!group || !matRef.current) { setIsLoading(false); return; }
+      if (!group || !matRef.current) return;
       lastRef.current[key] = uuid;
       await matRef.current.applyVariation(group, uuid);
     });
-  }, [run, setIsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
-    init, isReady, isLoading,
+    init, isReady,
     shankVariations, gem1Options, gem2Options, shankMetalOptions, castMetalOptions,
     debugInfo,
     applyHead, applyShank, applyCarat, applyShankMetal, applyCastMetal, applyGem,

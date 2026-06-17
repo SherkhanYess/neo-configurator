@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
-export function ViewerPanel({ onInit, isLoading }) {
+export function ViewerPanel({ onInit }) {
   const containerRef = useRef(null);
   const initialised = useRef(false);
 
@@ -22,7 +22,6 @@ export function ViewerPanel({ onInit, isLoading }) {
   return (
     <div className="cfg-viewer-panel">
       <div ref={containerRef} className="cfg-viewer-container" />
-      {isLoading && <div className="cfg-viewer-loading" aria-hidden="true" />}
       <div className="cfg-viewer-hint">Вращайте кольцо двумя пальцами</div>
     </div>
   );
