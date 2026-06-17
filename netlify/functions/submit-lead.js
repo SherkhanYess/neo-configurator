@@ -227,7 +227,7 @@ export const handler = async (event) => {
         const wRes  = await fetch('https://api.wazzup24.com/v3/message', {
           method: 'POST',
           headers: {
-            'X-Wazzup-Api-Key': WAZZUP_KEY,
+            'Authorization': `Bearer ${WAZZUP_KEY}`,
             'Content-Type':     'application/json',
           },
           body: JSON.stringify({
