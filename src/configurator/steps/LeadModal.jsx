@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { buildConfigUrl } from '../config.js';
+import { calcPrice } from '../priceCalc.js';
 
 // Values must exactly match amoCRM enum values in the «Повод покупки» field
 const OCCASIONS = [
@@ -69,6 +70,15 @@ export function LeadModal({ choices, onClose }) {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [success, setSuccess]   = useState(false);
+  const [prices, setPrices]     = useState(null);
+
+  // Fetch prices on modal open to include estimated price in the WhatsApp message
+  useEffect(() => {
+    fetch('/api/get-prices')
+      .then((r) => r.json())
+      .then(setPrices)
+      .catch(() => {});
+  }, []);
 
   let utm = null;
   try { utm = JSON.parse(sessionStorage.getItem('nd_utm') ?? 'null'); } catch (_) {}
@@ -85,12 +95,15 @@ export function LeadModal({ choices, onClose }) {
 
     setLoading(true);
 
+    const estimatedPrice = prices ? calcPrice(choices, prices) : null;
+
     const payload = {
       name: name.trim(),
       phone: phone.trim(),
       city,
       occasion,
       timing,
+      estimatedPrice,
       config: {
         shapeLabel: choices.shapeLabel,
         shankLabel: choices.shankLabel,

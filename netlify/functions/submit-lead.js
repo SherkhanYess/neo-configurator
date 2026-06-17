@@ -104,7 +104,7 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { name, phone, city, occasion, timing, config = {}, configUrl = '', utm = {} } = body;
+  const { name, phone, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {} } = body;
 
   if (!name || !phone) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'name and phone are required' }) };
@@ -189,6 +189,51 @@ export const handler = async (event) => {
         headers: amoHdrs,
         body: JSON.stringify([{ note_type: 'common', params: { text: noteText } }]),
       }).catch((e) => console.warn('note failed:', e));
+    }
+
+    // Send WhatsApp message to client via Wazzup
+    const WAZZUP_KEY        = process.env.WAZZUP_API_KEY;
+    const WAZZUP_CHANNEL_ID = process.env.WAZZUP_CHANNEL_ID;
+
+    if (WAZZUP_KEY && WAZZUP_CHANNEL_ID) {
+      const priceStr = estimatedPrice
+        ? `\n💰 Примерная стоимость: от ${Number(estimatedPrice).toLocaleString('ru-KZ')} ₸`
+        : '';
+
+      const configLines = [
+        config.shapeLabel && `• Огранка: ${config.shapeLabel}`,
+        config.shankLabel && `• Шинка: ${config.shankLabel}`,
+        config.castLabel  && `• Каст: ${config.castLabel}`,
+        config.carat      && `• Каратность: ${config.carat} кар`,
+        config.gem1Label  && `• Цвет бриллианта: ${config.gem1Label}`,
+        config.metalLabel && `• Металл: ${config.metalLabel}`,
+      ].filter(Boolean).join('\n');
+
+      const waText = [
+        `Здравствуйте, ${name}! 💎`,
+        '',
+        'Вы собрали украшение в нашем конфигураторе:',
+        configLines,
+        priceStr,
+        '',
+        'Наш менеджер свяжется с вами в течение нескольких минут для уточнения деталей и финальной цены.',
+        '',
+        'С уважением, Neo Diamond 🔷',
+      ].join('\n').trim();
+
+      await fetch('https://api.wazzup24.com/v3/message', {
+        method: 'POST',
+        headers: {
+          'X-Wazzup-Api-Key': WAZZUP_KEY,
+          'Content-Type':     'application/json',
+        },
+        body: JSON.stringify({
+          channelId: WAZZUP_CHANNEL_ID,
+          chatType:  'whatsapp',
+          chatId:    phone,
+          text:      waText,
+        }),
+      }).catch((e) => console.warn('Wazzup send failed:', e));
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId }) };
