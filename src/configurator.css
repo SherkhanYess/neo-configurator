@@ -1035,6 +1035,42 @@
   color: #e4eaf4;
 }
 
+/* ── Phone field with dial code ── */
+.lead-phone-row {
+  display: flex;
+  gap: 8px;
+}
+
+.lead-dial-select {
+  flex: 0 0 auto;
+  width: 100px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 13px 10px;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.lead-dial-select:focus {
+  border-color: var(--ice-500, #46b1e0);
+}
+
+.lead-dial-select option {
+  background: #162036;
+  color: #e4eaf4;
+}
+
+.lead-phone-input {
+  flex: 1;
+}
+
 /* ── Pill Group ── */
 .lead-pills {
   display: flex;

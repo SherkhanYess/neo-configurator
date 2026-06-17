@@ -17,6 +17,18 @@ const TIMINGS = [
   'Больше месяца',
 ];
 
+const DIAL_CODES = [
+  { code: '+7',   label: '🇰🇿 +7'   },
+  { code: '+7',   label: '🇷🇺 +7'   },
+  { code: '+998', label: '🇺🇿 +998' },
+  { code: '+996', label: '🇰🇬 +996' },
+  { code: '+994', label: '🇦🇿 +994' },
+  { code: '+90',  label: '🇹🇷 +90'  },
+  { code: '+49',  label: '🇩🇪 +49'  },
+  { code: '+44',  label: '🇬🇧 +44'  },
+  { code: '+1',   label: '🇺🇸 +1'   },
+];
+
 // Values must exactly match amoCRM enum values in the «Город заказа» field
 const CITIES = [
   'Алматы',
@@ -63,7 +75,8 @@ function SuccessScreen({ onClose }) {
 
 export function LeadModal({ choices, onClose }) {
   const [name, setName]         = useState('');
-  const [phone, setPhone]       = useState('');
+  const [dialCode, setDialCode] = useState('+7');
+  const [localPhone, setLocalPhone] = useState('');
   const [city, setCity]         = useState('');
   const [occasion, setOccasion] = useState('');
   const [timing, setTiming]     = useState('');
@@ -87,8 +100,10 @@ export function LeadModal({ choices, onClose }) {
     e.preventDefault();
     setError('');
 
-    if (!name.trim())  { setError('Введите ваше имя'); return; }
-    if (!phone.trim()) { setError('Введите номер WhatsApp'); return; }
+    const phone = `${dialCode}${localPhone.replace(/\D/g, '')}`;
+
+    if (!name.trim())       { setError('Введите ваше имя'); return; }
+    if (!localPhone.trim()) { setError('Введите номер WhatsApp'); return; }
     if (!city)         { setError('Выберите город'); return; }
     if (!occasion)     { setError('Выберите повод покупки'); return; }
     if (!timing)       { setError('Выберите срок'); return; }
@@ -137,7 +152,7 @@ export function LeadModal({ choices, onClose }) {
       setError('Нет соединения. Попробуйте ещё раз.');
       setLoading(false);
     }
-  }, [name, phone, city, occasion, timing, choices, utm]);
+  }, [name, dialCode, localPhone, city, occasion, timing, choices, utm]);
 
   return (
     <div className="lead-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -178,15 +193,28 @@ export function LeadModal({ choices, onClose }) {
 
             <div className="lead-field">
               <label className="lead-label" htmlFor="lead-phone">Номер WhatsApp</label>
-              <input
-                id="lead-phone"
-                type="tel"
-                className="lead-input"
-                placeholder="+7 700 000 00 00"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                autoComplete="tel"
-              />
+              <div className="lead-phone-row">
+                <select
+                  className="lead-dial-select"
+                  value={dialCode}
+                  onChange={(e) => setDialCode(e.target.value)}
+                  aria-label="Код страны"
+                >
+                  {DIAL_CODES.map((d) => (
+                    <option key={d.label} value={d.code}>{d.label}</option>
+                  ))}
+                </select>
+                <input
+                  id="lead-phone"
+                  type="tel"
+                  className="lead-input lead-phone-input"
+                  placeholder="700 000 00 00"
+                  value={localPhone}
+                  onChange={(e) => setLocalPhone(e.target.value)}
+                  autoComplete="tel-national"
+                  inputMode="tel"
+                />
+              </div>
             </div>
 
             <div className="lead-field">
