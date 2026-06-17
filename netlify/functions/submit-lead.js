@@ -104,7 +104,11 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { name, phone, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {} } = body;
+  const { name, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {} } = body;
+
+  // Normalize phone to international format (+7XXXXXXXXXX)
+  const rawPhone = String(body.phone || '').replace(/\D/g, ''); // strip non-digits
+  const phone = rawPhone.startsWith('7') ? `+${rawPhone}` : rawPhone.startsWith('8') ? `+7${rawPhone.slice(1)}` : `+${rawPhone}`;
 
   if (!name || !phone) {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'name and phone are required' }) };
