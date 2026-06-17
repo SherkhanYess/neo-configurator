@@ -49,15 +49,18 @@
 .cfg-viewer-panel {
   flex-shrink: 0;
   position: relative;
-  width: calc(100% - 32px);
-  margin: 0 16px;
-  height: 46vh;
-  min-height: 220px;
-  max-height: 340px;
-  background: transparent;
-  border-radius: 20px;
+  width: calc(100% - 24px);
+  margin: 8px 12px 0;
+  height: 44vh;
+  min-height: 240px;
+  max-height: 360px;
+  background: #f0f2f5;
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.06) inset,
+    0 16px 48px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.06);
 }
 
 .cfg-viewer-container {
@@ -1141,38 +1144,46 @@
 .lead-close-btn:hover { background: rgba(255,255,255,0.14); }
 
 /* ============================================================
-   Column wrappers (mobile: transparent pass-through)
+   Column wrappers — mobile: transparent pass-through
    ============================================================ */
 .cfg-viewer-col {
-  display: contents; /* no effect on mobile — viewer-panel styles apply directly */
+  display: contents;
 }
-
 .cfg-content-col {
-  display: contents; /* no effect on mobile */
+  display: contents;
 }
 
 /* ============================================================
-   Desktop layout — viewer left, controls right
+   Desktop layout ≥768px — viewer left, controls right
+   DOM order: header → viewer-col → content-col
+   Grid named areas reorder visually without touching DOM
    ============================================================ */
 @media (min-width: 768px) {
   .cfg-root {
-    flex-direction: row;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 56% 44%;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "viewer header"
+      "viewer content";
     height: 100dvh;
     overflow: hidden;
   }
 
-  /* Left column: sticky 3D viewer */
+  /* Header → top-right */
+  .cfg-header {
+    grid-area: header;
+    position: static;
+  }
+
+  /* Viewer column → full-height left */
   .cfg-viewer-col {
     display: flex;
-    flex-direction: column;
-    flex: 0 0 55%;
-    height: 100dvh;
-    position: sticky;
-    top: 0;
+    grid-area: viewer;
   }
 
   .cfg-viewer-col .cfg-viewer-panel {
+    flex: 1;
     width: 100%;
     margin: 0;
     height: 100%;
@@ -1180,28 +1191,20 @@
     min-height: 0;
     border-radius: 0;
     box-shadow: none;
-    flex: 1;
   }
 
-  /* Right column: header + steps */
+  /* Content column (progress + panel) → scrollable right */
   .cfg-content-col {
     display: flex;
     flex-direction: column;
-    flex: 0 0 45%;
-    height: 100dvh;
+    grid-area: content;
     overflow-y: auto;
-  }
-
-  .cfg-content-col .cfg-header {
-    position: sticky;
-    top: 0;
-    flex-shrink: 0;
-    width: 100%;
+    min-height: 0;
   }
 
   .cfg-content-col .cfg-panel {
     flex: 1;
-    height: auto;
     overflow-y: visible;
+    height: auto;
   }
 }

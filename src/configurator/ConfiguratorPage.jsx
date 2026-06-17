@@ -191,24 +191,25 @@ export default function ConfiguratorPage() {
         </div>
       )}
 
-      {/* Left column: 3D viewer (desktop) */}
+      {/* Header — always on top (mobile) / top-right (desktop) */}
+      <header className="cfg-header">
+        <img src={logoWhite} alt="Neo Diamond" className="cfg-logo" />
+        {!isStart && cfg.stepNumber && (
+          <span className="cfg-step-counter">
+            {cfg.stepNumber} / {cfg.totalSteps}
+          </span>
+        )}
+      </header>
+
+      {/* Viewer — below header (mobile) / full left column (desktop) */}
       {!isStart && (
         <div className="cfg-viewer-col">
           <ViewerPanel onInit={handleInit} />
         </div>
       )}
 
-      {/* Right column: header + steps */}
+      {/* Steps content — below viewer (mobile) / right column (desktop) */}
       <div className="cfg-content-col">
-        <header className="cfg-header">
-          <img src={logoWhite} alt="Neo Diamond" className="cfg-logo" />
-          {!isStart && cfg.stepNumber && (
-            <span className="cfg-step-counter">
-              {cfg.stepNumber} / {cfg.totalSteps}
-            </span>
-          )}
-        </header>
-
         {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
 
       <div className={`cfg-panel ${isStart ? 'cfg-panel--full' : ''}`}>
