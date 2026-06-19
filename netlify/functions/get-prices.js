@@ -39,8 +39,9 @@ function getDefaultPrices() {
       halo: 30000,
       bezel: 20000,
     },
-    caratPrice:          80000,
-    purity750surcharge:  20000,
-    fancyColorSurcharge: 100000,
+    caratPrice:           200000, // per carat ABOVE 1
+    purity750surcharge:   20000,
+    fancyColorSurcharge:  100000, // per carat, central diamond only
+    scatterFancySurcharge: 150000, // flat, per scatter zone (россыпь / хало)
   };
 }

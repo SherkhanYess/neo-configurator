@@ -141,7 +141,8 @@ function PricesForm({ token }) {
         <h3 className="adm-section-title">Каратность и проба</h3>
         <NumberField label="Цена за 1 карат" value={prices.caratPrice} onChange={(v) => set('caratPrice', v)} />
         <NumberField label="Доплата за пробу 750 (₸)" value={prices.purity750surcharge} onChange={(v) => set('purity750surcharge', v)} />
-        <NumberField label="Фантазийный цвет — наценка за 1 карат (₸)" value={prices.fancyColorSurcharge} onChange={(v) => set('fancyColorSurcharge', v)} />
+        <NumberField label="Фантазийный цвет центр. бриллианта — за 1 карат (₸)" value={prices.fancyColorSurcharge} onChange={(v) => set('fancyColorSurcharge', v)} />
+        <NumberField label="Фантазийный цвет россыпи / хало — фиксированная наценка (₸)" value={prices.scatterFancySurcharge} onChange={(v) => set('scatterFancySurcharge', v)} />
       </section>
 
       {msg && <p className={`adm-msg${msg.startsWith('✅') ? ' adm-msg--ok' : ' adm-msg--err'}`}>{msg}</p>}
