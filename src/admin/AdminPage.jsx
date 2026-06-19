@@ -132,34 +132,16 @@ function PricesForm({ token }) {
       </section>
 
       <section className="adm-section">
-        <h3 className="adm-section-title">Доплата по огранке (кроме круга)</h3>
-        {Object.entries(SHAPE_LABELS).map(([id, label]) => (
-          <NumberField
-            key={id}
-            label={label}
-            value={prices.shapes?.[id]}
-            onChange={(v) => set(`shapes.${id}`, v)}
-          />
-        ))}
-      </section>
-
-      <section className="adm-section">
         <h3 className="adm-section-title">Доплата по дизайну каста</h3>
         <NumberField label="Хало" value={prices.casts?.halo} onChange={(v) => set('casts.halo', v)} />
         <NumberField label="Безель" value={prices.casts?.bezel} onChange={(v) => set('casts.bezel', v)} />
       </section>
 
       <section className="adm-section">
-        <h3 className="adm-section-title">Доплата по цвету металла</h3>
-        <NumberField label="Жёлтое золото" value={prices.metals?.['Жёлтое']} onChange={(v) => set('metals.Жёлтое', v)} />
-        <NumberField label="Розовое золото" value={prices.metals?.['Розовое']} onChange={(v) => set('metals.Розовое', v)} />
-      </section>
-
-      <section className="adm-section">
         <h3 className="adm-section-title">Каратность и проба</h3>
-        <NumberField label="Цена за карат" value={prices.caratPrice} onChange={(v) => set('caratPrice', v)} />
-        <NumberField label="Наценка за пробу 750 (%)" value={prices.purity750surcharge} onChange={(v) => set('purity750surcharge', v)} suffix="%" />
-        <NumberField label="Наценка за фантазийный цвет" value={prices.fancyColorSurcharge} onChange={(v) => set('fancyColorSurcharge', v)} />
+        <NumberField label="Цена за 1 карат" value={prices.caratPrice} onChange={(v) => set('caratPrice', v)} />
+        <NumberField label="Доплата за пробу 750 (₸)" value={prices.purity750surcharge} onChange={(v) => set('purity750surcharge', v)} />
+        <NumberField label="Фантазийный цвет — наценка за 1 карат (₸)" value={prices.fancyColorSurcharge} onChange={(v) => set('fancyColorSurcharge', v)} />
       </section>
 
       {msg && <p className={`adm-msg${msg.startsWith('✅') ? ' adm-msg--ok' : ' adm-msg--err'}`}>{msg}</p>}

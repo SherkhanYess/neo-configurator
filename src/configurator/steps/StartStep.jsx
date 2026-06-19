@@ -1,43 +1,70 @@
 import React from 'react';
 
 const DiamondIcon = () => (
-  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 6h24l8 12-20 26L4 18Z" />
-    <path d="M4 18h40" />
-    <path d="M24 6l-8 12 8 26 8-26Z" />
+  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+    <path d="M6 3h12l4 6-10 13L2 9Z" opacity=".15"/>
+    <path d="M6 3h12l4 6-10 13L2 9Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    <path d="M2 9h20M12 3l-4 6 4 13 4-13Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
   </svg>
 );
 
-const RingIcon = () => (
-  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <ellipse cx="24" cy="30" rx="16" ry="8" />
-    <path d="M8 30V18" />
-    <path d="M40 30V18" />
-    <ellipse cx="24" cy="18" rx="16" ry="8" />
+const CheckIcon = () => (
+  <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+    <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" opacity=".4"/>
+    <path d="M6 10l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
+
+const ArrowIcon = () => (
+  <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
+    <path d="M4 10h12M12 6l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const BENEFITS = [
+  'Бриллианты в ассортименте — любая огранка и цвет',
+  'Изготовление 7–14 дней в нашей студии',
+  'Примерка украшения вживую перед оплатой',
+];
 
 export function StartStep({ onStart }) {
   return (
     <div className="cfg-start">
-      <div className="cfg-start-tagline">
-        <span className="nd-eyebrow">Neo Diamond</span>
-        <h1 className="cfg-start-title">Создайте<br />своё кольцо</h1>
-        <p className="cfg-start-sub">С чего хотите начать?</p>
+
+      <div className="cfg-start-hero">
+        <div className="cfg-start-badge">
+          <DiamondIcon />
+          <span>Neo Diamond · Ювелирная студия</span>
+        </div>
+
+        <h1 className="cfg-start-title">
+          Создайте кольцо<br />своей мечты
+        </h1>
+
+        <p className="cfg-start-sub">
+          Выберите огранку, оправу и металл — получите точную стоимость в WhatsApp за&nbsp;10&nbsp;секунд
+        </p>
+
+        <ul className="cfg-start-benefits">
+          {BENEFITS.map((b) => (
+            <li key={b} className="cfg-start-benefit">
+              <span className="cfg-start-benefit-icon"><CheckIcon /></span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+
+        <button
+          className="cfg-start-cta"
+          onClick={() => onStart('diamond')}
+        >
+          <span>Начать создание</span>
+          <ArrowIcon />
+        </button>
+
+        <p className="cfg-start-note">Займёт около 3 минут · Бесплатно</p>
       </div>
 
-      <div className="cfg-start-cards">
-        <button className="cfg-start-card" onClick={() => onStart('diamond')}>
-          <span className="cfg-start-card-icon"><DiamondIcon /></span>
-          <span className="cfg-start-card-label">С бриллианта</span>
-          <span className="cfg-start-card-hint">Сначала выберите огранку</span>
-        </button>
-        <button className="cfg-start-card" onClick={() => onStart('shank')}>
-          <span className="cfg-start-card-icon"><RingIcon /></span>
-          <span className="cfg-start-card-label">С оправы</span>
-          <span className="cfg-start-card-hint">Сначала выберите дизайн оправы</span>
-        </button>
-      </div>
     </div>
   );
 }

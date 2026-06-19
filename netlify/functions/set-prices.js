@@ -34,6 +34,11 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
+  // Reject null or non-object payloads (protects from auth-check calls with null body)
+  if (!prices || typeof prices !== 'object' || Array.isArray(prices)) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid prices object' }) };
+  }
+
   try {
     const store = getStore('nd-prices');
     await store.setJSON('config', prices);

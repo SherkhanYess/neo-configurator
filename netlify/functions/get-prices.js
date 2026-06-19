@@ -36,32 +36,12 @@ function getDefaultPrices() {
       'Sirius Luxe': 280000,
       'Bezel':       230000,
     },
-    shapes: {
-      oval: 20000,
-      pear: 20000,
-      marquise: 20000,
-      radiant: 15000,
-      emerald: 15000,
-      cushion: 15000,
-      princess: 15000,
-      heart: 25000,
-      asscher: 15000,
-    },
     casts: {
       halo: 30000,
       bezel: 20000,
     },
-    shanks: {
-      'Neo Luxe': 10000,
-      'Sirius Luxe': 15000,
-      'Bezel': 10000,
-    },
-    metals: {
-      'Жёлтое': 0,
-      'Розовое': 5000,
-    },
-    purity750surcharge: 10,
-    caratPrice: 80000,
-    fancyColorSurcharge: 0,
+    caratPrice:          80000,
+    purity750surcharge:  20000,  // flat KZT for 750 purity
+    fancyColorSurcharge: 100000, // KZT per 1 carat for fancy color
   };
 }

@@ -196,61 +196,84 @@ export const handler = async (event) => {
       }).catch((e) => console.warn('note failed:', e));
     }
 
-    // Send WhatsApp message to client via Wazzup
+    // Send WhatsApp messages to client via Wazzup
     const WAZZUP_KEY        = process.env.WAZZUP_API_KEY;
     const WAZZUP_CHANNEL_ID = process.env.WAZZUP_CHANNEL_ID;
 
     if (WAZZUP_KEY && WAZZUP_CHANNEL_ID) {
-      const priceStr = estimatedPrice
-        ? `\n💰 Примерная стоимость: от ${Number(estimatedPrice).toLocaleString('ru-KZ')} ₸`
-        : '';
+      const sendWazzup = async (text) => {
+        try {
+          const res = await fetch('https://api.wazzup24.com/v3/message', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${WAZZUP_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              channelId: WAZZUP_CHANNEL_ID,
+              chatType:  'whatsapp',
+              chatId:    phone,
+              text,
+            }),
+          });
+          const body = await res.text();
+          console.log('Wazzup:', res.status, body);
+          return { status: res.status, body };
+        } catch (e) {
+          console.warn('Wazzup error:', e);
+          return { status: null, body: String(e) };
+        }
+      };
 
+      // Build config lines
       const configLines = [
-        config.shapeLabel && `• Огранка: ${config.shapeLabel}`,
-        config.shankLabel && `• Шинка: ${config.shankLabel}`,
-        config.castLabel  && `• Каст: ${config.castLabel}`,
-        config.carat      && `• Каратность: ${config.carat} кар`,
-        config.gem1Label  && `• Цвет бриллианта: ${config.gem1Label}`,
-        config.metalLabel && `• Металл: ${config.metalLabel}`,
+        config.shapeLabel && `▪️ Огранка: ${config.shapeLabel}`,
+        config.shankLabel && `▪️ Шинка: ${config.shankLabel}`,
+        config.castLabel  && `▪️ Дизайн каста: ${config.castLabel}`,
+        config.carat      && `▪️ Каратность: ${config.carat} кар`,
+        config.gem1Label  && `▪️ Цвет бриллианта: ${config.gem1Label}`,
+        config.purity     && `▪️ Проба золота: ${config.purity}`,
+        config.metalLabel && `▪️ Цвет металла: ${config.metalLabel}`,
       ].filter(Boolean).join('\n');
 
-      const waText = [
-        `Здравствуйте, ${name}! 💎`,
+      const priceStr = estimatedPrice
+        ? `${Number(estimatedPrice).toLocaleString('ru-KZ')} ₸`
+        : 'уточняется';
+
+      // Message 1 — configuration summary
+      const msg1 = [
+        `Здравствуйте, ${name}! 👋`,
         '',
-        'Вы собрали украшение в нашем конфигураторе:',
+        'Мы — *Neo Diamond*. Ювелирная студия формата конструктор. 💎',
+        '',
+        'Поздравляем — вы собрали украшение на нашем онлайн-конструкторе со следующими характеристиками:',
+        '',
         configLines,
-        priceStr,
         '',
-        'Наш менеджер свяжется с вами в течение нескольких минут для уточнения деталей и финальной цены.',
+        `💰 *Стоимость данного украшения: ${priceStr}*`,
         '',
-        'С уважением, Neo Diamond 🔷',
-      ].join('\n').trim();
+        'Знайте, что всегда можно сделать украшение дешевле или дороже — в зависимости от вашего запроса.',
+        '',
+        '⏱ Стандартный срок изготовления в нашей студии — *7–14 дней*, но имеется срочное изготовление по запросу!',
+      ].join('\n');
 
-      let wazzupStatus = null;
-      let wazzupBody   = null;
-      try {
-        const wRes  = await fetch('https://api.wazzup24.com/v3/message', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${WAZZUP_KEY}`,
-            'Content-Type':     'application/json',
-          },
-          body: JSON.stringify({
-            channelId: WAZZUP_CHANNEL_ID,
-            chatType:  'whatsapp',
-            chatId:    phone,
-            text:      waText,
-          }),
-        });
-        wazzupStatus = wRes.status;
-        wazzupBody   = await wRes.text();
-        console.log('Wazzup response:', wazzupStatus, wazzupBody);
-      } catch (e) {
-        wazzupBody = String(e);
-        console.warn('Wazzup fetch error:', e);
-      }
+      // Message 2 — personal manager follow-up
+      const msg2 = [
+        '✨ Скоро с вами свяжется ваш персональный менеджер.',
+        '',
+        'У вас появится возможность *примерить вживую* ваше будущее украшение перед оплатой.',
+        '',
+        'Если хотите задать вопрос прямо сейчас — пишите сюда, мы онлайн! 🙌',
+      ].join('\n');
 
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId, wazzupStatus, wazzupBody }) };
+      // Send first message
+      const w1 = await sendWazzup(msg1);
+
+      // Wait 10 seconds, then send follow-up
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+      const w2 = await sendWazzup(msg2);
+
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId, wazzup1: w1.status, wazzup2: w2.status }) };
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId }) };
