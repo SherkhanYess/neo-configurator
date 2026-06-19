@@ -1,31 +1,30 @@
-// Netlify Function: get-prices
+// Netlify Function v2: get-prices
 // Returns the current price configuration from Netlify Blobs
 
 import { getStore } from '@netlify/blobs';
 
-export const handler = async () => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
-  };
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Content-Type': 'application/json',
+};
+
+export default async (req, context) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('', { status: 204, headers: CORS });
+  }
 
   try {
-    const store = getStore('nd-prices');
-    const prices = await store.get('config', { type: 'json' });
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(prices ?? getDefaultPrices()),
-    };
+    const store = getStore({ name: 'nd-prices', context });
+    const raw = await store.get('config');
+    const prices = raw ? JSON.parse(raw) : null;
+    return new Response(JSON.stringify(prices ?? getDefaultPrices()), { status: 200, headers: CORS });
   } catch (err) {
     console.warn('get-prices blob error (returning defaults):', err);
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(getDefaultPrices()),
-    };
+    return new Response(JSON.stringify(getDefaultPrices()), { status: 200, headers: CORS });
   }
 };
+
+export const config = { path: '/api/get-prices' };
 
 function getDefaultPrices() {
   return {
@@ -41,7 +40,7 @@ function getDefaultPrices() {
       bezel: 20000,
     },
     caratPrice:          80000,
-    purity750surcharge:  20000,  // flat KZT for 750 purity
-    fancyColorSurcharge: 100000, // KZT per 1 carat for fancy color
+    purity750surcharge:  20000,
+    fancyColorSurcharge: 100000,
   };
 }

@@ -1,58 +1,55 @@
-// Netlify Function: set-prices
+// Netlify Function v2: set-prices
 // Saves updated price configuration to Netlify Blobs (admin-only)
 
 import { getStore } from '@netlify/blobs';
 
-export const handler = async (event) => {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Content-Type': 'application/json',
-  };
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Content-Type': 'application/json',
+};
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers, body: '' };
+export default async (req, context) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('', { status: 204, headers: CORS });
   }
 
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: CORS });
   }
 
   // Auth check
   const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
-  const authHeader = event.headers['authorization'] ?? event.headers['Authorization'] ?? '';
+  const authHeader = req.headers.get('authorization') ?? '';
   const token = authHeader.replace('Bearer ', '').trim();
 
   if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: CORS });
   }
 
   let prices;
   try {
-    prices = JSON.parse(event.body || '{}');
+    prices = await req.json();
   } catch {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400, headers: CORS });
   }
 
-  // Reject null or non-object payloads (protects from auth-check calls with null body)
+  // Reject null or non-object payloads
   if (!prices || typeof prices !== 'object' || Array.isArray(prices)) {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid prices object' }) };
+    return new Response(JSON.stringify({ error: 'Invalid prices object' }), { status: 400, headers: CORS });
   }
 
   try {
-    const store = getStore('nd-prices');
+    const store = getStore({ name: 'nd-prices', context });
     await store.set('config', JSON.stringify(prices));
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ ok: true }),
-    };
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: CORS });
   } catch (err) {
     console.error('set-prices error:', err);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Failed to save prices', detail: String(err) }),
-    };
+    return new Response(
+      JSON.stringify({ error: 'Failed to save prices', detail: String(err) }),
+      { status: 500, headers: CORS }
+    );
   }
 };
+
+export const config = { path: '/api/set-prices' };
