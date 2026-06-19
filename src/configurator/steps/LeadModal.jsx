@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { buildConfigUrl } from '../config.js';
 import { calcPrice } from '../priceCalc.js';
+import { buildBreakdown, formatBreakdownForWA } from '../priceBreakdown.js';
 
 // Values must exactly match amoCRM enum values in the «Повод покупки» field
 const OCCASIONS = [
@@ -73,7 +74,7 @@ function SuccessScreen({ onClose }) {
   );
 }
 
-export function LeadModal({ choices, onClose }) {
+export function LeadModal({ choices, prices: pricesProp, onClose }) {
   const [name, setName]         = useState('');
   const [dialCode, setDialCode] = useState('+7');
   const [localPhone, setLocalPhone] = useState('');
@@ -83,7 +84,7 @@ export function LeadModal({ choices, onClose }) {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
   const [success, setSuccess]   = useState(false);
-  const [prices, setPrices]     = useState(null);
+  const [prices, setPrices]     = useState(pricesProp ?? null);
 
   // Lock background scroll while modal is open (iOS-safe: save scroll position)
   useEffect(() => {
@@ -102,13 +103,14 @@ export function LeadModal({ choices, onClose }) {
     };
   }, []);
 
-  // Fetch prices on modal open to include estimated price in the WhatsApp message
+  // Fetch prices only if not passed from parent
   useEffect(() => {
+    if (pricesProp) return;
     fetch('/api/get-prices')
       .then((r) => r.json())
       .then(setPrices)
       .catch(() => {});
-  }, []);
+  }, [pricesProp]);
 
   let utm = null;
   try { utm = JSON.parse(sessionStorage.getItem('nd_utm') ?? 'null'); } catch (_) {}
@@ -128,6 +130,8 @@ export function LeadModal({ choices, onClose }) {
     setLoading(true);
 
     const estimatedPrice = prices ? calcPrice(choices, prices) : null;
+    const breakdown = buildBreakdown(choices, prices);
+    const configLinesWA = formatBreakdownForWA(breakdown);
 
     const payload = {
       name: name.trim(),
@@ -136,6 +140,7 @@ export function LeadModal({ choices, onClose }) {
       occasion,
       timing,
       estimatedPrice,
+      configLinesWA,
       config: {
         shapeLabel: choices.shapeLabel,
         shankLabel: choices.shankLabel,

@@ -104,7 +104,7 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { name, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {} } = body;
+  const { name, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {}, configLinesWA = '' } = body;
 
   // Normalize phone to international format (+7XXXXXXXXXX)
   const rawPhone = String(body.phone || '').replace(/\D/g, ''); // strip non-digits
@@ -225,15 +225,13 @@ export const handler = async (event) => {
         }
       };
 
-      // Build config lines
-      const configLines = [
-        config.shapeLabel && `▪️ Огранка: ${config.shapeLabel}`,
-        config.shankLabel && `▪️ Шинка: ${config.shankLabel}`,
-        config.castLabel  && `▪️ Дизайн каста: ${config.castLabel}`,
-        config.carat      && `▪️ Каратность: ${config.carat} кар`,
-        config.gem1Label  && `▪️ Цвет бриллианта: ${config.gem1Label}`,
-        config.purity     && `▪️ Проба золота: ${config.purity}`,
-        config.metalLabel && `▪️ Цвет металла: ${config.metalLabel}`,
+      // Use pre-formatted lines from frontend (includes prices per line)
+      const configLines = configLinesWA || [
+        config.shapeLabel && `▪️ ${config.shankLabel} - ${config.shapeLabel}`,
+        config.castLabel  && `▪️ Дизайн каста - ${config.castLabel}`,
+        config.carat      && `▪️ Каратность - ${Number(config.carat).toFixed(2)}`,
+        config.purity     && `▪️ Проба золота - ${config.purity}`,
+        config.metalLabel && `▪️ Цвет золота: ${config.metalLabel}`,
       ].filter(Boolean).join('\n');
 
       const priceStr = estimatedPrice

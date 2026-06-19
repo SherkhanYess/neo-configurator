@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LABEL_COLORS } from '../useIjewel.js';
 import { LeadModal } from './LeadModal.jsx';
+import { buildBreakdown } from '../priceBreakdown.js';
 
 function ColorSwatch({ label }) {
   if (!label) return null;
@@ -14,26 +15,28 @@ function ColorSwatch({ label }) {
   );
 }
 
-const SUMMARY_LABELS = {
-  shapeLabel:  { label: 'Форма бриллианта', step: 'diamond' },
-  shankLabel:  { label: 'Дизайн оправы',    step: 'shank' },
-  castLabel:   { label: 'Дизайн каста',     step: 'cast' },
-  carat:       { label: 'Каратность',        step: 'carat', format: (v) => `${v} кар` },
-  gem1Label:   { label: 'Цвет центр. бриллианта', step: 'carat', isColor: true },
-  gem2Label:   { label: 'Цвет россыпи',     step: 'carat', isColor: true },
-  purity:      { label: 'Проба золота',     step: 'metal', format: (v) => `${v}` },
-  metalLabel:  { label: 'Цвет металла',     step: 'metal', isColor: true },
-};
-
-
 export function SummaryStep({ choices, sequence, onGoTo }) {
   const [showLead, setShowLead] = useState(false);
+  const [prices, setPrices] = useState(null);
 
-  const rows = Object.entries(SUMMARY_LABELS).filter(([key]) => {
-    const def = SUMMARY_LABELS[key];
-    const val = choices[key];
-    return sequence.includes(def.step) && val !== null && val !== undefined && val !== '';
-  });
+  useEffect(() => {
+    fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
+  }, []);
+
+  const lines = buildBreakdown(choices, prices);
+
+  // Map breakdown key → which step to navigate to on "Изменить"
+  const stepByKey = {
+    model:  'shank',
+    cast:   'cast',
+    carat:  'carat',
+    purity: 'metal',
+    metal:  'metal',
+    gem1:   'carat',
+    gem2:   'carat',
+  };
+
+  const isColorKey = { metal: true, gem1: true, gem2: true };
 
   return (
     <div className="cfg-step-content cfg-summary">
@@ -43,24 +46,35 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
       </div>
 
       <div className="cfg-summary-list">
-        {rows.map(([key, def]) => {
-          const raw = choices[key];
+        {lines.map((line) => {
+          const step = stepByKey[line.key];
+          if (step && !sequence.includes(step)) return null;
+
           return (
-            <div key={key} className="cfg-summary-row">
-              <span className="cfg-summary-key">{def.label}</span>
+            <div key={line.key} className="cfg-summary-row">
+              <span className="cfg-summary-key">{line.label}</span>
               <span className="cfg-summary-val">
-                {def.isColor
-                  ? <ColorSwatch label={raw} />
-                  : def.format ? def.format(raw) : String(raw)
+                {line.value
+                  ? (isColorKey[line.key]
+                      ? <ColorSwatch label={line.value} />
+                      : <span>{line.value}</span>)
+                  : null
                 }
+                {line.price != null && (
+                  <span className="cfg-summary-price">
+                    {line.pricePrefix}{Number(line.price).toLocaleString('ru-KZ')} ₸
+                  </span>
+                )}
               </span>
-              <button
-                type="button"
-                className="cfg-summary-edit"
-                onClick={() => onGoTo(def.step)}
-              >
-                Изменить
-              </button>
+              {step && (
+                <button
+                  type="button"
+                  className="cfg-summary-edit"
+                  onClick={() => onGoTo(step)}
+                >
+                  Изменить
+                </button>
+              )}
             </div>
           );
         })}
@@ -81,7 +95,7 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
       </div>
 
       {showLead && (
-        <LeadModal choices={choices} onClose={() => setShowLead(false)} />
+        <LeadModal choices={choices} prices={prices} onClose={() => setShowLead(false)} />
       )}
     </div>
   );
