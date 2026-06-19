@@ -150,26 +150,15 @@ export function LeadModal({ choices, onClose }) {
       utm: utm ?? {},
     };
 
-    try {
-      const res = await fetch('/api/submit-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    // Show success immediately — server handles amoCRM + WhatsApp in background
+    setSuccess(true);
 
-      const data = await res.json().catch(() => ({}));
+    fetch('/api/submit-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
 
-      if (!res.ok) {
-        setError(data.error ?? 'Ошибка отправки. Попробуйте ещё раз.');
-        setLoading(false);
-        return;
-      }
-
-      setSuccess(true);
-    } catch {
-      setError('Нет соединения. Попробуйте ещё раз.');
-      setLoading(false);
-    }
   }, [name, dialCode, localPhone, city, occasion, timing, choices, utm]);
 
   return (

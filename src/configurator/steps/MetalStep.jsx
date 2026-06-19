@@ -70,8 +70,7 @@ export function MetalStep({
         />
       </div>
 
-      {shankMetal && (
-        <div className="cfg-section">
+      <div className="cfg-section">
           <label className="cfg-toggle-row">
             <input
               type="checkbox"
@@ -82,7 +81,6 @@ export function MetalStep({
             <span className="cfg-toggle-label">Комбинированное золото</span>
           </label>
         </div>
-      )}
 
       {combinedGold && (
         <div className="cfg-section cfg-section--animate">
