@@ -106,7 +106,7 @@ function PricesForm({ token }) {
       if (res.ok) {
         setMsg('✅ Цены сохранены!');
       } else {
-        setMsg(`❌ Ошибка: ${data.error ?? res.status}`);
+        setMsg(`❌ Ошибка: ${data.error ?? res.status}${data.detail ? ` — ${data.detail}` : ''}`);
       }
     } catch {
       setMsg('❌ Ошибка соединения');
