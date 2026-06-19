@@ -41,7 +41,7 @@ export const handler = async (event) => {
 
   try {
     const store = getStore('nd-prices');
-    await store.setJSON('config', prices);
+    await store.set('config', JSON.stringify(prices));
     return {
       statusCode: 200,
       headers,
