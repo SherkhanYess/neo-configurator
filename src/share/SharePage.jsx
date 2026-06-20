@@ -32,6 +32,7 @@ export default function SharePage() {
   const [choices, setChoices] = useState(null);
   const [showOverlay, setShowOverlay] = useState(true);
   const [showLead, setShowLead] = useState(false);
+  const restoredRef = useRef(false);
 
   // On mount: parse URL, save sender UTM, set recipient UTM
   useEffect(() => {
@@ -46,68 +47,44 @@ export default function SharePage() {
     try { sessionStorage.setItem('nd_utm', JSON.stringify({ utm_term: 'share' })); } catch (_) {}
   }, []);
 
-  // Remove overlay 5s after iJewel is ready (extra time to let all variations apply)
+  // Remove overlay after 6s (enough for all variations to settle)
   useEffect(() => {
     if (!ijewel.isReady) return;
-    const t = setTimeout(() => setShowOverlay(false), 5000);
+    const t = setTimeout(() => setShowOverlay(false), 6000);
     return () => clearTimeout(t);
   }, [ijewel.isReady]);
 
-  // ── Single restore effect ──
-  // Runs every time ANY option array changes (all depend on `tick`, polled every 500ms).
-  // All apply* functions have internal dedup (lastRef) so repeated calls are safe and free.
-  // This guarantees each variation is applied as soon as its data is available,
-  // regardless of which options load first.
+  // Main restore — fires once when ring components are ready (shankVariations populated)
+  // Step 1: apply structure (shape/cast/shank/carat)
+  // Step 2: after 1.5s, apply colors via restoreFromLabels (sequential, with full logging)
   useEffect(() => {
-    if (!ijewel.isReady || !choicesRef.current) return;
+    if (!ijewel.isReady || !ijewel.shankVariations.length || !choicesRef.current) return;
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+
     const c = choicesRef.current;
+    console.log('[Share] starting restore with choices:', c);
 
-    // Shape / cast / shank / carat — needs ring components to be ready (shankVariations.length > 0)
-    if (ijewel.shankVariations.length) {
-      const s = DIAMOND_SHAPES.find((x) => x.id === c.shape);
-      const k = CAST_DESIGNS.find((x) => x.id === c.cast);
-      if (s || k) ijewel.applyHead(s?.ijewelTag ?? null, k?.ijewelTag ?? null);
-      if (c.shank) ijewel.applyShank(c.shank);
-      if (c.carat) ijewel.applyCarat(c.carat);
-    }
+    // Step 1 — structure
+    const s = DIAMOND_SHAPES.find((x) => x.id === c.shape);
+    const k = CAST_DESIGNS.find((x) => x.id === c.cast);
+    if (s || k) ijewel.applyHead(s?.ijewelTag ?? null, k?.ijewelTag ?? null);
+    if (c.shank) ijewel.applyShank(c.shank);
+    if (c.carat) ijewel.applyCarat(c.carat);
 
-    // Center diamond color
-    if (c.gem1Label && ijewel.gem1Options.length) {
-      const match = ijewel.gem1Options.find((o) => o.label === c.gem1Label);
-      if (match) ijewel.applyGem('gem1', match.uuid);
-    }
+    // Step 2 — colors after delay (iJewel needs time to process structure changes
+    //          before material groups are updated for the new cast/shape)
+    setTimeout(() => {
+      console.log('[Share] applying colors after delay');
+      ijewel.restoreFromLabels({
+        gem1Label:      c.gem1Label,
+        gem2Label:      c.gem2Label,
+        metalLabel:     c.metalLabel,
+        castMetalLabel: c.castMetalLabel,
+      });
+    }, 1500);
 
-    // Scatter / side diamonds color
-    if (c.gem2Label && ijewel.gem2Options.length) {
-      const match = ijewel.gem2Options.find((o) => o.label === c.gem2Label);
-      if (match) ijewel.applyGem('gem2', match.uuid);
-    }
-
-    // Shank metal color
-    if (c.metalLabel && ijewel.shankMetalOptions.length) {
-      const shankTarget = ijewel.shankMetalOptions.find((o) => o.label === c.metalLabel);
-      if (shankTarget) ijewel.applyShankMetal(shankTarget.uuid);
-    }
-
-    // Cast metal color (combined gold uses separate castMetalLabel, else same as shank)
-    if (ijewel.castMetalOptions.length) {
-      const castLabel = c.castMetalLabel || c.metalLabel;
-      if (castLabel) {
-        const castTarget =
-          ijewel.castMetalOptions.find((o) => o.label === castLabel) ??
-          ijewel.castMetalOptions.find((o) =>
-            o.label?.split(' ')[0]?.toLowerCase() === castLabel?.split(' ')[0]?.toLowerCase()
-          );
-        if (castTarget) ijewel.applyCastMetal(castTarget.uuid);
-      }
-    }
-  // All four option arrays change on every 500ms poll tick → effect retries until each apply succeeds
-  }, [ // eslint-disable-line react-hooks/exhaustive-deps
-    ijewel.shankVariations,
-    ijewel.gem1Options,
-    ijewel.shankMetalOptions,
-    ijewel.castMetalOptions,
-  ]);
+  }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInit = useCallback((el) => { ijewel.init(el); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
