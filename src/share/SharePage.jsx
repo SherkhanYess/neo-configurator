@@ -63,8 +63,6 @@ export default function SharePage() {
     restoredRef.current = true;
 
     const c = choicesRef.current;
-    console.log('[Share] starting restore with choices:', c);
-
     // Step 1 — structure
     const s = DIAMOND_SHAPES.find((x) => x.id === c.shape);
     const k = CAST_DESIGNS.find((x) => x.id === c.cast);
@@ -75,7 +73,6 @@ export default function SharePage() {
     // Step 2 — colors after delay (iJewel needs time to process structure changes
     //          before material groups are updated for the new cast/shape)
     setTimeout(() => {
-      console.log('[Share] applying colors after delay');
       ijewel.restoreFromLabels({
         gem1Label:      c.gem1Label,
         gem2Label:      c.gem2Label,

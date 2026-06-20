@@ -284,7 +284,7 @@ export function useIjewel() {
   const restoreFromLabels = useCallback(({ gem1Label, gem2Label, metalLabel, castMetalLabel }) => {
     run(async () => {
       const mat = matRef.current;
-      if (!mat) { console.warn('[Share] matRef is null'); return; }
+      if (!mat) return;
 
       const applyLabel = async (hints, label, isGem) => {
         if (!label) return;
@@ -293,48 +293,31 @@ export function useIjewel() {
           const t = (g.title ?? g.name ?? '').toLowerCase();
           return hints.some((h) => t.includes(h.toLowerCase()));
         });
-
-        if (!group) {
-          console.warn('[Share] no group for hints:', hints,
-            '| available groups:', groupList.map((g) => g.title ?? g.name));
-          return;
-        }
+        if (!group) return;
 
         const idx = groupList.indexOf(group);
         const items = (mat.options?.[idx]?.length ? mat.options[idx] : null) ?? group.materials ?? [];
-        const available = items.map((m) => ({
-          uuid: m.uuid,
-          label: humanizeLabel(m.userData?.label ?? m.title ?? m.name ?? m.uuid, isGem),
-          raw: m.userData?.label ?? m.title ?? m.name ?? m.uuid,
-        }));
-        console.log('[Share] group:', group.title ?? group.name,
-          '| looking for:', label,
-          '| available:', available);
 
         const item = items.find((m) =>
           humanizeLabel(m.userData?.label ?? m.title ?? m.name ?? m.uuid, isGem) === label
         );
         if (!item) {
-          console.warn('[Share] label not found:', label, '— trying partial match');
           // Partial fallback: first word match
           const partial = items.find((m) => {
             const lbl = humanizeLabel(m.userData?.label ?? m.title ?? m.name ?? m.uuid, isGem);
             return lbl?.split(' ')[0]?.toLowerCase() === label?.split(' ')[0]?.toLowerCase();
           });
-          if (!partial) { console.warn('[Share] no match at all for:', label); return; }
-          console.log('[Share] partial match:', partial.uuid);
-          try { await mat.applyVariation(group, partial.uuid); } catch (e) {
-            try { await mat.applyVariation(group, partial); } catch (e2) { console.error('[Share] failed:', e2); }
+          if (!partial) return;
+          try { await mat.applyVariation(group, partial.uuid); } catch (_) {
+            try { await mat.applyVariation(group, partial); } catch (_2) {}
           }
           return;
         }
 
-        console.log('[Share] applying:', label, 'uuid:', item.uuid);
         try {
           await mat.applyVariation(group, item.uuid);
-        } catch (e) {
-          console.warn('[Share] uuid failed, trying full object:', e);
-          try { await mat.applyVariation(group, item); } catch (e2) { console.error('[Share] both failed:', e2); }
+        } catch (_) {
+          try { await mat.applyVariation(group, item); } catch (_2) {}
         }
       };
 
