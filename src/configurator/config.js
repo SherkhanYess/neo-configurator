@@ -118,6 +118,35 @@ export const parseConfigUrl = () => {
   } catch (_) { return null; }
 };
 
+// Builds /share URL with ring config + sender's UTM encoded as ?su=
+export const buildShareUrl = (choices) => {
+  const data = {};
+  if (choices.shape)      data.sh = choices.shape;
+  if (choices.shank)      data.sk = choices.shank;
+  if (choices.cast)       data.ca = choices.cast;
+  if (choices.carat)      data.ct = choices.carat;
+  if (choices.gem1Label)  data.g1 = choices.gem1Label;
+  if (choices.gem2Label)  data.g2 = choices.gem2Label;
+  if (choices.metalLabel) data.mt = choices.metalLabel;
+
+  let suParam = '';
+  try {
+    const raw = sessionStorage.getItem('nd_utm');
+    if (raw) suParam = `&su=${toUrlSafeB64(raw)}`;
+  } catch (_) {}
+
+  return `${SITE_URL}/share?c=${toUrlSafeB64(JSON.stringify(data))}${suParam}`;
+};
+
+// Decode ?su= param — sender's UTM data (the girl's UTM)
+export const parseSenderUtm = () => {
+  try {
+    const su = new URLSearchParams(window.location.search).get('su');
+    if (!su) return null;
+    return JSON.parse(fromUrlSafeB64(su));
+  } catch (_) { return null; }
+};
+
 export const buildWhatsappMessage = (choices) => {
   const url = buildConfigUrl(choices);
   return encodeURIComponent(

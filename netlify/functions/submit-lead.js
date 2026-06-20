@@ -104,7 +104,12 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { name, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {}, configLinesWA = '' } = body;
+  const { name, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {}, senderUtm = {}, configLinesWA = '' } = body;
+
+  // For shared leads: use sender's UTM for attribution, but mark utm_term as 'share'
+  const effectiveUtm = (senderUtm?.utm_source)
+    ? { ...senderUtm, utm_term: 'share' }
+    : utm;
 
   // Normalize phone to international format (+7XXXXXXXXXX)
   const rawPhone = String(body.phone || '').replace(/\D/g, ''); // strip non-digits
@@ -166,7 +171,7 @@ export const handler = async (event) => {
       .filter(Boolean).join(' ');
 
     // 4. Create lead with mapped custom fields
-    const customFields = buildCustomFields({ city, occasion, timing, utm });
+    const customFields = buildCustomFields({ city, occasion, timing, utm: effectiveUtm });
 
     const leadRes = await fetch(`${amoBase}/leads`, {
       method: 'POST',

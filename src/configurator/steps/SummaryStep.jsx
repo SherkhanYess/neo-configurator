@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LABEL_COLORS } from '../useIjewel.js';
 import { LeadModal } from './LeadModal.jsx';
 import { buildBreakdown } from '../priceBreakdown.js';
+import { buildShareUrl } from '../config.js';
 
 function ColorSwatch({ label }) {
   if (!label) return null;
@@ -18,6 +19,18 @@ function ColorSwatch({ label }) {
 export function SummaryStep({ choices, sequence, onGoTo }) {
   const [showLead, setShowLead] = useState(false);
   const [prices, setPrices] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const url = buildShareUrl(choices);
+    if (navigator.share) {
+      await navigator.share({ title: 'Моё кольцо Neo Diamond', url }).catch(() => {});
+    } else {
+      await navigator.clipboard.writeText(url).catch(() => {});
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
@@ -91,6 +104,14 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
           );
         })}
       </div>
+
+      <button
+        type="button"
+        className="cfg-share-btn"
+        onClick={handleShare}
+      >
+        🔗 {copied ? 'Ссылка скопирована!' : 'Поделиться украшением'}
+      </button>
 
       {showLead && (
         <LeadModal choices={choices} prices={prices} onClose={() => setShowLead(false)} />

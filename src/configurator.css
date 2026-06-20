@@ -1367,3 +1367,44 @@
   .cfg-step-title { font-size: 20px; }
   .cfg-panel { padding: 20px 16px 36px; }
 }
+
+/* ── Share feature ── */
+
+/* Overlay on SharePage while iJewel applies ring variations */
+.share-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 20, 0.88);
+  z-index: 10;
+  gap: 14px;
+  pointer-events: none;
+}
+
+/* Share button on SummaryStep */
+.cfg-share-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 15px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.cfg-share-btn:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+.cfg-share-btn:active { transform: scale(0.98); }

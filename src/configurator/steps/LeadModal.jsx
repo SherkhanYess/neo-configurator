@@ -115,6 +115,9 @@ export function LeadModal({ choices, prices: pricesProp, onClose }) {
   let utm = null;
   try { utm = JSON.parse(sessionStorage.getItem('nd_utm') ?? 'null'); } catch (_) {}
 
+  let senderUtm = null;
+  try { senderUtm = JSON.parse(sessionStorage.getItem('nd_sender_utm') ?? 'null'); } catch (_) {}
+
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setError('');
@@ -153,6 +156,7 @@ export function LeadModal({ choices, prices: pricesProp, onClose }) {
       },
       configUrl: buildConfigUrl(choices),
       utm: utm ?? {},
+      senderUtm: senderUtm ?? {},
     };
 
     // Show success immediately — server handles amoCRM + WhatsApp in background
@@ -164,7 +168,7 @@ export function LeadModal({ choices, prices: pricesProp, onClose }) {
       body: JSON.stringify(payload),
     }).catch(() => {});
 
-  }, [name, dialCode, localPhone, city, occasion, timing, choices, utm]);
+  }, [name, dialCode, localPhone, city, occasion, timing, choices, utm, senderUtm]);
 
   return (
     <div className="lead-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
