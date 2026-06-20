@@ -45,6 +45,8 @@
 .cfg-viewer-container {
   width: 100%;
   height: 100%;
+  transform: scale(1.2) translateY(8%);
+  transform-origin: center center;
 }
 
 .cfg-viewer-hint {
