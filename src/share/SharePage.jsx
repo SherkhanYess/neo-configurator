@@ -56,16 +56,22 @@ export default function SharePage() {
     return () => clearTimeout(t);
   }, [ijewel.isReady]);
 
-  // Replay all ring variations once iJewel is ready
+  // Replay shape/cast/shank/carat — trigger on shankVariations (not isReady) because
+  // getComponent('head') returns null until the ring plugin finishes mounting,
+  // which happens AFTER isReady fires. shankVariations is populated from ringRef.current.components,
+  // so non-empty means the plugin is fully ready.
+  const appliedRef = useRef(false);
   useEffect(() => {
-    if (!ijewel.isReady || !choicesRef.current) return;
+    if (!ijewel.isReady || !choicesRef.current || !ijewel.shankVariations.length) return;
+    if (appliedRef.current) return; // apply only once
+    appliedRef.current = true;
     const c = choicesRef.current;
     const s = DIAMOND_SHAPES.find((x) => x.id === c.shape);
     const k = CAST_DESIGNS.find((x) => x.id === c.cast);
     if (s || k) ijewel.applyHead(s?.ijewelTag ?? null, k?.ijewelTag ?? null);
     if (c.shank) ijewel.applyShank(c.shank);
     if (c.carat) ijewel.applyCarat(c.carat);
-  }, [ijewel.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Restore gem colors after gem options load
   useEffect(() => {
