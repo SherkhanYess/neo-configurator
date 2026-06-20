@@ -77,6 +77,42 @@
   pointer-events: none;
 }
 
+/* Loading overlay */
+.cfg-viewer-loader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  z-index: 10;
+  border-radius: inherit;
+}
+
+.cfg-viewer-loader-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.cfg-viewer-loader-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.cfg-diamond-spinner {
+  animation: diamond-pulse 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.4));
+}
+
+@keyframes diamond-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.88); }
+}
+
 /* Step panel (bottom scrollable area) */
 .cfg-panel {
   flex: 1;
