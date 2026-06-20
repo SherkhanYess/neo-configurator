@@ -40,6 +40,23 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
 
   return (
     <div className="cfg-step-content cfg-summary">
+
+      {/* CTA — сразу после вьюера */}
+      <div className="cfg-summary-cta">
+        <p className="cfg-summary-cta-note">
+          Получите точную стоимость украшения прямо в WhatsApp — ответим за 10 секунд
+        </p>
+        <button
+          type="button"
+          className="cfg-wa-btn"
+          onClick={() => setShowLead(true)}
+        >
+          <WhatsAppIcon />
+          Получить стоимость на WhatsApp
+        </button>
+      </div>
+
+      {/* Итог конфигурации — после CTA */}
       <div className="cfg-summary-header">
         <span className="nd-eyebrow">Ваш заказ</span>
         <h2 className="cfg-step-title">Итог конфигурации</h2>
@@ -73,20 +90,6 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
             </div>
           );
         })}
-      </div>
-
-      <div className="cfg-summary-cta">
-        <p className="cfg-summary-cta-note">
-          Получите точную стоимость украшения прямо в WhatsApp — ответим за 10 секунд
-        </p>
-        <button
-          type="button"
-          className="cfg-wa-btn"
-          onClick={() => setShowLead(true)}
-        >
-          <WhatsAppIcon />
-          Получить стоимость на WhatsApp
-        </button>
       </div>
 
       {showLead && (

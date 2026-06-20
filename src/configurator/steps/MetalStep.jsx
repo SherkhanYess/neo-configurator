@@ -62,7 +62,7 @@ export function MetalStep({
       </div>
 
       <div className="cfg-section">
-        <div className="cfg-section-label">Цвет металла</div>
+        <div className="cfg-section-label">Цвет золота</div>
         <MetalPicker
           options={shankMetalOptions}
           chosen={shankMetal}
