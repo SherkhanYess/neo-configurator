@@ -11,7 +11,6 @@ import { CastDesignStep } from './steps/CastDesignStep.jsx';
 import { CaratStep } from './steps/CaratStep.jsx';
 import { MetalStep } from './steps/MetalStep.jsx';
 import { SummaryStep } from './steps/SummaryStep.jsx';
-import logoWhite from '../assets/logo/neo-diamond-logo-white.png';
 
 export default function ConfiguratorPage() {
   const cfg    = useConfigurator();
@@ -190,17 +189,8 @@ export default function ConfiguratorPage() {
           <pre>{JSON.stringify(ijewel.debugInfo, null, 2)}</pre>
         </div>
       )}
-      <header className="cfg-header">
-        <img src={logoWhite} alt="Neo Diamond" className="cfg-logo" />
-        {!isStart && cfg.stepNumber && (
-          <span className="cfg-step-counter">
-            {cfg.stepNumber} / {cfg.totalSteps}
-          </span>
-        )}
-      </header>
-
-      {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
       {!isStart && <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} />}
+      {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
 
       <div className={`cfg-panel ${isStart ? 'cfg-panel--full' : ''}`}>
         {cfg.currentStep === 'start' && <StartStep onStart={cfg.start} />}

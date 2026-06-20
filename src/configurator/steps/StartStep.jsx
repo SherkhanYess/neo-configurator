@@ -1,4 +1,5 @@
 import React from 'react';
+import logoWhite from '../../assets/logo/neo-diamond-logo-white.png';
 
 const DiamondIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
@@ -32,6 +33,7 @@ export function StartStep({ onStart }) {
     <div className="cfg-start">
 
       <div className="cfg-start-hero">
+        <img src={logoWhite} alt="Neo Diamond" className="cfg-start-logo" />
         <div className="cfg-start-badge">
           <DiamondIcon />
           <span>Neo Diamond · Ювелирная студия</span>

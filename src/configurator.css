@@ -14,36 +14,7 @@
   overflow-x: hidden;
 }
 
-/* Header */
-.cfg-header {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 60px;
-  padding: 0 24px;
-  background: rgba(6, 13, 29, 0.75);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  flex-shrink: 0;
-}
-
-.cfg-logo {
-  height: 22px;
-  width: auto;
-}
-
-.cfg-step-counter {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: var(--fw-semibold);
-  color: var(--text-tertiary);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
+/* Header removed — logo lives inside viewer and start screen */
 
 /* Prevent horizontal overflow globally */
 .cfg-root * {
@@ -56,8 +27,8 @@
   position: relative;
   width: 100%;
   height: 46vh;
-  min-height: 220px;
-  max-height: 380px;
+  min-height: 240px;
+  max-height: 440px;
   background: transparent;
 }
 
@@ -103,14 +74,31 @@
   letter-spacing: 0.02em;
 }
 
-.cfg-diamond-spinner {
-  animation: diamond-pulse 1.6s ease-in-out infinite;
-  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.4));
+/* Logo overlay inside viewer */
+.cfg-viewer-logo {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  pointer-events: none;
+}
+.cfg-viewer-logo img {
+  height: 22px;
+  width: auto;
+  opacity: 0.9;
 }
 
-@keyframes diamond-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.88); }
+/* Loading gem emoji */
+.cfg-loader-gem {
+  font-size: 52px;
+  line-height: 1;
+  animation: gem-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes gem-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
 }
 
 /* Step panel (bottom scrollable area) */
@@ -152,12 +140,19 @@
   pointer-events: none;
 }
 
+.cfg-start-logo {
+  display: block;
+  height: 26px;
+  width: auto;
+  margin: 0 auto 8px;
+}
+
 .cfg-start-hero {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 80px 28px 56px;
+  padding: 60px 28px 56px;
   gap: 0;
   position: relative;
   z-index: 1;
