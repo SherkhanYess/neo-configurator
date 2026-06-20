@@ -31,20 +31,20 @@
   overflow: hidden !important;
 }
 
-/* 3D Viewer — 1:1 square ratio */
+/* 3D Viewer — 5:4 ratio (between 1:1 and 4:3) */
 .cfg-viewer-panel {
   flex-shrink: 0;
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  max-height: 480px;
+  aspect-ratio: 5 / 4;
+  max-height: 440px;
   background: transparent;
   overflow: hidden;
 }
 
 .cfg-viewer-container {
   width: 100%;
-  height: 120%;
+  height: 100%;
 }
 
 .cfg-viewer-hint {
