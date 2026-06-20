@@ -39,72 +39,60 @@ export default function SharePage() {
     choicesRef.current = parsed;
     setChoices(parsed);
 
-    // Store sender's UTM for LeadModal to include in payload
     const senderUtm = parseSenderUtm();
     if (senderUtm) {
       try { sessionStorage.setItem('nd_sender_utm', JSON.stringify(senderUtm)); } catch (_) {}
     }
-
-    // Set recipient's own UTM to utm_term=share
     try { sessionStorage.setItem('nd_utm', JSON.stringify({ utm_term: 'share' })); } catch (_) {}
   }, []);
 
-  // Remove overlay 3.5s after iJewel is ready
+  // Remove overlay 5s after iJewel is ready (extra time to let all variations apply)
   useEffect(() => {
     if (!ijewel.isReady) return;
-    const t = setTimeout(() => setShowOverlay(false), 3500);
+    const t = setTimeout(() => setShowOverlay(false), 5000);
     return () => clearTimeout(t);
   }, [ijewel.isReady]);
 
-  // Replay shape/cast/shank/carat — trigger on shankVariations (not isReady) because
-  // getComponent('head') returns null until the ring plugin finishes mounting,
-  // which happens AFTER isReady fires. shankVariations is populated from ringRef.current.components,
-  // so non-empty means the plugin is fully ready.
-  const appliedRef = useRef(false);
-  useEffect(() => {
-    if (!ijewel.isReady || !choicesRef.current || !ijewel.shankVariations.length) return;
-    if (appliedRef.current) return; // apply only once
-    appliedRef.current = true;
-    const c = choicesRef.current;
-    const s = DIAMOND_SHAPES.find((x) => x.id === c.shape);
-    const k = CAST_DESIGNS.find((x) => x.id === c.cast);
-    if (s || k) ijewel.applyHead(s?.ijewelTag ?? null, k?.ijewelTag ?? null);
-    if (c.shank) ijewel.applyShank(c.shank);
-    if (c.carat) ijewel.applyCarat(c.carat);
-  }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Restore gem colors — only apply if exact label is found (no white fallback that would block re-apply)
+  // ── Single restore effect ──
+  // Runs every time ANY option array changes (all depend on `tick`, polled every 500ms).
+  // All apply* functions have internal dedup (lastRef) so repeated calls are safe and free.
+  // This guarantees each variation is applied as soon as its data is available,
+  // regardless of which options load first.
   useEffect(() => {
     if (!ijewel.isReady || !choicesRef.current) return;
     const c = choicesRef.current;
 
+    // Shape / cast / shank / carat — needs ring components to be ready (shankVariations.length > 0)
+    if (ijewel.shankVariations.length) {
+      const s = DIAMOND_SHAPES.find((x) => x.id === c.shape);
+      const k = CAST_DESIGNS.find((x) => x.id === c.cast);
+      if (s || k) ijewel.applyHead(s?.ijewelTag ?? null, k?.ijewelTag ?? null);
+      if (c.shank) ijewel.applyShank(c.shank);
+      if (c.carat) ijewel.applyCarat(c.carat);
+    }
+
+    // Center diamond color
     if (c.gem1Label && ijewel.gem1Options.length) {
       const match = ijewel.gem1Options.find((o) => o.label === c.gem1Label);
       if (match) ijewel.applyGem('gem1', match.uuid);
     }
+
+    // Scatter / side diamonds color
     if (c.gem2Label && ijewel.gem2Options.length) {
       const match = ijewel.gem2Options.find((o) => o.label === c.gem2Label);
       if (match) ijewel.applyGem('gem2', match.uuid);
     }
-  }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Restore shank metal + cast metal (combined gold) after options load
-  useEffect(() => {
-    if (!ijewel.isReady || !choicesRef.current) return;
-    if (!ijewel.shankMetalOptions.length) return;
-    const c = choicesRef.current;
-
-    // Shank metal
-    if (c.metalLabel) {
+    // Shank metal color
+    if (c.metalLabel && ijewel.shankMetalOptions.length) {
       const shankTarget = ijewel.shankMetalOptions.find((o) => o.label === c.metalLabel);
       if (shankTarget) ijewel.applyShankMetal(shankTarget.uuid);
     }
 
-    // Cast metal — use separate castMetalLabel if combined gold, else same as shank
+    // Cast metal color (combined gold uses separate castMetalLabel, else same as shank)
     if (ijewel.castMetalOptions.length) {
       const castLabel = c.castMetalLabel || c.metalLabel;
       if (castLabel) {
-        // Try exact match first, then first-word match
         const castTarget =
           ijewel.castMetalOptions.find((o) => o.label === castLabel) ??
           ijewel.castMetalOptions.find((o) =>
@@ -113,19 +101,23 @@ export default function SharePage() {
         if (castTarget) ijewel.applyCastMetal(castTarget.uuid);
       }
     }
-  }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+  // All four option arrays change on every 500ms poll tick → effect retries until each apply succeeds
+  }, [ // eslint-disable-line react-hooks/exhaustive-deps
+    ijewel.shankVariations,
+    ijewel.gem1Options,
+    ijewel.shankMetalOptions,
+    ijewel.castMetalOptions,
+  ]);
 
   const handleInit = useCallback((el) => { ijewel.init(el); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isColorKey = { metal: true, gem1: true, gem2: true };
-
   const lines = buildBreakdown(choices ?? {}, null);
 
   return (
     <div className="cfg-root nd-bg" style={{ position: 'relative' }}>
       <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} hidden={false} />
 
-      {/* Loading overlay while iJewel applies ring variations */}
       {showOverlay && (
         <div className="share-overlay">
           <span className="cfg-loader-gem">💎</span>
