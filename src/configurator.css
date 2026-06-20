@@ -21,14 +21,13 @@
   box-sizing: border-box;
 }
 
-/* 3D Viewer */
+/* 3D Viewer — 1:1 square ratio */
 .cfg-viewer-panel {
   flex-shrink: 0;
   position: relative;
   width: 100%;
-  height: 46vh;
-  min-height: 240px;
-  max-height: 440px;
+  aspect-ratio: 1 / 1;
+  max-height: 480px;
   background: transparent;
 }
 
@@ -84,7 +83,7 @@
   pointer-events: none;
 }
 .cfg-viewer-logo img {
-  height: 22px;
+  height: 30px;
   width: auto;
   opacity: 0.9;
 }
@@ -140,11 +139,17 @@
   pointer-events: none;
 }
 
+/* Logo on start screen — fixed at very top */
 .cfg-start-logo {
   display: block;
-  height: 26px;
+  height: 32px;
   width: auto;
-  margin: 0 auto 8px;
+  margin: 0 auto;
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
 }
 
 .cfg-start-hero {
@@ -152,7 +157,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 60px 28px 56px;
+  padding: 80px 28px 56px;
   gap: 0;
   position: relative;
   z-index: 1;
@@ -1317,7 +1322,7 @@
 
 /* ── Short viewport: shrink viewer on landscape phones ── */
 @media (max-height: 600px) {
-  .cfg-viewer-panel { max-height: 200px; min-height: 160px; }
+  .cfg-viewer-panel { max-height: 220px; aspect-ratio: auto; height: 220px; }
 }
 
 /* ── Shape card tap feedback ── */
