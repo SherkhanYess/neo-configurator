@@ -73,39 +73,45 @@ export default function SharePage() {
     if (c.carat) ijewel.applyCarat(c.carat);
   }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Restore gem colors after gem options load
+  // Restore gem colors — only apply if exact label is found (no white fallback that would block re-apply)
   useEffect(() => {
     if (!ijewel.isReady || !choicesRef.current) return;
     const c = choicesRef.current;
 
-    const findGem = (opts, label) =>
-      label
-        ? opts.find((o) => o.label === label) ?? opts.find((o) => o.label.toLowerCase().includes('бел'))
-        : opts.find((o) => o.label.toLowerCase().includes('бел'));
-
-    const w1 = findGem(ijewel.gem1Options, c.gem1Label);
-    if (w1) ijewel.applyGem('gem1', w1.uuid);
-
-    const w2 = findGem(ijewel.gem2Options, c.gem2Label);
-    if (w2) ijewel.applyGem('gem2', w2.uuid);
+    if (c.gem1Label && ijewel.gem1Options.length) {
+      const match = ijewel.gem1Options.find((o) => o.label === c.gem1Label);
+      if (match) ijewel.applyGem('gem1', match.uuid);
+    }
+    if (c.gem2Label && ijewel.gem2Options.length) {
+      const match = ijewel.gem2Options.find((o) => o.label === c.gem2Label);
+      if (match) ijewel.applyGem('gem2', match.uuid);
+    }
   }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Restore shank metal after options load
+  // Restore shank metal + cast metal (combined gold) after options load
   useEffect(() => {
     if (!ijewel.isReady || !choicesRef.current) return;
-    const label = choicesRef.current.metalLabel;
-    if (!label) return;
-    const target = ijewel.shankMetalOptions.find((o) => o.label === label);
-    if (target) {
-      ijewel.applyShankMetal(target.uuid);
-      // Sync cast metal too
-      const castTarget = ijewel.castMetalOptions.find((o) => {
-        const c1 = LABEL_COLORS[o.label];
-        const c2 = LABEL_COLORS[label];
-        if (c1 && c2 && c1 === c2) return true;
-        return o.label?.split(' ')[0]?.toLowerCase() === label?.split(' ')[0]?.toLowerCase();
-      });
-      if (castTarget) ijewel.applyCastMetal(castTarget.uuid);
+    if (!ijewel.shankMetalOptions.length) return;
+    const c = choicesRef.current;
+
+    // Shank metal
+    if (c.metalLabel) {
+      const shankTarget = ijewel.shankMetalOptions.find((o) => o.label === c.metalLabel);
+      if (shankTarget) ijewel.applyShankMetal(shankTarget.uuid);
+    }
+
+    // Cast metal — use separate castMetalLabel if combined gold, else same as shank
+    if (ijewel.castMetalOptions.length) {
+      const castLabel = c.castMetalLabel || c.metalLabel;
+      if (castLabel) {
+        // Try exact match first, then first-word match
+        const castTarget =
+          ijewel.castMetalOptions.find((o) => o.label === castLabel) ??
+          ijewel.castMetalOptions.find((o) =>
+            o.label?.split(' ')[0]?.toLowerCase() === castLabel?.split(' ')[0]?.toLowerCase()
+          );
+        if (castTarget) ijewel.applyCastMetal(castTarget.uuid);
+      }
     }
   }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 

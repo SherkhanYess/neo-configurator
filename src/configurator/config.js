@@ -107,9 +107,10 @@ export const parseConfigUrl = () => {
       shank:      data.sk ?? null,
       cast:       data.ca ?? null,
       carat:      data.ct ? Number(data.ct) : null,
-      gem1Label:  data.g1 ?? null,
-      gem2Label:  data.g2 ?? null,
-      metalLabel: data.mt ?? null,
+      gem1Label:      data.g1 ?? null,
+      gem2Label:      data.g2 ?? null,
+      metalLabel:     data.mt ?? null,
+      castMetalLabel: data.cm ?? null,
       // derive labels from IDs where possible
       shapeLabel: data.sh ? (DIAMOND_SHAPES.find(s => s.id === data.sh)?.label ?? data.sh) : null,
       shankLabel: data.sk ?? null,
@@ -125,9 +126,10 @@ export const buildShareUrl = (choices) => {
   if (choices.shank)      data.sk = choices.shank;
   if (choices.cast)       data.ca = choices.cast;
   if (choices.carat)      data.ct = choices.carat;
-  if (choices.gem1Label)  data.g1 = choices.gem1Label;
-  if (choices.gem2Label)  data.g2 = choices.gem2Label;
-  if (choices.metalLabel) data.mt = choices.metalLabel;
+  if (choices.gem1Label)      data.g1 = choices.gem1Label;
+  if (choices.gem2Label)      data.g2 = choices.gem2Label;
+  if (choices.metalLabel)     data.mt = choices.metalLabel;
+  if (choices.castMetalLabel) data.cm = choices.castMetalLabel; // combined gold cast color
 
   let suParam = '';
   try {
