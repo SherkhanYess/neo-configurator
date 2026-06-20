@@ -189,7 +189,8 @@ export default function ConfiguratorPage() {
           <pre>{JSON.stringify(ijewel.debugInfo, null, 2)}</pre>
         </div>
       )}
-      {!isStart && <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} />}
+      {/* Always mounted so iJewel starts loading immediately on page open */}
+      <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} hidden={isStart} />
       {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
 
       <div className={`cfg-panel ${isStart ? 'cfg-panel--full' : ''}`}>

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import logoWhite from '../../assets/logo/neo-diamond-logo-white.png';
 
-export function ViewerPanel({ onInit, isReady }) {
+export function ViewerPanel({ onInit, isReady, hidden }) {
   const containerRef = useRef(null);
   const initialised = useRef(false);
 
@@ -20,7 +20,7 @@ export function ViewerPanel({ onInit, isReady }) {
   }, [onInit]);
 
   return (
-    <div className="cfg-viewer-panel">
+    <div className={`cfg-viewer-panel${hidden ? ' cfg-viewer-panel--hidden' : ''}`}>
       <div ref={containerRef} className="cfg-viewer-container" />
 
       {/* Logo centered at top, over the viewer */}

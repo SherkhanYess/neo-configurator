@@ -21,6 +21,16 @@
   box-sizing: border-box;
 }
 
+/* 3D Viewer — hidden while on start screen but still mounted (preloads iJewel) */
+.cfg-viewer-panel--hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+
 /* 3D Viewer — 1:1 square ratio */
 .cfg-viewer-panel {
   flex-shrink: 0;

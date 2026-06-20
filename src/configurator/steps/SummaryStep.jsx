@@ -60,11 +60,6 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
                       : <span>{line.value}</span>)
                   : null
                 }
-                {line.price != null && (
-                  <span className="cfg-summary-price">
-                    {line.pricePrefix}{Number(line.price).toLocaleString('ru-KZ')} ₸
-                  </span>
-                )}
               </span>
               {step && (
                 <button
