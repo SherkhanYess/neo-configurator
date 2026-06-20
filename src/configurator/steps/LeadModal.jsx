@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { buildConfigUrl } from '../config.js';
+import { buildShareUrl } from '../config.js';
 import { calcPrice } from '../priceCalc.js';
 import { buildBreakdown, formatBreakdownForWA } from '../priceBreakdown.js';
 
@@ -154,7 +154,7 @@ export function LeadModal({ choices, prices: pricesProp, onClose }) {
         purity:     choices.purity,
         metalLabel: choices.metalLabel,
       },
-      configUrl: buildConfigUrl(choices),
+      configUrl: buildShareUrl(choices),
       utm: utm ?? {},
       senderUtm: senderUtm ?? {},
     };
