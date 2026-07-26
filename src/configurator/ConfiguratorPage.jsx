@@ -232,6 +232,7 @@ export default function ConfiguratorPage() {
             gem2={cfg.choices.gem2}
             gem1Options={ijewel.gem1Options}
             gem2Options={ijewel.gem2Options}
+            cast={cfg.choices.cast}
             onChooseCarat={handleCarat}
             onChooseGem1={handleGem1}
             onChooseGem2={handleGem2}

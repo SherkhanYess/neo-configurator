@@ -31,9 +31,12 @@ function ColorPicker({ options, chosen, onChoose }) {
 export function CaratStep({
   carat, gem1, gem2,
   gem1Options, gem2Options,
+  cast,
   onChooseCarat, onChooseGem1, onChooseGem2,
   onNext, onBack,
 }) {
+  // Bezel cast has no scattered diamonds
+  const hasScatter = cast !== 'bezel';
   const canNext = carat !== null && carat !== undefined;
 
   return (
@@ -63,7 +66,7 @@ export function CaratStep({
         </div>
       )}
 
-      {gem2Options?.length > 0 && (
+      {hasScatter && gem2Options?.length > 0 && (
         <div className="cfg-section">
           <div className="cfg-section-label">Цвет россыпных бриллиантов</div>
           <ColorPicker options={gem2Options} chosen={gem2} onChoose={onChooseGem2} />

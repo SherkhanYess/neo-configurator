@@ -42,7 +42,8 @@ export function calcPrice(choices, prices) {
   }
 
   // Fancy color for SCATTERED diamonds (gem2/россыпь): flat surcharge
-  if (isFancy(choices.gem2Label) && prices.scatterFancySurcharge) {
+  // Bezel cast has no scatter diamonds — skip entirely
+  if (choices.cast !== 'bezel' && isFancy(choices.gem2Label) && prices.scatterFancySurcharge) {
     total += prices.scatterFancySurcharge;
     // Halo cast also has scattered diamonds → additional flat surcharge
     if (choices.castLabel === 'Хало') {
