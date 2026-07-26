@@ -201,76 +201,52 @@ export const handler = async (event) => {
       }).catch((e) => console.warn('note failed:', e));
     }
 
-    // Send WhatsApp messages to client via Wazzup
-    const WAZZUP_KEY        = process.env.WAZZUP_API_KEY;
-    const WAZZUP_CHANNEL_ID = process.env.WAZZUP_CHANNEL_ID;
+    // Send WhatsApp message to client via Kelesu (WhatsApp Business template)
+    const KELESU_KEY        = process.env.KELESU_API_KEY;
+    const KELESU_CHANNEL_ID = process.env.KELESU_CHANNEL_ID;
 
-    if (WAZZUP_KEY && WAZZUP_CHANNEL_ID) {
-      const sendWazzup = async (text) => {
-        try {
-          const res = await fetch('https://api.wazzup24.com/v3/message', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${WAZZUP_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              channelId: WAZZUP_CHANNEL_ID,
-              chatType:  'whatsapp',
-              chatId:    phone,
-              text,
-            }),
-          });
-          const body = await res.text();
-          console.log('Wazzup:', res.status, body);
-          return { status: res.status, body };
-        } catch (e) {
-          console.warn('Wazzup error:', e);
-          return { status: null, body: String(e) };
-        }
-      };
-
-      // Use pre-formatted lines from frontend (includes prices per line)
-      const configLines = configLinesWA || [
-        config.shapeLabel && `▪️ ${config.shankLabel} - ${config.shapeLabel}`,
-        config.castLabel  && `▪️ Дизайн каста - ${config.castLabel}`,
-        config.carat      && `▪️ Каратность - ${Number(config.carat).toFixed(2)}`,
-        config.purity     && `▪️ Проба золота - ${config.purity}`,
-        config.metalLabel && `▪️ Цвет золота: ${config.metalLabel}`,
-      ].filter(Boolean).join('\n');
-
+    if (KELESU_KEY && KELESU_CHANNEL_ID) {
       const priceStr = estimatedPrice
         ? `${Number(estimatedPrice).toLocaleString('ru-KZ')} ₸`
         : 'уточняется';
 
-      // Message 1 — configuration summary
-      const msg1 = [
-        `Здравствуйте, ${name}! 👋`,
-        '',
-        'Мы — *Neo Diamond*. Ювелирная студия формата конструктор. 💎',
-        '',
-        'Поздравляем — вы собрали украшение на нашем онлайн-конструкторе со следующими характеристиками:',
-        '',
-        configLines,
-        '',
-        `💰 *Стоимость данного украшения: ${priceStr}*`,
-        '',
-        'Знайте, что всегда можно сделать украшение дешевле или дороже — в зависимости от вашего запроса.',
-        '',
-        '⏱ Стандартный срок изготовления в нашей студии — *7–14 дней*, но имеется срочное изготовление по запросу!',
-      ].join('\n');
-
-      // Message 2 — budget check
-      const msg2 = 'Как вам цена, подходит по бюджету? 😊';
-
-      // Send first message
-      const w1 = await sendWazzup(msg1);
-
-      // Wait 10 seconds, then send follow-up
-      await new Promise((resolve) => setTimeout(resolve, 10000));
-      const w2 = await sendWazzup(msg2);
-
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId, wazzup1: w1.status, wazzup2: w2.status }) };
+      // Template constructor_final_price parameters:
+      // {{1}}=name {{2}}=shape {{3}}=shank {{4}}=cast {{5}}=carat
+      // {{6}}=gem1 {{7}}=purity {{8}}=metal {{9}}=price
+      const phoneDigits = phone.replace(/^\+/, '');
+      try {
+        const res = await fetch(`https://api.kelesu.kz/api/v1/waba/channels/${KELESU_CHANNEL_ID}/templates/send-to-phone`, {
+          method: 'POST',
+          headers: {
+            'X-API-Key':    KELESU_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phone_number:  phoneDigits,
+            template_name: 'constructor_final_price',
+            components: [
+              {
+                type: 'body',
+                parameters: [
+                  { type: 'text', text: name },
+                  { type: 'text', text: config.shapeLabel || '—' },
+                  { type: 'text', text: config.shankLabel || '—' },
+                  { type: 'text', text: config.castLabel  || '—' },
+                  { type: 'text', text: config.carat ? String(config.carat) : '—' },
+                  { type: 'text', text: config.gem1Label  || '—' },
+                  { type: 'text', text: config.purity     || '—' },
+                  { type: 'text', text: config.metalLabel || '—' },
+                  { type: 'text', text: priceStr },
+                ],
+              },
+            ],
+          }),
+        });
+        const kelesuBody = await res.text();
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId, kelesu: res.status, kelesuBody }) };
+      } catch (e) {
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId, kelesuError: String(e) }) };
+      }
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId }) };
