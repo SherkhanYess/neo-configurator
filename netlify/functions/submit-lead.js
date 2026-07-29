@@ -30,10 +30,14 @@ const AMO_FIELDS = {
   timing: {
     id: 420035,
     enums: {
-      'До 5-дней':           284333,
-      'В течений 10 дней':   284335,
-      'В течений месяца':    284337,
-      'Больше месяца':       284339,
+      'До 5-дней':             284333,
+      'В течений 10 дней':     284335,
+      'В течений месяца':      284337,
+      'Больше месяца':         284339,
+      // LeadFormStep aliases
+      'В течение недели':      284333,
+      'В течение месяца':      284337,
+      'Пока присматриваюсь':   284339,
     },
   },
   // UTM_ID — field 417935 (textarea)
@@ -104,7 +108,7 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { name, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {}, senderUtm = {}, configLinesWA = '' } = body;
+  const { name, city, occasion, timing, estimatedPrice, config = {}, configUrl = '', utm = {}, senderUtm = {}, configLinesWA = '', preCapture = false } = body;
 
   // For shared leads: use sender's UTM for attribution, but mark utm_term as 'share'
   const effectiveUtm = (senderUtm?.utm_source)
@@ -199,6 +203,11 @@ export const handler = async (event) => {
         headers: amoHdrs,
         body: JSON.stringify([{ note_type: 'common', params: { text: noteText } }]),
       }).catch((e) => console.warn('note failed:', e));
+    }
+
+    // Skip WhatsApp for pre-capture leads (sent before user configures ring)
+    if (preCapture) {
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, leadId, contactId, preCapture: true }) };
     }
 
     // Send WhatsApp message to client via Kelesu (WhatsApp Business template)

@@ -37,7 +37,7 @@ const INITIAL_CHOICES = {
 };
 
 export function useConfigurator() {
-  const [currentStep, setCurrentStep] = useState(urlConfig ? 'summary' : 'start');
+  const [currentStep, setCurrentStep] = useState(urlConfig ? 'summary' : 'lead');
   const [sequence, setSequence]       = useState(urlConfig ? FULL_SEQUENCE : []);
   const [choices, setChoices]         = useState(
     urlConfig ? { ...INITIAL_CHOICES, ...urlConfig } : INITIAL_CHOICES

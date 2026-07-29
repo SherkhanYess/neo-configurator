@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useConfigurator } from './useConfigurator.js';
 import { useIjewel, LABEL_COLORS } from './useIjewel.js';
 import { DIAMOND_SHAPES, CAST_DESIGNS } from './config.js';
+import { calcPrice, formatPrice } from './priceCalc.js';
 import { ViewerPanel } from './components/ViewerPanel.jsx';
 import { ProgressBar } from './components/ProgressBar.jsx';
-import { StartStep } from './steps/StartStep.jsx';
+import { LeadFormStep } from './steps/LeadFormStep.jsx';
 import { DiamondShapeStep } from './steps/DiamondShapeStep.jsx';
 import { ShankDesignStep } from './steps/ShankDesignStep.jsx';
 import { CastDesignStep } from './steps/CastDesignStep.jsx';
@@ -15,6 +16,12 @@ import { SummaryStep } from './steps/SummaryStep.jsx';
 export default function ConfiguratorPage() {
   const cfg    = useConfigurator();
   const ijewel = useIjewel();
+  const [prices, setPrices] = useState(null);
+
+  // Load prices once on mount
+  useEffect(() => {
+    fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
+  }, []);
 
   // Stable refs so handlers always read fresh values without stale closures
   const choicesRef = useRef(cfg.choices);
@@ -41,47 +48,41 @@ export default function ConfiguratorPage() {
   }, [ijewel.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Restore gem colors from URL label OR apply white default
-  // Fires when gem1Options first populate (after viewer ready)
   useEffect(() => {
     if (!ijewel.isReady || choicesRef.current.gem1) return;
     const c = choicesRef.current;
-
-    // If label came from URL — find matching option; otherwise fall back to white
     const findGem = (opts, label) =>
       label
         ? opts.find((o) => o.label === label) ?? opts.find((o) => o.label.toLowerCase().includes('бел'))
         : opts.find((o) => o.label.toLowerCase().includes('бел'));
-
     const w1 = findGem(ijewel.gem1Options, c.gem1Label);
     if (w1) { cfg.choose('gem1', w1.uuid, 'gem1Label', w1.label); ijewel.applyGem('gem1', w1.uuid); }
-
     const w2 = findGem(ijewel.gem2Options, c.gem2Label);
     if (w2) { cfg.choose('gem2', w2.uuid, 'gem2Label', w2.label); ijewel.applyGem('gem2', w2.uuid); }
   }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Restore shank metal from URL label OR skip (no default — user must choose)
+  // Restore shank metal from URL label
   useEffect(() => {
     if (!ijewel.isReady || choicesRef.current.metal) return;
     const label = choicesRef.current.metalLabel;
-    if (!label) return; // no URL label — leave as iJewel default
+    if (!label) return;
     const target = ijewel.shankMetalOptions.find((o) => o.label === label);
     if (target) {
       cfg.choose('metal', target.uuid, 'metalLabel', target.label);
       ijewel.applyShankMetal(target.uuid);
-      // sync cast too
       const castUuid = castUuidByLabel(target.label);
       if (castUuid) ijewel.applyCastMetal(castUuid);
     }
   }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Default white cast — only when there's no URL config at all
+  // Default white cast
   useEffect(() => {
     if (!ijewel.isReady || choicesRef.current.metal || choicesRef.current.metalLabel) return;
     const white = ijewel.castMetalOptions.find((o) => o.label.toLowerCase().includes('бел'));
     if (white) ijewel.applyCastMetal(white.uuid);
   }, [ijewel.castMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // --- Handlers: call iJewel immediately (same tick as setState) ---
+  // --- Handlers ---
 
   const handleShape = useCallback((s) => {
     cfg.choose('shape', s.id, 'shapeLabel', s.label);
@@ -93,16 +94,13 @@ export default function ConfiguratorPage() {
     cfg.choose('cast', c.id, 'castLabel', c.label);
     const s = DIAMOND_SHAPES.find((x) => x.id === choicesRef.current.shape);
     ijewel.applyHead(s?.ijewelTag ?? null, c.ijewelTag);
-
-    // Auto-select Bezel shank when choosing bezel cast
     if (c.id === 'bezel') {
       if (choicesRef.current.shank !== 'Bezel') {
-        prevShankRef.current = choicesRef.current.shank; // remember previous
+        prevShankRef.current = choicesRef.current.shank;
       }
       cfg.choose('shank', 'Bezel', 'shankLabel', 'Bezel');
       ijewel.applyShank('Bezel');
     } else if (choicesRef.current.cast === 'bezel') {
-      // Switching away from bezel — restore previous shank
       const restored = prevShankRef.current;
       prevShankRef.current = null;
       if (restored) {
@@ -132,17 +130,12 @@ export default function ConfiguratorPage() {
     ijewel.applyGem('gem2', uuid);
   }, [cfg, ijewel]);
 
-  // Find cast UUID that matches shank color (labels differ: "Белое золото" vs "Белое")
-  // Match by shared hex color value from LABEL_COLORS, or by first word
   const castUuidByLabel = useCallback((shankLabel) => {
     const shankColor = LABEL_COLORS[shankLabel];
-    // Try exact label match first
     let match = ijewel.castMetalOptions.find((o) => o.label === shankLabel);
-    // Try color hex match
     if (!match && shankColor) {
       match = ijewel.castMetalOptions.find((o) => LABEL_COLORS[o.label] === shankColor);
     }
-    // Try first-word match ("Белое золото" → "Белое")
     if (!match) {
       const firstWord = shankLabel?.split(' ')[0]?.toLowerCase();
       match = ijewel.castMetalOptions.find((o) =>
@@ -164,7 +157,6 @@ export default function ConfiguratorPage() {
   const handleToggleCombined = useCallback((checked) => {
     cfg.choose('combinedGold', checked);
     if (!checked) {
-      // Sync cast back to shank color
       const label = choicesRef.current.metalLabel;
       const castUuid = label ? castUuidByLabel(label) : null;
       if (castUuid) ijewel.applyCastMetal(castUuid);
@@ -178,8 +170,12 @@ export default function ConfiguratorPage() {
 
   const handleInit = useCallback((el) => { ijewel.init(el); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isStart   = cfg.currentStep === 'start';
+  const isLead    = cfg.currentStep === 'lead';
   const isSummary = cfg.currentStep === 'summary';
+
+  // Live price badge — shown during config steps only
+  const showPriceBadge = !isLead && !isSummary;
+  const livePrice = showPriceBadge ? calcPrice(cfg.choices, prices) : null;
 
   return (
     <div className="cfg-root nd-bg">
@@ -189,12 +185,12 @@ export default function ConfiguratorPage() {
           <pre>{JSON.stringify(ijewel.debugInfo, null, 2)}</pre>
         </div>
       )}
-      {/* Always mounted so iJewel starts loading immediately on page open */}
-      <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} hidden={isStart} />
-      {!isStart && !isSummary && <ProgressBar value={cfg.progress} />}
+      {/* Always mounted so iJewel starts loading immediately */}
+      <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} hidden={isLead} />
+      {!isLead && !isSummary && <ProgressBar value={cfg.progress} />}
 
-      <div className={`cfg-panel ${isStart ? 'cfg-panel--full' : ''}`}>
-        {cfg.currentStep === 'start' && <StartStep onStart={cfg.start} />}
+      <div className={`cfg-panel ${isLead ? 'cfg-panel--full' : ''}`}>
+        {cfg.currentStep === 'lead' && <LeadFormStep onStart={cfg.start} />}
 
         {cfg.currentStep === 'diamond' && (
           <DiamondShapeStep
@@ -264,6 +260,14 @@ export default function ConfiguratorPage() {
             sequence={cfg.sequence}
             onGoTo={cfg.goToStep}
           />
+        )}
+
+        {/* Live price badge — sticky above bottom */}
+        {showPriceBadge && livePrice && (
+          <div className="cfg-price-badge">
+            <span className="cfg-price-badge-label">Стоимость от</span>
+            <span className="cfg-price-badge-value">{formatPrice(livePrice)}</span>
+          </div>
         )}
       </div>
     </div>

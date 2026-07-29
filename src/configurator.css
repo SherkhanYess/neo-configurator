@@ -1408,3 +1408,295 @@
   background: rgba(255, 255, 255, 0.04);
 }
 .cfg-share-btn:active { transform: scale(0.98); }
+
+/* ── Lead Form Step (replaces StartStep) ── */
+.cfg-lead {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  padding: 0 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cfg-lead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cfg-lead-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: 52px 0 48px;
+}
+
+.cfg-lead-logo {
+  margin-bottom: 40px;
+}
+.cfg-lead-logo img {
+  height: 26px;
+  width: auto;
+  opacity: 0.9;
+}
+
+.cfg-lead-title {
+  font-family: var(--font-display);
+  font-weight: var(--fw-light);
+  font-size: clamp(2rem, 9vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+}
+
+.cfg-lead-sub {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 40px;
+  max-width: 320px;
+}
+
+.cfg-lead-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.cfg-lead-input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  padding: 16px 18px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+}
+.cfg-lead-input:focus {
+  border-color: rgba(255,255,255,0.36);
+  background: rgba(255,255,255,0.10);
+}
+.cfg-lead-input::placeholder { color: var(--text-tertiary); }
+
+.cfg-lead-phone-row {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  transition: border-color 0.2s, background 0.2s;
+  overflow: hidden;
+}
+.cfg-lead-phone-row:focus-within {
+  border-color: rgba(255,255,255,0.36);
+  background: rgba(255,255,255,0.10);
+}
+
+.cfg-lead-dial {
+  padding: 16px 0 16px 18px;
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.cfg-lead-phone-input {
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding-left: 6px !important;
+}
+.cfg-lead-phone-input:focus { border-color: transparent !important; background: transparent !important; }
+
+.cfg-lead-timing-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+.cfg-lead-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cfg-lead-pill {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.cfg-lead-pill:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.28);
+}
+.cfg-lead-pill:active { transform: scale(0.95); }
+.cfg-lead-pill.is-active {
+  background: rgba(11,32,64,0.85);
+  border-color: rgba(255,255,255,0.5);
+  color: #fff;
+  font-weight: 600;
+}
+
+.cfg-lead-submit {
+  appearance: none;
+  -webkit-appearance: none;
+  margin-top: 32px;
+  width: 100%;
+  height: 58px;
+  border: none;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--nd-ink-800, #0B2040);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 8px 32px rgba(255,255,255,0.18);
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: -0.01em;
+}
+.cfg-lead-submit:not(:disabled):hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(255,255,255,0.24);
+}
+.cfg-lead-submit:not(:disabled):active { transform: scale(0.97); }
+.cfg-lead-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Live price badge ── */
+.cfg-price-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  margin-top: 12px;
+  background: rgba(11, 32, 64, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  position: sticky;
+  bottom: 16px;
+}
+
+.cfg-price-badge-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+}
+
+.cfg-price-badge-value {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ── Summary: final price hero ── */
+.cfg-summary-price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 20px;
+  text-align: center;
+}
+
+.cfg-summary-price-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.cfg-summary-price-value {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(1.75rem, 7vw, 2.25rem);
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ── Summary: WA action buttons ── */
+.cfg-summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cfg-wa-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 56px;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 160ms var(--ease-out, ease), opacity 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: -0.01em;
+}
+.cfg-wa-cta:active { transform: scale(0.97); }
+
+.cfg-wa-cta--primary {
+  background: #0B2040;
+  color: #ffffff;
+  box-shadow: 0 6px 24px rgba(11,32,64,0.45);
+}
+.cfg-wa-cta--primary:hover { opacity: 0.88; }
+
+.cfg-wa-cta--secondary {
+  background: transparent;
+  color: rgba(255,255,255,0.80);
+  border: 1.5px solid rgba(255,255,255,0.22);
+}
+.cfg-wa-cta--secondary:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.40);
+}
