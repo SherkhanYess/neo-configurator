@@ -37,10 +37,11 @@ const INITIAL_CHOICES = {
 };
 
 export function useConfigurator() {
-  const [currentStep, setCurrentStep] = useState(urlConfig ? 'summary' : 'lead');
-  const [sequence, setSequence]       = useState(urlConfig ? FULL_SEQUENCE : []);
+  const defaultSeq = buildSequence('diamond');
+  const [currentStep, setCurrentStep] = useState(urlConfig ? 'summary' : defaultSeq[0]);
+  const [sequence, setSequence]       = useState(urlConfig ? FULL_SEQUENCE : defaultSeq);
   const [choices, setChoices]         = useState(
-    urlConfig ? { ...INITIAL_CHOICES, ...urlConfig } : INITIAL_CHOICES
+    urlConfig ? { ...INITIAL_CHOICES, ...urlConfig } : { ...INITIAL_CHOICES, startPath: 'diamond' }
   );
 
   const choose = useCallback((key, value, labelKey, labelValue) => {
@@ -65,12 +66,8 @@ export function useConfigurator() {
 
   const back = useCallback(() => {
     const idx = sequence.indexOf(currentStep);
-    if (idx > 0) {
-      setCurrentStep(sequence[idx - 1]);
-    } else {
-      setCurrentStep('start');
-      setSequence([]);
-    }
+    if (idx > 0) setCurrentStep(sequence[idx - 1]);
+    // at first step — caller handles navigation (e.g. go to landing)
   }, [currentStep, sequence]);
 
   const goToStep = useCallback((stepId) => {

@@ -4,8 +4,7 @@ import { useIjewel, LABEL_COLORS } from './useIjewel.js';
 import { DIAMOND_SHAPES, CAST_DESIGNS } from './config.js';
 import { calcPrice, formatPrice } from './priceCalc.js';
 import { ViewerPanel } from './components/ViewerPanel.jsx';
-import { ProgressBar } from './components/ProgressBar.jsx';
-import { LeadFormStep } from './steps/LeadFormStep.jsx';
+import { StepRail } from './components/StepRail.jsx';
 import { DiamondShapeStep } from './steps/DiamondShapeStep.jsx';
 import { ShankDesignStep } from './steps/ShankDesignStep.jsx';
 import { CastDesignStep } from './steps/CastDesignStep.jsx';
@@ -13,21 +12,19 @@ import { CaratStep } from './steps/CaratStep.jsx';
 import { MetalStep } from './steps/MetalStep.jsx';
 import { SummaryStep } from './steps/SummaryStep.jsx';
 
+const LANDING_URL = 'https://neodiamond.kz';
+
 export default function ConfiguratorPage() {
   const cfg    = useConfigurator();
   const ijewel = useIjewel();
   const [prices, setPrices] = useState(null);
 
-  // Load prices once on mount
   useEffect(() => {
     fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
   }, []);
 
-  // Stable refs so handlers always read fresh values without stale closures
-  const choicesRef = useRef(cfg.choices);
+  const choicesRef   = useRef(cfg.choices);
   choicesRef.current = cfg.choices;
-
-  // Remember non-Bezel shank to restore when switching away from bezel cast
   const prevShankRef = useRef(null);
 
   // Replay all choices into iJewel once it becomes ready
@@ -47,7 +44,6 @@ export default function ConfiguratorPage() {
     }
   }, [ijewel.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Restore gem colors from URL label OR apply white default
   useEffect(() => {
     if (!ijewel.isReady || choicesRef.current.gem1) return;
     const c = choicesRef.current;
@@ -61,7 +57,6 @@ export default function ConfiguratorPage() {
     if (w2) { cfg.choose('gem2', w2.uuid, 'gem2Label', w2.label); ijewel.applyGem('gem2', w2.uuid); }
   }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Restore shank metal from URL label
   useEffect(() => {
     if (!ijewel.isReady || choicesRef.current.metal) return;
     const label = choicesRef.current.metalLabel;
@@ -75,7 +70,6 @@ export default function ConfiguratorPage() {
     }
   }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Default white cast
   useEffect(() => {
     if (!ijewel.isReady || choicesRef.current.metal || choicesRef.current.metalLabel) return;
     const white = ijewel.castMetalOptions.find((o) => o.label.toLowerCase().includes('бел'));
@@ -95,18 +89,13 @@ export default function ConfiguratorPage() {
     const s = DIAMOND_SHAPES.find((x) => x.id === choicesRef.current.shape);
     ijewel.applyHead(s?.ijewelTag ?? null, c.ijewelTag);
     if (c.id === 'bezel') {
-      if (choicesRef.current.shank !== 'Bezel') {
-        prevShankRef.current = choicesRef.current.shank;
-      }
+      if (choicesRef.current.shank !== 'Bezel') prevShankRef.current = choicesRef.current.shank;
       cfg.choose('shank', 'Bezel', 'shankLabel', 'Bezel');
       ijewel.applyShank('Bezel');
     } else if (choicesRef.current.cast === 'bezel') {
       const restored = prevShankRef.current;
       prevShankRef.current = null;
-      if (restored) {
-        cfg.choose('shank', restored, 'shankLabel', restored);
-        ijewel.applyShank(restored);
-      }
+      if (restored) { cfg.choose('shank', restored, 'shankLabel', restored); ijewel.applyShank(restored); }
     }
   }, [cfg, ijewel]);
 
@@ -115,32 +104,17 @@ export default function ConfiguratorPage() {
     ijewel.applyShank(s.id);
   }, [cfg, ijewel]);
 
-  const handleCarat = useCallback((v) => {
-    cfg.choose('carat', v);
-    ijewel.applyCarat(v);
-  }, [cfg, ijewel]);
-
-  const handleGem1 = useCallback((uuid, label) => {
-    cfg.choose('gem1', uuid, 'gem1Label', label);
-    ijewel.applyGem('gem1', uuid);
-  }, [cfg, ijewel]);
-
-  const handleGem2 = useCallback((uuid, label) => {
-    cfg.choose('gem2', uuid, 'gem2Label', label);
-    ijewel.applyGem('gem2', uuid);
-  }, [cfg, ijewel]);
+  const handleCarat  = useCallback((v)        => { cfg.choose('carat', v); ijewel.applyCarat(v); },                [cfg, ijewel]);
+  const handleGem1   = useCallback((uuid, lbl) => { cfg.choose('gem1', uuid, 'gem1Label', lbl); ijewel.applyGem('gem1', uuid); }, [cfg, ijewel]);
+  const handleGem2   = useCallback((uuid, lbl) => { cfg.choose('gem2', uuid, 'gem2Label', lbl); ijewel.applyGem('gem2', uuid); }, [cfg, ijewel]);
 
   const castUuidByLabel = useCallback((shankLabel) => {
     const shankColor = LABEL_COLORS[shankLabel];
     let match = ijewel.castMetalOptions.find((o) => o.label === shankLabel);
-    if (!match && shankColor) {
-      match = ijewel.castMetalOptions.find((o) => LABEL_COLORS[o.label] === shankColor);
-    }
+    if (!match && shankColor) match = ijewel.castMetalOptions.find((o) => LABEL_COLORS[o.label] === shankColor);
     if (!match) {
       const firstWord = shankLabel?.split(' ')[0]?.toLowerCase();
-      match = ijewel.castMetalOptions.find((o) =>
-        o.label?.toLowerCase().startsWith(firstWord)
-      );
+      match = ijewel.castMetalOptions.find((o) => o.label?.toLowerCase().startsWith(firstWord));
     }
     return match?.uuid ?? null;
   }, [ijewel.castMetalOptions]);
@@ -157,8 +131,7 @@ export default function ConfiguratorPage() {
   const handleToggleCombined = useCallback((checked) => {
     cfg.choose('combinedGold', checked);
     if (!checked) {
-      const label = choicesRef.current.metalLabel;
-      const castUuid = label ? castUuidByLabel(label) : null;
+      const castUuid = castUuidByLabel(choicesRef.current.metalLabel);
       if (castUuid) ijewel.applyCastMetal(castUuid);
     }
   }, [cfg, ijewel, castUuidByLabel]);
@@ -170,11 +143,20 @@ export default function ConfiguratorPage() {
 
   const handleInit = useCallback((el) => { ijewel.init(el); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const isLead    = cfg.currentStep === 'lead';
+  // Back: at first step go to landing; otherwise go to previous step
+  const handleBack = useCallback(() => {
+    const idx = cfg.sequence.indexOf(cfg.currentStep);
+    if (idx <= 0) {
+      window.location.href = LANDING_URL;
+    } else {
+      cfg.back();
+    }
+  }, [cfg]);
+
   const isSummary = cfg.currentStep === 'summary';
 
-  // Live price badge — shown during config steps only
-  const showPriceBadge = !isLead && !isSummary;
+  // Live price badge during config steps
+  const showPriceBadge = !isSummary;
   const livePrice = showPriceBadge ? calcPrice(cfg.choices, prices) : null;
 
   return (
@@ -185,19 +167,26 @@ export default function ConfiguratorPage() {
           <pre>{JSON.stringify(ijewel.debugInfo, null, 2)}</pre>
         </div>
       )}
-      {/* Always mounted so iJewel starts loading immediately */}
-      <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} hidden={isLead} />
-      {!isLead && !isSummary && <ProgressBar value={cfg.progress} />}
 
-      <div className={`cfg-panel ${isLead ? 'cfg-panel--full' : ''}`}>
-        {cfg.currentStep === 'lead' && <LeadFormStep onStart={cfg.start} />}
+      <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} />
 
+      {/* Step rail — shown on all config steps */}
+      {!isSummary && (
+        <StepRail
+          sequence={cfg.sequence}
+          currentStep={cfg.currentStep}
+          onGoTo={cfg.goToStep}
+        />
+      )}
+
+      {/* Light panel for controls */}
+      <div className="cfg-panel cfg-panel--light">
         {cfg.currentStep === 'diamond' && (
           <DiamondShapeStep
             chosen={cfg.choices.shape}
             onChoose={handleShape}
             onNext={cfg.next}
-            onBack={cfg.back}
+            onBack={handleBack}
           />
         )}
 
@@ -206,7 +195,7 @@ export default function ConfiguratorPage() {
             chosen={cfg.choices.shank}
             onChoose={handleShank}
             onNext={cfg.next}
-            onBack={cfg.back}
+            onBack={handleBack}
             variations={ijewel.shankVariations}
             castChosen={cfg.choices.cast}
           />
@@ -217,7 +206,7 @@ export default function ConfiguratorPage() {
             chosen={cfg.choices.cast}
             onChoose={handleCast}
             onNext={cfg.next}
-            onBack={cfg.back}
+            onBack={handleBack}
           />
         )}
 
@@ -233,7 +222,7 @@ export default function ConfiguratorPage() {
             onChooseGem1={handleGem1}
             onChooseGem2={handleGem2}
             onNext={cfg.next}
-            onBack={cfg.back}
+            onBack={handleBack}
           />
         )}
 
@@ -250,7 +239,7 @@ export default function ConfiguratorPage() {
             onToggleCombined={handleToggleCombined}
             onChooseCastMetal={handleCastMetal}
             onNext={cfg.next}
-            onBack={cfg.back}
+            onBack={handleBack}
           />
         )}
 
@@ -262,7 +251,7 @@ export default function ConfiguratorPage() {
           />
         )}
 
-        {/* Live price badge — sticky above bottom */}
+        {/* Live price badge */}
         {showPriceBadge && livePrice && (
           <div className="cfg-price-badge">
             <span className="cfg-price-badge-label">Стоимость от</span>
