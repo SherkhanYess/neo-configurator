@@ -26,8 +26,18 @@ function WhatsAppIcon() {
   );
 }
 
-export function SummaryStep({ choices, sequence, onGoTo }) {
+function notifyLeadContacted(leadId) {
+  if (!leadId) return;
+  fetch('/api/update-lead', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ leadId: Number(leadId), stageId: 83826166, note: '📱 Клиент нажал на WhatsApp на странице итога' }),
+  }).catch(() => {});
+}
+
+export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
   const [prices, setPrices] = useState(null);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
@@ -37,11 +47,7 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
   const shareUrl   = buildShareUrl(choices);
 
   const waAppt = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    `Здравствуйте! Хочу записаться на живую примерку. Моё кольцо: ${shareUrl}`
-  )}`;
-
-  const waSave = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    `Хочу сохранить моё кольцо: ${shareUrl}`
+    `Здравствуйте, собрал(-а) украшение на конструкторе, хочу узнать подробности и на живой показ!`
   )}`;
 
   const lines = buildBreakdown(choices, prices);
@@ -58,6 +64,15 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
 
   const isColorKey = { metal: true, gem1: true, gem2: true };
 
+  function handleShare() {
+    if (navigator.share) {
+      navigator.share({ title: 'Моё украшение Neo Diamond', url: shareUrl }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(shareUrl).then(() => setShared(true)).catch(() => {});
+      setTimeout(() => setShared(false), 2500);
+    }
+  }
+
   return (
     <div className="cfg-step-content cfg-summary">
 
@@ -69,15 +84,16 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
         </div>
       )}
 
-      {/* WhatsApp CTAs */}
+      {/* WhatsApp CTA */}
       <div className="cfg-summary-actions">
-        <a className="cfg-wa-cta cfg-wa-cta--primary" href={waAppt} target="_blank" rel="noopener noreferrer">
+        <p className="cfg-summary-wa-pitch">
+          Перейдя на WhatsApp вам ответит ваш персональный менеджер. Вы сможете{' '}
+          <u>записаться на живой показ</u> или <u>задать свои вопросы</u>.
+        </p>
+        <a className="cfg-wa-cta cfg-wa-cta--primary" href={waAppt} target="_blank" rel="noopener noreferrer"
+           onClick={() => notifyLeadContacted(leadId)}>
           <WhatsAppIcon />
-          Записаться на живую примерку
-        </a>
-        <a className="cfg-wa-cta cfg-wa-cta--secondary" href={waSave} target="_blank" rel="noopener noreferrer">
-          <WhatsAppIcon />
-          Сохранить украшение
+          Перейти на WhatsApp
         </a>
       </div>
 
@@ -115,6 +131,24 @@ export function SummaryStep({ choices, sequence, onGoTo }) {
             </div>
           );
         })}
+      </div>
+
+      {/* Bottom actions */}
+      <div className="cfg-summary-bottom">
+        <button
+          type="button"
+          className="cfg-summary-rebuild"
+          onClick={() => onGoTo(sequence[0])}
+        >
+          ↩ Пересобрать украшение
+        </button>
+        <button
+          type="button"
+          className="cfg-summary-share"
+          onClick={handleShare}
+        >
+          {shared ? '✓ Ссылка скопирована' : '⤴ Сохранить / поделиться украшением'}
+        </button>
       </div>
     </div>
   );

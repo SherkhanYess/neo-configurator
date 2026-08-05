@@ -19,7 +19,7 @@ export const DIAMOND_SHAPES = [
 
 export const CAST_DESIGNS = [
   { id: 'classic', label: 'Классика', sub: 'Крапаны', ijewelTag: 'cast: classic' },
-  { id: 'halo',    label: 'Хало',     sub: 'Ореол',   ijewelTag: 'cast: halo' },
+  { id: 'halo',    label: 'Ореол',    sub: 'Ореол',   ijewelTag: 'cast: halo' },
   { id: 'bezel',   label: 'Безель',   sub: 'Ободок',  ijewelTag: 'cast: bezel' },
 ];
 

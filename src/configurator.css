@@ -502,6 +502,15 @@
   color: var(--text-tertiary);
 }
 
+.cfg-cast-price {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  letter-spacing: 0;
+}
+.is-selected .cfg-cast-price { color: inherit; opacity: 0.85; }
+
 /* Section label */
 .cfg-section {
   display: flex;
@@ -525,6 +534,13 @@
   text-transform: uppercase;
   color: var(--text-tertiary);
   opacity: 0.7;
+}
+
+/* Carat + color sections wrapper — tighter spacing than the default step gap */
+.cfg-carat-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* Carat buttons */
@@ -716,6 +732,102 @@
   color: var(--text-tertiary);
 }
 
+.cfg-opt-price {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+.is-selected .cfg-opt-price { color: inherit; opacity: 0.7; }
+
+.cfg-section-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cfg-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.cfg-info-btn:hover { color: var(--text-secondary); }
+.cfg-info-btn-text { text-decoration: underline; text-underline-offset: 2px; }
+
+.cfg-info-btn--sub {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.cfg-info-box {
+  background: rgba(11,32,64,.05);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.cfg-info-box p { margin: 0 0 6px; }
+.cfg-info-box p:last-child { margin-bottom: 0; }
+.cfg-info-box ul { margin: 4px 0 0 0; padding-left: 16px; }
+.cfg-info-box li { margin-bottom: 4px; }
+.cfg-info-example { font-size: 0.72rem; opacity: 0.75; }
+
+.cfg-summary-wa-pitch {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.cfg-summary-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.cfg-summary-rebuild,
+.cfg-summary-share {
+  width: 100%;
+  height: 54px;
+  padding: 0 22px;
+  border-radius: var(--radius-xl, 27px);
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+.cfg-summary-rebuild:hover,
+.cfg-summary-share:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.26);
+  color: var(--text-primary);
+}
+.cfg-summary-rebuild:active,
+.cfg-summary-share:active {
+  transform: scale(0.97);
+}
+
 /* Step actions bar */
 .cfg-step-actions {
   display: flex;
@@ -879,8 +991,8 @@
 /* Color picker (gems + metals) */
 .cfg-color-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
 }
 
 .cfg-color-btn {
@@ -928,9 +1040,8 @@
   color: rgba(255,255,255,0.55);
   text-align: center;
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
   max-width: 100%;
 }
 
@@ -1039,37 +1150,6 @@
   font-weight: 500;
   color: var(--text-secondary);
   font-family: var(--font-mono, monospace);
-}
-
-/* ── Price Block ── */
-.cfg-price-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin: 0 0 20px;
-  padding: 18px 20px;
-  background: rgba(201,168,76,0.08);
-  border: 1px solid rgba(201,168,76,0.25);
-  border-radius: 16px;
-  text-align: center;
-}
-.cfg-price-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--nd-gold, #C9A84C);
-}
-.cfg-price-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-}
-.cfg-price-note {
-  font-size: 11px;
-  color: var(--text-tertiary);
 }
 
 /* ── Lead Modal Overlay ── */
@@ -1384,6 +1464,35 @@
   pointer-events: none;
 }
 
+/* Share page price block */
+.share-price-block {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(196,161,119,0.08);
+  border: 1px solid rgba(196,161,119,0.3);
+  border-radius: 16px;
+  margin-bottom: 4px;
+}
+.share-price-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9C7B45;
+  white-space: nowrap;
+}
+.share-price-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 22px;
+  font-weight: 700;
+  color: #0B2040;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
 /* Share button on SummaryStep */
 .cfg-share-btn {
   display: flex;
@@ -1409,225 +1518,37 @@
 }
 .cfg-share-btn:active { transform: scale(0.98); }
 
-/* ── Lead Form Step (replaces StartStep) ── */
-.cfg-lead {
+
+/* ── Price inside StepRail (right-aligned gold badge) ── */
+.cfg-step-rail-price {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
-  background: var(--bg-gradient);
-  background-attachment: fixed;
-  padding: 0 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-.cfg-lead::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 24px 24px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.cfg-lead-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-  padding: 52px 0 48px;
-}
-
-.cfg-lead-logo {
-  margin-bottom: 40px;
-}
-.cfg-lead-logo img {
-  height: 26px;
-  width: auto;
-  opacity: 0.9;
-}
-
-.cfg-lead-title {
-  font-family: var(--font-display);
-  font-weight: var(--fw-light);
-  font-size: clamp(2rem, 9vw, 2.75rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
-  margin: 0 0 12px;
-}
-
-.cfg-lead-sub {
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin: 0 0 40px;
-  max-width: 320px;
-}
-
-.cfg-lead-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  flex: 1;
-}
-
-.cfg-lead-input {
-  width: 100%;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 16px;
-  padding: 16px 18px;
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 16px;
-  outline: none;
-  transition: border-color 0.2s, background 0.2s;
-  -webkit-appearance: none;
-}
-.cfg-lead-input:focus {
-  border-color: rgba(255,255,255,0.36);
-  background: rgba(255,255,255,0.10);
-}
-.cfg-lead-input::placeholder { color: var(--text-tertiary); }
-
-.cfg-lead-phone-row {
-  display: flex;
-  align-items: center;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 16px;
-  transition: border-color 0.2s, background 0.2s;
-  overflow: hidden;
-}
-.cfg-lead-phone-row:focus-within {
-  border-color: rgba(255,255,255,0.36);
-  background: rgba(255,255,255,0.10);
-}
-
-.cfg-lead-dial {
-  padding: 16px 0 16px 18px;
-  font-size: 16px;
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  white-space: nowrap;
+  align-items: flex-end;
+  justify-content: center;
+  margin-left: auto;
+  padding: 6px 16px 6px 12px;
   flex-shrink: 0;
-  user-select: none;
+  gap: 2px;
+  border-left: 1px solid rgba(196,161,119,0.25);
 }
 
-.cfg-lead-phone-input {
-  border: none !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  padding-left: 6px !important;
-}
-.cfg-lead-phone-input:focus { border-color: transparent !important; background: transparent !important; }
-
-.cfg-lead-timing-label {
-  font-size: 11px;
-  font-weight: 600;
+.cfg-step-rail-price-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin-top: 4px;
-}
-
-.cfg-lead-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.cfg-lead-pill {
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 12px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.05);
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  color: rgba(196,161,119,0.6);
   white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-.cfg-lead-pill:hover {
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.28);
-}
-.cfg-lead-pill:active { transform: scale(0.95); }
-.cfg-lead-pill.is-active {
-  background: rgba(11,32,64,0.85);
-  border-color: rgba(255,255,255,0.5);
-  color: #fff;
-  font-weight: 600;
 }
 
-.cfg-lead-submit {
-  appearance: none;
-  -webkit-appearance: none;
-  margin-top: 32px;
-  width: 100%;
-  height: 58px;
-  border: none;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--nd-ink-800, #0B2040);
-  font-family: var(--font-sans);
-  font-size: var(--text-md);
+.cfg-step-rail-price-value {
+  font-family: var(--font-mono, monospace);
+  font-size: 16px;
   font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 8px 32px rgba(255,255,255,0.18);
-  -webkit-tap-highlight-color: transparent;
-  letter-spacing: -0.01em;
-}
-.cfg-lead-submit:not(:disabled):hover {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  box-shadow: 0 12px 40px rgba(255,255,255,0.24);
-}
-.cfg-lead-submit:not(:disabled):active { transform: scale(0.97); }
-.cfg-lead-submit:disabled { opacity: 0.45; cursor: not-allowed; }
-
-/* ── Live price badge ── */
-.cfg-price-badge {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 20px;
-  margin-top: 12px;
-  background: rgba(11, 32, 64, 0.72);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 16px;
-  position: sticky;
-  bottom: 16px;
-}
-
-.cfg-price-badge-label {
-  font-family: var(--font-mono, monospace);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.55);
+  color: #C4A177;
   white-space: nowrap;
-}
-
-.cfg-price-badge-value {
-  font-family: var(--font-mono, monospace);
-  font-size: var(--text-lg);
-  font-weight: 500;
-  color: #fff;
-  white-space: nowrap;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 20px rgba(196,161,119,0.4);
 }
 
 /* ── Summary: final price hero ── */
@@ -1706,20 +1627,29 @@
    ════════════════════════════════════════════ */
 .cfg-step-rail {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   /* subtle dark strip between viewer and light panel */
-  background: rgba(7, 22, 48, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(7, 22, 48, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   flex-shrink: 0;
 }
-.cfg-step-rail::-webkit-scrollbar { display: none; }
+
+.cfg-step-rail-steps {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 8px 0 16px;
+}
+.cfg-step-rail-steps::-webkit-scrollbar { display: none; }
 
 .cfg-step-rail-item {
   appearance: none;
@@ -1862,6 +1792,7 @@
 .cfg-panel--light .cfg-cast-card.is-selected .cfg-cast-icon { color: #0B2040; }
 .cfg-panel--light .cfg-cast-label { color: #0B2040; }
 .cfg-panel--light .cfg-cast-sub   { color: #7A90A8; }
+.cfg-panel--light .cfg-cast-price { color: #0B2040; }
 
 /* ── Carat pills (light) ── */
 .cfg-panel--light .cfg-carat-btn {
@@ -1956,6 +1887,22 @@
 }
 .cfg-panel--light .cfg-purity-value { color: #0B2040; }
 .cfg-panel--light .cfg-purity-sub   { color: #7A90A8; }
+.cfg-panel--light .cfg-opt-price    { color: #7A90A8; }
+.cfg-panel--light .cfg-info-btn    { color: #7A90A8; }
+.cfg-panel--light .cfg-info-box    { background: rgba(11,32,64,.06); color: #3A5068; }
+.cfg-panel--light .cfg-summary-wa-pitch { color: #3A5068; }
+.cfg-panel--light .cfg-summary-rebuild,
+.cfg-panel--light .cfg-summary-share {
+  border-color: rgba(11,32,64,0.18);
+  background: rgba(11,32,64,0.05);
+  color: #4A6080;
+}
+.cfg-panel--light .cfg-summary-rebuild:hover,
+.cfg-panel--light .cfg-summary-share:hover {
+  background: rgba(11,32,64,0.09);
+  border-color: rgba(11,32,64,0.28);
+  color: #0B2040;
+}
 
 /* ── Toggle (combined gold, light) ── */
 .cfg-panel--light .cfg-toggle-label {

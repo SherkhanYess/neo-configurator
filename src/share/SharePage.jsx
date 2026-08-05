@@ -5,6 +5,7 @@ import { parseConfigUrl, parseSenderUtm } from '../configurator/config.js';
 import { ViewerPanel } from '../configurator/components/ViewerPanel.jsx';
 import { LeadModal } from '../configurator/steps/LeadModal.jsx';
 import { buildBreakdown } from '../configurator/priceBreakdown.js';
+import { calcPrice, formatPrice } from '../configurator/priceCalc.js';
 
 function ColorSwatch({ label }) {
   if (!label) return null;
@@ -32,7 +33,23 @@ export default function SharePage() {
   const [choices, setChoices] = useState(null);
   const [showOverlay, setShowOverlay] = useState(true);
   const [showLead, setShowLead] = useState(false);
+  const [prices, setPrices] = useState(null);
   const restoredRef = useRef(false);
+
+  useEffect(() => {
+    const defaults = {
+      baseByShank: { 'Neo': 200000, 'Neo Luxe': 250000, 'Sirius': 220000, 'Sirius Luxe': 280000, 'Bezel': 230000 },
+      casts: { halo: 30000, bezel: 20000 },
+      caratPrice: 200000,
+      purity750surcharge: 20000,
+      fancyColorSurcharge: 100000,
+      scatterFancySurcharge: 150000,
+    };
+    fetch('/api/get-prices')
+      .then(r => r.ok ? r.json() : defaults)
+      .then(setPrices)
+      .catch(() => setPrices(defaults));
+  }, []);
 
   // On mount: parse URL, save sender UTM, set recipient UTM
   useEffect(() => {
@@ -87,6 +104,7 @@ export default function SharePage() {
 
   const isColorKey = { metal: true, gem1: true, gem2: true };
   const lines = buildBreakdown(choices ?? {}, null);
+  const livePrice = choices ? calcPrice(choices, prices) : null;
 
   return (
     <div className="cfg-root nd-bg" style={{ position: 'relative' }}>
@@ -100,22 +118,18 @@ export default function SharePage() {
       )}
 
       {!showOverlay && (
-        <div className="cfg-panel">
+        <div className="cfg-panel cfg-panel--light">
           <div className="cfg-step-content cfg-summary">
-            <div className="cfg-summary-cta">
-              <p className="cfg-summary-cta-note">
-                Вам собрали украшение в Neo Diamond — узнайте точную стоимость прямо в WhatsApp
-              </p>
-              <button
-                type="button"
-                className="cfg-wa-btn"
-                onClick={() => setShowLead(true)}
-              >
-                <WhatsAppIcon />
-                Получить стоимость на WhatsApp
-              </button>
-            </div>
 
+            {/* Price block */}
+            {livePrice && (
+              <div className="share-price-block">
+                <span className="share-price-label">Стоимость украшения</span>
+                <span className="share-price-value">{formatPrice(livePrice)}</span>
+              </div>
+            )}
+
+            {/* Summary list */}
             {lines.length > 0 && (
               <>
                 <div className="cfg-summary-header">
@@ -139,6 +153,19 @@ export default function SharePage() {
                 </div>
               </>
             )}
+
+            {/* CTA */}
+            <div className="cfg-summary-actions">
+              <button
+                type="button"
+                className="cfg-wa-cta cfg-wa-cta--primary"
+                onClick={() => setShowLead(true)}
+              >
+                <WhatsAppIcon />
+                Узнать стоимость в WhatsApp
+              </button>
+            </div>
+
           </div>
         </div>
       )}

@@ -18,9 +18,22 @@ export default function ConfiguratorPage() {
   const cfg    = useConfigurator();
   const ijewel = useIjewel();
   const [prices, setPrices] = useState(null);
+  const [leadId, setLeadId] = useState(() => new URLSearchParams(window.location.search).get('lid') || null);
+  const qualifiedRef = useRef(false);
 
   useEffect(() => {
-    fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
+    const defaults = {
+      baseByShank: { 'Neo': 200000, 'Neo Luxe': 250000, 'Sirius': 220000, 'Sirius Luxe': 280000, 'Bezel': 230000 },
+      casts: { halo: 30000, bezel: 20000 },
+      caratPrice: 200000,
+      purity750surcharge: 20000,
+      fancyColorSurcharge: 100000,
+      scatterFancySurcharge: 150000,
+    };
+    fetch('/api/get-prices')
+      .then(r => r.ok ? r.json() : defaults)
+      .then(setPrices)
+      .catch(() => setPrices(defaults));
   }, []);
 
   const choicesRef   = useRef(cfg.choices);
@@ -155,13 +168,35 @@ export default function ConfiguratorPage() {
 
   const isSummary = cfg.currentStep === 'summary';
 
-  // Live price badge during config steps
+  // Move lead to "Квалифицировано" when user reaches summary
+  useEffect(() => {
+    if (!isSummary || !leadId || qualifiedRef.current) return;
+    qualifiedRef.current = true;
+    fetch('/api/update-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ leadId: Number(leadId), stageId: 87656158, note: '✅ Клиент собрал украшение в конфигураторе' }),
+    }).catch(() => {});
+  }, [isSummary, leadId]);
+
+  // Live price: show from step 1 using base price, update as choices are made
   const showPriceBadge = !isSummary;
-  const livePrice = showPriceBadge ? calcPrice(cfg.choices, prices) : null;
+  const livePrice = (() => {
+    if (!showPriceBadge || !prices) return null;
+    // If carat is selected use full calc
+    if (cfg.choices.carat) return calcPrice(cfg.choices, prices);
+    // Otherwise show base price: Sirius default or chosen shank
+    const shankLabel = cfg.choices.shankLabel || 'Sirius';
+    let base = prices.baseByShank?.[shankLabel] ?? prices.baseByShank?.['Sirius'] ?? 0;
+    if (cfg.choices.cast && cfg.choices.cast !== 'classic') {
+      base += prices.casts?.[cfg.choices.cast] ?? 0;
+    }
+    return base || null;
+  })();
 
   return (
     <div className="cfg-root nd-bg">
-      {ijewel.debugInfo && (
+      {import.meta.env.DEV && ijewel.debugInfo && (
         <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.92)', color:'#0f0', fontFamily:'monospace', fontSize:12, padding:16, overflowY:'auto', zIndex:9999 }}>
           <b style={{color:'#ff0'}}>DEBUG (?debug=1)</b>
           <pre>{JSON.stringify(ijewel.debugInfo, null, 2)}</pre>
@@ -170,12 +205,14 @@ export default function ConfiguratorPage() {
 
       <ViewerPanel onInit={handleInit} isReady={ijewel.isReady} />
 
-      {/* Step rail — shown on all config steps */}
+      {/* Step rail — shown on all config steps, includes live price */}
       {!isSummary && (
         <StepRail
           sequence={cfg.sequence}
           currentStep={cfg.currentStep}
           onGoTo={cfg.goToStep}
+          livePrice={livePrice ? formatPrice(livePrice) : null}
+          hasExactPrice={!!cfg.choices.carat}
         />
       )}
 
@@ -198,6 +235,7 @@ export default function ConfiguratorPage() {
             onBack={handleBack}
             variations={ijewel.shankVariations}
             castChosen={cfg.choices.cast}
+            prices={prices}
           />
         )}
 
@@ -207,6 +245,7 @@ export default function ConfiguratorPage() {
             onChoose={handleCast}
             onNext={cfg.next}
             onBack={handleBack}
+            prices={prices}
           />
         )}
 
@@ -218,6 +257,7 @@ export default function ConfiguratorPage() {
             gem1Options={ijewel.gem1Options}
             gem2Options={ijewel.gem2Options}
             cast={cfg.choices.cast}
+            prices={prices}
             onChooseCarat={handleCarat}
             onChooseGem1={handleGem1}
             onChooseGem2={handleGem2}
@@ -234,6 +274,7 @@ export default function ConfiguratorPage() {
             combinedGold={cfg.choices.combinedGold}
             shankMetalOptions={ijewel.shankMetalOptions}
             castMetalOptions={ijewel.castMetalOptions}
+            prices={prices}
             onChoosePurity={(v) => cfg.choose('purity', v)}
             onChooseShankMetal={handleShankMetal}
             onToggleCombined={handleToggleCombined}
@@ -248,16 +289,10 @@ export default function ConfiguratorPage() {
             choices={cfg.choices}
             sequence={cfg.sequence}
             onGoTo={cfg.goToStep}
+            leadId={leadId}
           />
         )}
 
-        {/* Live price badge */}
-        {showPriceBadge && livePrice && (
-          <div className="cfg-price-badge">
-            <span className="cfg-price-badge-label">Стоимость от</span>
-            <span className="cfg-price-badge-value">{formatPrice(livePrice)}</span>
-          </div>
-        )}
       </div>
     </div>
   );

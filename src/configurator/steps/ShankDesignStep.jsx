@@ -1,6 +1,7 @@
 import React from 'react';
 import { StepHeader } from '../components/StepHeader.jsx';
 import { Button } from '../../components/core/Button.jsx';
+import { formatPrice } from '../priceCalc.js';
 
 const FALLBACK_SHANKS = [
   { id: 'Neo',         label: 'Neo' },
@@ -10,7 +11,7 @@ const FALLBACK_SHANKS = [
   { id: 'Bezel',       label: 'Bezel' },
 ];
 
-export function ShankDesignStep({ chosen, onChoose, onNext, onBack, variations, castChosen }) {
+export function ShankDesignStep({ chosen, onChoose, onNext, onBack, variations, castChosen, prices }) {
   const allShanks = variations?.length > 0 ? variations : FALLBACK_SHANKS;
 
   // Bezel shank only visible when bezel cast is selected
@@ -32,6 +33,9 @@ export function ShankDesignStep({ chosen, onChoose, onNext, onBack, variations, 
             onClick={() => onChoose(shank)}
           >
             <span className="cfg-option-label">{shank.label}</span>
+            {prices?.baseByShank?.[shank.label] && (
+              <span className="cfg-opt-price">от {formatPrice(prices.baseByShank[shank.label])}</span>
+            )}
           </button>
         ))}
       </div>

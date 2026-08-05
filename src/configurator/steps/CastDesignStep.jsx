@@ -2,6 +2,7 @@ import React from 'react';
 import { CAST_DESIGNS } from '../config.js';
 import { StepHeader } from '../components/StepHeader.jsx';
 import { Button } from '../../components/core/Button.jsx';
+import { formatPrice } from '../priceCalc.js';
 
 const CAST_ICONS = {
   classic: (
@@ -33,7 +34,7 @@ const CAST_ICONS = {
   ),
 };
 
-export function CastDesignStep({ chosen, onChoose, onNext, onBack }) {
+export function CastDesignStep({ chosen, onChoose, onNext, onBack, prices }) {
   return (
     <div className="cfg-step-content">
       <StepHeader title="Дизайн каста" sub="Способ крепления центрального бриллианта" />
@@ -48,7 +49,13 @@ export function CastDesignStep({ chosen, onChoose, onNext, onBack }) {
           >
             <span className="cfg-cast-icon">{CAST_ICONS[cast.id]}</span>
             <span className="cfg-cast-label">{cast.label}</span>
-            <span className="cfg-cast-sub">{cast.sub}</span>
+            <span className="cfg-cast-price">
+              {cast.id === 'classic'
+                ? 'включено'
+                : prices?.casts?.[cast.id]
+                  ? `+${formatPrice(prices.casts[cast.id])}`
+                  : null}
+            </span>
           </button>
         ))}
       </div>

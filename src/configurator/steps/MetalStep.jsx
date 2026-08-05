@@ -2,10 +2,11 @@ import React from 'react';
 import { LABEL_COLORS } from '../useIjewel.js';
 import { StepHeader } from '../components/StepHeader.jsx';
 import { Button } from '../../components/core/Button.jsx';
+import { formatPrice } from '../priceCalc.js';
 
 const PURITY_OPTIONS = [
-  { value: '585', label: '585', hint: '14 карат · доступнее' },
-  { value: '750', label: '750', hint: '18 карат · премиум' },
+  { value: '585', label: '585' },
+  { value: '750', label: '750' },
 ];
 
 function MetalPicker({ options, chosen, onChoose }) {
@@ -36,7 +37,7 @@ export function MetalStep({
   purity, shankMetal, castMetal, combinedGold,
   shankMetalOptions, castMetalOptions,
   onChoosePurity, onChooseShankMetal, onToggleCombined, onChooseCastMetal,
-  onNext, onBack,
+  onNext, onBack, prices,
 }) {
   const canNext = !!purity && !!shankMetal;
 
@@ -55,7 +56,13 @@ export function MetalStep({
               onClick={() => onChoosePurity(p.value)}
             >
               <span className="cfg-purity-value">{p.label}</span>
-              <span className="cfg-purity-sub">{p.hint}</span>
+              <span className="cfg-opt-price">
+                {p.value === '585'
+                  ? 'включено'
+                  : prices?.purity750surcharge
+                    ? `+${formatPrice(prices.purity750surcharge)}`
+                    : '+20 000 ₸'}
+              </span>
             </button>
           ))}
         </div>
