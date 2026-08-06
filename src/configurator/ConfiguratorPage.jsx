@@ -168,14 +168,26 @@ export default function ConfiguratorPage() {
 
   const isSummary = cfg.currentStep === 'summary';
 
-  // Move lead to "Квалифицировано" when user reaches summary
+  // Move lead to "Квалифицировано" when user reaches summary, attach ring config as note
   useEffect(() => {
     if (!isSummary || !leadId || qualifiedRef.current) return;
     qualifiedRef.current = true;
+    const c = cfg.choices;
+    const configLines = [
+      c.shapeLabel && `Огранка: ${c.shapeLabel}`,
+      c.shankLabel && `Шинка: ${c.shankLabel}`,
+      c.castLabel  && `Каст: ${c.castLabel}`,
+      c.carat      && `Каратность: ${c.carat} кар`,
+      c.gem1Label  && `Центр. бриллиант: ${c.gem1Label}`,
+      c.gem2Label  && `Россыпь: ${c.gem2Label}`,
+      c.purity     && `Проба: ${c.purity}`,
+      c.metalLabel && `Металл: ${c.metalLabel}`,
+    ].filter(Boolean).join('\n');
+    const note = `✅ Клиент собрал украшение в конфигураторе\n\n💍 Конфигурация:\n${configLines || '—'}`;
     fetch('/api/update-lead', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ leadId: Number(leadId), stageId: 87656158, note: '✅ Клиент собрал украшение в конфигураторе' }),
+      body: JSON.stringify({ leadId: Number(leadId), stageId: 87656158, note }),
     }).catch(() => {});
   }, [isSummary, leadId]);
 
