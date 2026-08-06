@@ -19,7 +19,6 @@ export default function ConfiguratorPage() {
   const ijewel = useIjewel();
   const [prices, setPrices] = useState(null);
   const [leadId, setLeadId] = useState(() => new URLSearchParams(window.location.search).get('lid') || null);
-  const qualifiedRef = useRef(false);
 
   useEffect(() => {
     const defaults = {
@@ -169,9 +168,9 @@ export default function ConfiguratorPage() {
   const isSummary = cfg.currentStep === 'summary';
 
   // Move lead to "Квалифицировано" when user reaches summary, attach ring config as note
+  // Fires each time user reaches summary (including after rebuild) — no dedup guard needed
   useEffect(() => {
-    if (!isSummary || !leadId || qualifiedRef.current) return;
-    qualifiedRef.current = true;
+    if (!isSummary || !leadId) return;
     const c = cfg.choices;
     const configLines = [
       c.shapeLabel && `Огранка: ${c.shapeLabel}`,
