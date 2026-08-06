@@ -3,6 +3,7 @@ import { LABEL_COLORS } from '../useIjewel.js';
 import { buildBreakdown } from '../priceBreakdown.js';
 import { buildShareUrl } from '../config.js';
 import { calcPrice, formatPrice } from '../priceCalc.js';
+import { LeadModal } from './LeadModal.jsx';
 
 const WA_NUMBER = '77766708505';
 
@@ -38,6 +39,7 @@ function notifyLeadContacted(leadId) {
 export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
   const [prices, setPrices] = useState(null);
   const [shared, setShared] = useState(false);
+  const [showLeadModal, setShowLeadModal] = useState(false);
 
   useEffect(() => {
     fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
@@ -51,6 +53,15 @@ export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
   )}`;
 
   const lines = buildBreakdown(choices, prices);
+
+  function handleWaClick(e) {
+    if (!leadId) {
+      e.preventDefault();
+      setShowLeadModal(true);
+    } else {
+      notifyLeadContacted(leadId);
+    }
+  }
 
   const stepByKey = {
     model:  'shank',
@@ -91,7 +102,7 @@ export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
           <u>записаться на живой показ</u> или <u>задать свои вопросы</u>.
         </p>
         <a className="cfg-wa-cta cfg-wa-cta--primary" href={waAppt} target="_blank" rel="noopener noreferrer"
-           onClick={() => notifyLeadContacted(leadId)}>
+           onClick={handleWaClick}>
           <WhatsAppIcon />
           Перейти на WhatsApp
         </a>
@@ -150,6 +161,15 @@ export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
           {shared ? '✓ Ссылка скопирована' : '⤴ Сохранить / поделиться украшением'}
         </button>
       </div>
+
+      {showLeadModal && (
+        <LeadModal
+          choices={choices}
+          prices={prices}
+          waUrl={waAppt}
+          onClose={() => setShowLeadModal(false)}
+        />
+      )}
     </div>
   );
 }

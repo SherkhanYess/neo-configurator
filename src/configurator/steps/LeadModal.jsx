@@ -74,7 +74,7 @@ function SuccessScreen({ onClose }) {
   );
 }
 
-export function LeadModal({ choices, prices: pricesProp, onClose }) {
+export function LeadModal({ choices, prices: pricesProp, waUrl, onClose }) {
   const [name, setName]         = useState('');
   const [dialCode, setDialCode] = useState('+7');
   const [localPhone, setLocalPhone] = useState('');
@@ -159,8 +159,13 @@ export function LeadModal({ choices, prices: pricesProp, onClose }) {
       senderUtm: senderUtm ?? {},
     };
 
-    // Show success immediately — server handles amoCRM + WhatsApp in background
-    setSuccess(true);
+    // If opened from configurator WA button — go straight to WhatsApp, submit in background
+    if (waUrl) {
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+      onClose();
+    } else {
+      setSuccess(true);
+    }
 
     fetch('/api/submit-lead', {
       method: 'POST',
