@@ -5,7 +5,41 @@ import { buildShareUrl } from '../config.js';
 import { calcPrice, formatPrice } from '../priceCalc.js';
 import { LeadModal } from './LeadModal.jsx';
 
-const WA_NUMBER = '77766708505';
+const WA_BY_CITY = {
+  'Алматы':       '77766708505',
+  'Астана':       '77776908505',
+  'Другой город': '77766708505',
+};
+
+const CITIES = ['Алматы', 'Астана', 'Другой город'];
+
+function CityModal({ onSelect, onClose }) {
+  return (
+    <div className="lead-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="lead-modal" style={{ maxHeight: 'auto' }}>
+        <button type="button" className="lead-modal-close" onClick={onClose} aria-label="Закрыть">✕</button>
+        <div className="lead-modal-header">
+          <span className="nd-eyebrow">Перейти на WhatsApp</span>
+          <h3 className="lead-modal-title">Ваш город?</h3>
+          <p className="lead-modal-subtitle">Выберите — подберём нужного менеджера</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+          {CITIES.map((city) => (
+            <button
+              key={city}
+              type="button"
+              className="lead-pill"
+              style={{ padding: '14px 20px', fontSize: 16, textAlign: 'center', borderRadius: 14 }}
+              onClick={() => onSelect(city)}
+            >
+              {city}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ColorSwatch({ label }) {
   if (!label) return null;
@@ -39,7 +73,9 @@ function notifyLeadContacted(leadId) {
 export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
   const [prices, setPrices] = useState(null);
   const [shared, setShared] = useState(false);
+  const [showCityModal, setShowCityModal] = useState(false);
   const [showLeadModal, setShowLeadModal] = useState(false);
+  const [preselectedCity, setPreselectedCity] = useState('');
 
   useEffect(() => {
     fetch('/api/get-prices').then(r => r.json()).then(setPrices).catch(() => {});
@@ -48,18 +84,33 @@ export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
   const finalPrice = calcPrice(choices, prices);
   const shareUrl   = buildShareUrl(choices);
 
-  const waAppt = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
-    `Здравствуйте, собрал(-а) украшение на конструкторе, хочу узнать подробности и на живой показ!`
-  )}`;
+  const waUrl = (city) => {
+    const num = WA_BY_CITY[city] || WA_BY_CITY['Алматы'];
+    return `https://wa.me/${num}?text=${encodeURIComponent('Здравствуйте, собрал(-а) украшение на конструкторе, хочу узнать подробности и на живой показ!')}`;
+  };
 
   const lines = buildBreakdown(choices, prices);
 
   function handleWaClick(e) {
+    e.preventDefault();
+    setShowCityModal(true);
+  }
+
+  function handleCitySelect(city) {
+    setShowCityModal(false);
+    setPreselectedCity(city);
+
     if (!leadId) {
-      e.preventDefault();
+      // Прямой пользователь — показываем LeadModal с предвыбранным городом
       setShowLeadModal(true);
     } else {
-      notifyLeadContacted(leadId);
+      // Пришёл с лендинга — обновляем город в амо и идём в WA
+      fetch('/api/update-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: Number(leadId), stageId: 83826166, city, note: `📱 Клиент нажал на WhatsApp. Город: ${city}` }),
+      }).catch(() => {});
+      window.open(waUrl(city), '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -101,8 +152,7 @@ export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
           Перейдя на WhatsApp вам ответит ваш персональный менеджер. Вы сможете{' '}
           <u>записаться на живой показ</u> или <u>задать свои вопросы</u>.
         </p>
-        <a className="cfg-wa-cta cfg-wa-cta--primary" href={waAppt} target="_blank" rel="noopener noreferrer"
-           onClick={handleWaClick}>
+        <a className="cfg-wa-cta cfg-wa-cta--primary" href="#" onClick={handleWaClick}>
           <WhatsAppIcon />
           Перейти на WhatsApp
         </a>
@@ -162,11 +212,16 @@ export function SummaryStep({ choices, sequence, onGoTo, leadId }) {
         </button>
       </div>
 
+      {showCityModal && (
+        <CityModal onSelect={handleCitySelect} onClose={() => setShowCityModal(false)} />
+      )}
+
       {showLeadModal && (
         <LeadModal
           choices={choices}
           prices={prices}
-          waUrl={waAppt}
+          waUrl={waUrl(preselectedCity)}
+          preselectedCity={preselectedCity}
           onClose={() => setShowLeadModal(false)}
         />
       )}

@@ -24,10 +24,20 @@ export const handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { leadId, stageId, note } = body;
-  if (!leadId || !stageId) {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'leadId and stageId are required' }) };
+  const { leadId, stageId, note, city } = body;
+  if (!leadId) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'leadId is required' }) };
   }
+
+  const CITY_ENUMS = {
+    'Алматы':       268607,
+    'Астана':       268609,
+    'Шымкент':      268611,
+    'Актобе':       268613,
+    'Актау':        268615,
+    'Атырау':       284343,
+    'Другой город': 284345,
+  };
 
   const amoBase = `https://${AMO_DOMAIN}.amocrm.ru/api/v4`;
   const amoHdrs = {
@@ -36,11 +46,20 @@ export const handler = async (event) => {
   };
 
   try {
-    // Update lead stage
+    // Build patch payload
+    const patch = {};
+    if (stageId) patch.status_id = stageId;
+    if (city && CITY_ENUMS[city]) {
+      patch.custom_fields_values = [
+        { field_id: 409769, values: [{ enum_id: CITY_ENUMS[city] }] },
+      ];
+    }
+
+    // Update lead
     const res = await fetch(`${amoBase}/leads/${leadId}`, {
       method: 'PATCH',
       headers: amoHdrs,
-      body: JSON.stringify({ status_id: stageId }),
+      body: JSON.stringify(patch),
     });
 
     if (!res.ok) {

@@ -74,11 +74,11 @@ function SuccessScreen({ onClose }) {
   );
 }
 
-export function LeadModal({ choices, prices: pricesProp, waUrl, onClose }) {
+export function LeadModal({ choices, prices: pricesProp, waUrl, preselectedCity, onClose }) {
   const [name, setName]         = useState('');
   const [dialCode, setDialCode] = useState('+7');
   const [localPhone, setLocalPhone] = useState('');
-  const [city, setCity]         = useState('');
+  const [city, setCity]         = useState(preselectedCity || '');
   const [occasion, setOccasion] = useState('');
   const [timing, setTiming]     = useState('');
   const [loading, setLoading]   = useState(false);
