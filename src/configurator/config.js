@@ -107,6 +107,7 @@ export const parseConfigUrl = () => {
       shank:      data.sk ?? null,
       cast:       data.ca ?? null,
       carat:      data.ct ? Number(data.ct) : null,
+      purity:     data.pu ?? null,
       gem1Label:      data.g1 ?? null,
       gem2Label:      data.g2 ?? null,
       metalLabel:     data.mt ?? null,
@@ -122,14 +123,15 @@ export const parseConfigUrl = () => {
 // Builds /share URL with ring config + sender's UTM encoded as ?su=
 export const buildShareUrl = (choices) => {
   const data = {};
-  if (choices.shape)      data.sh = choices.shape;
-  if (choices.shank)      data.sk = choices.shank;
-  if (choices.cast)       data.ca = choices.cast;
-  if (choices.carat)      data.ct = choices.carat;
+  if (choices.shape)          data.sh = choices.shape;
+  if (choices.shank)          data.sk = choices.shank;
+  if (choices.cast)           data.ca = choices.cast;
+  if (choices.carat)          data.ct = choices.carat;
+  if (choices.purity)         data.pu = choices.purity;
   if (choices.gem1Label)      data.g1 = choices.gem1Label;
   if (choices.gem2Label)      data.g2 = choices.gem2Label;
   if (choices.metalLabel)     data.mt = choices.metalLabel;
-  if (choices.castMetalLabel) data.cm = choices.castMetalLabel; // combined gold cast color
+  if (choices.castMetalLabel) data.cm = choices.castMetalLabel;
 
   let suParam = '';
   try {

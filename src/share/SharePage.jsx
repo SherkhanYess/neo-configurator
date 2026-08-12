@@ -27,12 +27,45 @@ function WhatsAppIcon() {
   );
 }
 
+const WA_BY_CITY = {
+  'Алматы':       '77766708505',
+  'Астана':       '77776908505',
+  'Другой город': '77766708505',
+};
+const CITIES = ['Алматы', 'Астана', 'Другой город'];
+
+function CityModal({ onSelect, onClose }) {
+  return (
+    <div className="lead-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="lead-modal">
+        <button type="button" className="lead-modal-close" onClick={onClose}>✕</button>
+        <div className="lead-modal-header">
+          <span className="nd-eyebrow">Перейти на WhatsApp</span>
+          <h3 className="lead-modal-title">Ваш город?</h3>
+          <p className="lead-modal-subtitle">Выберите — подберём нужного менеджера</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+          {CITIES.map((city) => (
+            <button key={city} type="button" className="lead-pill"
+              style={{ padding: '14px 20px', fontSize: 16, textAlign: 'center', borderRadius: 14 }}
+              onClick={() => onSelect(city)}>
+              {city}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SharePage() {
   const ijewel = useIjewel();
   const choicesRef = useRef(null);
   const [choices, setChoices] = useState(null);
   const [showOverlay, setShowOverlay] = useState(true);
+  const [showCity, setShowCity] = useState(false);
   const [showLead, setShowLead] = useState(false);
+  const [preselectedCity, setPreselectedCity] = useState('');
   const [prices, setPrices] = useState(null);
   const restoredRef = useRef(false);
 
@@ -156,13 +189,17 @@ export default function SharePage() {
 
             {/* CTA */}
             <div className="cfg-summary-actions">
+              <p className="cfg-summary-wa-pitch">
+                Перейдя на WhatsApp вам ответит ваш персональный менеджер. Вы сможете{' '}
+                <u>записаться на живой показ</u> или <u>задать свои вопросы</u>.
+              </p>
               <button
                 type="button"
                 className="cfg-wa-cta cfg-wa-cta--primary"
-                onClick={() => setShowLead(true)}
+                onClick={() => setShowCity(true)}
               >
                 <WhatsAppIcon />
-                Узнать стоимость в WhatsApp
+                Перейти на WhatsApp
               </button>
             </div>
 
@@ -170,8 +207,24 @@ export default function SharePage() {
         </div>
       )}
 
+      {showCity && (
+        <CityModal
+          onSelect={(city) => {
+            setShowCity(false);
+            setPreselectedCity(city);
+            setShowLead(true);
+          }}
+          onClose={() => setShowCity(false)}
+        />
+      )}
+
       {showLead && choices && (
-        <LeadModal choices={choices} onClose={() => setShowLead(false)} />
+        <LeadModal
+          choices={choices}
+          waUrl={`https://wa.me/${WA_BY_CITY[preselectedCity] || WA_BY_CITY['Алматы']}?text=${encodeURIComponent('Здравствуйте, собрал(-а) украшение на конструкторе, хочу узнать подробности и на живой показ!')}`}
+          preselectedCity={preselectedCity}
+          onClose={() => setShowLead(false)}
+        />
       )}
     </div>
   );
