@@ -244,49 +244,55 @@ export function useIjewel() {
     return (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag));
   };
 
-  // Applies head (shape+cast) and shank sequentially via the official RingConfigurator
-  // plugin method, which properly hides previous variation meshes before showing new ones.
-  // Shows the ring only after both are done (isConfigured → true).
-  const applyInitial = useCallback(async ({ shapeTag, castTag, shankName }) => {
+  const applyVariation = async (component, variation) => {
     const ring = ringRef.current;
-    if (!ring?.applyVariation) return;
-
-    const heads = getComponent('head');
-    if (heads && shapeTag) {
-      const v = heads.variations?.find(x => matchTag(x, shapeTag) && matchTag(x, castTag));
-      if (v) {
-        lastRef.current.head = `${shapeTag ?? ''}|${castTag ?? ''}`;
-        await ring.applyVariation(heads, v);
-      }
+    if (ring?.applyVariation) {
+      await ring.applyVariation(component, variation);
+    } else {
+      await component.applyVariation(variation);
     }
+  };
 
-    const shanks = getComponent('shank');
-    if (shanks && shankName) {
-      const v = shanks.variations?.find(
-        x => (x.title ?? x.name ?? '').replace('.glb', '') === shankName
-      );
-      if (v) {
-        lastRef.current.shank = shankName;
-        await ring.applyVariation(shanks, v);
+  // Applies head (shape+cast) then shank sequentially — one fully completes before the next
+  // starts. Only then sets isConfigured→true so the ring reveals without visual overlap.
+  const applyInitial = useCallback(async ({ shapeTag, castTag, shankName }) => {
+    try {
+      const heads = getComponent('head');
+      if (heads && shapeTag) {
+        const v = heads.variations?.find(x => matchTag(x, shapeTag) && matchTag(x, castTag));
+        if (v) {
+          lastRef.current.head = `${shapeTag ?? ''}|${castTag ?? ''}`;
+          await applyVariation(heads, v);
+        }
       }
-    }
 
-    setIsConfigured(true);
+      const shanks = getComponent('shank');
+      if (shanks && shankName) {
+        const v = shanks.variations?.find(
+          x => (x.title ?? x.name ?? '').replace('.glb', '') === shankName
+        );
+        if (v) {
+          lastRef.current.shank = shankName;
+          await applyVariation(shanks, v);
+        }
+      }
+    } finally {
+      setIsConfigured(true);
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // For user-triggered shape changes (shape picker) — single variation, no loading state needed.
+  // For user-triggered shape changes (shape picker).
   const applyHead = useCallback((shapeTag, castTag) => {
     const key = `${shapeTag ?? ''}|${castTag ?? ''}`;
     if (!shapeTag && !castTag) return;
     if (lastRef.current.head === key) return;
     run(async () => {
-      const ring  = ringRef.current;
       const heads = getComponent('head');
-      if (!heads || !ring?.applyVariation) return;
+      if (!heads) return;
       const v = heads.variations?.find(x => matchTag(x, shapeTag) && matchTag(x, castTag));
       if (!v) return;
       lastRef.current.head = key;
-      await ring.applyVariation(heads, v);
+      await applyVariation(heads, v);
     });
   }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -294,15 +300,14 @@ export function useIjewel() {
     const tag = `size: ${carat}ct`;
     if (lastRef.current.carat === tag) return;
     run(async () => {
-      const ring  = ringRef.current;
       const heads = getComponent('head');
-      if (!heads || !ring?.applyVariation) return;
+      if (!heads) return;
       const v = heads.variations?.find(x =>
         (x.tags ?? []).map(normalizeTag).includes(normalizeTag(tag))
       );
       if (!v) return;
       lastRef.current.carat = tag;
-      await ring.applyVariation(heads, v);
+      await applyVariation(heads, v);
     });
   }, [run]);
 
