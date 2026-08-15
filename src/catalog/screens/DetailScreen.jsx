@@ -76,6 +76,7 @@ export default function DetailScreen({ initial, onBack }) {
   const initialisedRef  = useRef(false);
   const castRef         = useRef(cast);
   const shankAppliedRef = useRef(false);
+  const headAppliedRef  = useRef(false);
 
   // Poll for SDK then init
   useEffect(() => {
@@ -92,18 +93,21 @@ export default function DetailScreen({ initial, onBack }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  // On ready: apply shape + cast head.
-  // Camera fit+zoom is handled automatically by the componentProcessed debounce in useIjewel.
-  // Interaction hint fires after ring parts have had time to fully settle.
+  // On ready: start interaction hint (shape applied below when components load).
   useEffect(() => {
     if (!ijewel.isReady) return;
-    const shapeTag = SHAPE_IJEWEL[shape];
-    const castTag  = CAST_IJEWEL[cast];
-    ijewel.applyHead(shapeTag, castTag);
-    // Start hint after ring loads and camera has settled (~2.5s)
     const t = setTimeout(() => ijewel.startInteractionHint(), 2500);
     return () => clearTimeout(t);
   }, [ijewel.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Apply shape + cast head once ring components are loaded (shankVariations populated = components ready).
+  useEffect(() => {
+    if (!ijewel.isReady || !ijewel.shankVariations.length || headAppliedRef.current) return;
+    headAppliedRef.current = true;
+    const shapeTag = SHAPE_IJEWEL[shape];
+    const castTag  = CAST_IJEWEL[cast];
+    ijewel.applyHead(shapeTag, castTag);
+  }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply shank when variations load
   useEffect(() => {
@@ -195,8 +199,9 @@ export default function DetailScreen({ initial, onBack }) {
     ? calcPrice(choices, prices)
     : (() => {
         if (!prices) return null;
-        let base = prices.baseByShank?.[shank] ?? 200000;
+        let base = prices.baseByShank?.[shank] ?? 0;
         if (cast !== 'classic') base += prices.casts?.[cast] ?? 0;
+        if (purity === '750') base += prices.purity750surcharge ?? 0;
         return base;
       })();
 
