@@ -53,7 +53,7 @@ function ShapeMiniPicker({ activeShape, onSelect, onClose }) {
   );
 }
 
-export default function DetailScreen({ initial, onBack }) {
+export default function DetailScreen({ initial, onBack, onBook }) {
   const [shape, setShape]       = useState(initial.shape);
   const shank = initial.shank;
   const cast  = initial.cast;
@@ -350,14 +350,14 @@ export default function DetailScreen({ initial, onBack }) {
 
       {/* Sticky CTA — two-part bar */}
       <div className="detail-cta-bar">
-        {/* Top: price row */}
         <div className="detail-cta-price-row">
           <span className="detail-cta-label">Стоимость</span>
           <span className="detail-cta-price">{price ? formatPrice(price) : '—'}</span>
         </div>
-        {/* Bottom: booking button */}
-        <button className="detail-cta-book" onClick={sendWA}>
-          Забронировать живой показ
+        <button className="detail-cta-book" onClick={() => onBook({
+          shape, shank, cast, carat, purity, metalLabel, gem1Label, gem2Label, price,
+        })}>
+          Подтвердить выбор
         </button>
       </div>
 
