@@ -45,9 +45,9 @@ const INCLUDED = [
   'Фирменный пакет',
 ];
 const AFTER_SALE = [
-  ['Ультразвуковая чистка', 'Пожизненно и бесплатно. Украшение сияет точно так же, как в день первого надевания — спустя год, пять, десять лет.'],
-  ['Повторное родирование', 'Бесплатно и в любое время. Белое золото всегда остаётся по-настоящему белым — мы следим за этим вместе с вами.'],
-  ['Ремонт и доработки', 'По себестоимости материалов. Подгоним размер, создадим пару, изменим форму. Мы рядом — не только в момент покупки.'],
+  { name: 'Ультразвуковая чистка', price: 'Бесплатно',        detail: 'Пожизненно, бесплатно. Ваше украшение всегда будет сиять как в первый день.' },
+  { name: 'Повторное родирование', price: 'Бесплатно',        detail: 'Бесплатно. Восстановим белоснежное покрытие в любое время.' },
+  { name: 'Ремонт и доработки',    price: 'По себестоимости', detail: 'По себестоимости. Изготовление второй пары, изменение размера и многое другое.' },
 ];
 const SHOW_ITEMS = [
   'Примерите украшения вживую — посмотрите разные формы и размеры бриллиантов на своей руке',
@@ -58,21 +58,23 @@ const SHOW_ITEMS = [
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
-// Benefit card: label eyebrow, value prominent, benefit below
+// Benefit card: label eyebrow, then value LEFT + benefit RIGHT (vertically centred)
 function BenefitCard({ label, value, benefit }) {
   return (
-    <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ fontSize: '0.68rem', fontWeight: 600, color: C.ink400, letterSpacing: '0.11em', textTransform: 'uppercase' }}>
         {label}
       </div>
-      <div style={{ fontFamily: '"Unbounded",sans-serif', fontWeight: 400, fontSize: '1.05rem', color: C.ink800 }}>
-        {value}
-      </div>
-      {benefit && (
-        <div style={{ fontSize: '0.82rem', color: C.ink400, lineHeight: 1.55 }}>
-          {benefit}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <div style={{ fontFamily: '"Unbounded",sans-serif', fontWeight: 400, fontSize: '1.05rem', color: C.ink800, flexShrink: 0 }}>
+          {value}
         </div>
-      )}
+        {benefit && (
+          <div style={{ fontSize: '0.8rem', color: C.ink400, lineHeight: 1.5, textAlign: 'right' }}>
+            {benefit}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -87,16 +89,39 @@ function RowCard({ label, value }) {
   );
 }
 
-// Text benefit card: label + description paragraph
-function TextCard({ label, text }) {
+// After-sale accordion card: prominent name + price, detail hidden under +
+function AfterSaleCard({ name, price, detail }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div style={{ ...card }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, color: C.ink400, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
-        {label}
+    <div style={{ ...card, padding: '16px 20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: C.ink800, letterSpacing: '-0.01em', lineHeight: 1.25 }}>
+            {name}
+          </div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 600, color: C.champ700, marginTop: 3, letterSpacing: '0.02em' }}>
+            {price}
+          </div>
+        </div>
+        <button
+          onClick={() => setOpen(v => !v)}
+          style={{
+            width: 32, height: 32, borderRadius: '50%', border: `1.5px solid ${C.paper300}`,
+            background: open ? C.ink800 : '#fff', color: open ? '#fff' : C.ink400,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', flexShrink: 0, fontSize: '1.2rem', lineHeight: 1,
+            transition: 'background 0.2s, color 0.2s',
+          }}
+          aria-label={open ? 'Скрыть' : 'Подробнее'}
+        >
+          {open ? '−' : '+'}
+        </button>
       </div>
-      <p style={{ fontSize: '0.87rem', color: C.ink600, lineHeight: 1.6, margin: 0 }}>
-        {text}
-      </p>
+      {open && (
+        <p style={{ margin: '12px 0 0', fontSize: '0.84rem', color: C.ink400, lineHeight: 1.6 }}>
+          {detail}
+        </p>
+      )}
     </div>
   );
 }
@@ -246,8 +271,8 @@ export default function BookingScreen() {
           Вы получаете не просто украшение, а долгосрочные отношения со студией. Это то, чего вы лишаетесь при покупке украшений у байеров из Китая и Дубая.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {AFTER_SALE.map(([label, text]) => (
-            <TextCard key={label} label={label} text={text} />
+          {AFTER_SALE.map(s => (
+            <AfterSaleCard key={s.name} {...s} />
           ))}
         </div>
         <MiniWAButton onClick={() => openWA(false)} />
