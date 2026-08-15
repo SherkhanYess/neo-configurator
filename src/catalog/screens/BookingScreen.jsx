@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { ringImage, cardName, SHAPES, CASTS, METAL_LABELS, WA_NUMBER } from '../data/config.js';
+import { cardName, SHAPES, CASTS, METAL_LABELS, WA_NUMBER, SHAPE_IJEWEL, CAST_IJEWEL } from '../data/config.js';
 import { formatPrice } from '../data/priceCalc.js';
+import { useIjewel } from '../hooks/useIjewel.js';
 
 const TIMER_SECONDS = 600;
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -104,12 +105,14 @@ function TextCard({ label, text }) {
 
 function MiniWAButton({ onClick }) {
   return (
-    <button onClick={onClick} style={{
-      width: '100%', marginTop: 20,
-      padding: '13px 20px', borderRadius: 50, border: 'none', cursor: 'pointer',
+    <button onClick={onClick} className="wa-btn-shimmer" style={{
+      width: '100%', marginTop: 28,
+      padding: '14px 20px', borderRadius: 50, border: 'none', cursor: 'pointer',
       background: C.wa, color: '#fff',
       fontSize: '0.9rem', fontWeight: 600, fontFamily: 'Manrope, sans-serif',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+      boxShadow: '0 4px 18px rgba(37,211,102,0.38)',
+      position: 'relative', overflow: 'hidden',
     }}>
       <WhatsAppIcon />
       Записаться на живой показ
@@ -121,10 +124,52 @@ function MiniWAButton({ onClick }) {
 export default function BookingScreen({ initial, onBack }) {
   const { shape, shank, cast, carat, purity, metalLabel, gem1Label, price } = initial;
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
-  const castLabel   = CASTS.find(c => c.id === cast)?.label ?? cast;
   const productName = cardName(shank, cast, shapeLabel);
-  const img         = ringImage(shank, cast, shape);
   const metalPurity = METAL_LABELS[purity] ?? purity;
+
+  // iJewel viewer
+  const ijewel        = useIjewel();
+  const containerRef  = useRef(null);
+  const initDoneRef   = useRef(false);
+  const applyDoneRef  = useRef(false);
+
+  useEffect(() => {
+    if (initDoneRef.current || !containerRef.current) return;
+    initDoneRef.current = true;
+    const tryInit = () => {
+      if (window.ijewelViewer) { ijewel.init(containerRef.current); }
+      else { setTimeout(tryInit, 200); }
+    };
+    tryInit();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!ijewel.isReady || !ijewel.shankVariations.length || applyDoneRef.current) return;
+    const sv = ijewel.shankVariations.find(v => v.id === shank) ??
+               ijewel.shankVariations.find(v => v.id.toLowerCase() === shank.toLowerCase());
+    if (!sv) return;
+    applyDoneRef.current = true;
+    ijewel.applyInitial({ shapeTag: SHAPE_IJEWEL[shape], castTag: CAST_IJEWEL[cast], shankName: sv.id });
+  }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!ijewel.isReady || !ijewel.gem1Options.length) return;
+    const findWhite = opts => opts.find(o => o.label.toLowerCase().includes('бел'));
+    const w1 = findWhite(ijewel.gem1Options);
+    if (w1) ijewel.applyGem('gem1', w1.uuid);
+    const w2 = findWhite(ijewel.gem2Options);
+    if (w2) ijewel.applyGem('gem2', w2.uuid);
+  }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!ijewel.isReady || !ijewel.shankMetalOptions.length) return;
+    const white = ijewel.shankMetalOptions.find(o => o.label.toLowerCase().includes('бел'));
+    if (white) {
+      ijewel.applyShankMetal(white.uuid);
+      const cw = ijewel.castMetalOptions.find(o => o.label === white.label);
+      if (cw) ijewel.applyCastMetal(cw.uuid);
+    }
+  }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const timeLeft  = useCountdown(TIMER_SECONDS);
   const mins      = Math.floor(timeLeft / 60);
@@ -152,6 +197,21 @@ export default function BookingScreen({ initial, onBack }) {
 
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
+      <style>{`
+        @keyframes wa-shimmer {
+          0%   { transform: translateX(-100%) skewX(-20deg); }
+          100% { transform: translateX(250%) skewX(-20deg); }
+        }
+        .wa-btn-shimmer::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0;
+          width: 40%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+          animation: wa-shimmer 2.4s ease-in-out infinite;
+          pointer-events: none;
+        }
+      `}</style>
 
       {/* Back */}
       <button onClick={onBack} style={{
@@ -168,16 +228,24 @@ export default function BookingScreen({ initial, onBack }) {
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section style={{ padding: '72px 24px 48px', maxWidth: 480, margin: '0 auto' }}>
 
-        {img && (
-          <div style={{
-            width: '100%', maxWidth: 320, margin: '0 auto 28px',
-            aspectRatio: '1/1', borderRadius: 24, overflow: 'hidden',
-            background: C.studio,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <img src={img} alt={productName} style={{ width: '88%', height: '88%', objectFit: 'contain' }} />
-          </div>
-        )}
+        {/* iJewel viewer */}
+        <div style={{
+          width: '100%', maxWidth: 360, margin: '0 auto 28px',
+          aspectRatio: '1/1', borderRadius: 24, overflow: 'hidden',
+          background: C.studio, position: 'relative',
+        }}>
+          <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+          {!ijewel.isConfigured && (
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: C.studio,
+            }}>
+              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontFamily: 'Manrope, sans-serif' }}>
+                Загрузка украшения...
+              </p>
+            </div>
+          )}
+        </div>
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={eyebrow}>Ваш выбор</div>
@@ -185,11 +253,11 @@ export default function BookingScreen({ initial, onBack }) {
             {productName}
           </h1>
           <p style={{ ...lead, marginBottom: 12 }}>
-            {[shapeLabel, carat ? `${carat} кар` : null, gem1Label, metalPurity, metalLabel].filter(Boolean).join(' · ')}
+            {[`${purity} проба`, carat ? `${carat} кар` : null].filter(Boolean).join(' · ')}
           </p>
           {price && (
             <div style={{ fontFamily: '"Courier New",monospace', fontSize: '1.3rem', fontWeight: 700, color: C.champ700, letterSpacing: '0.04em' }}>
-              от {formatPrice(price)}
+              {formatPrice(price)}
             </div>
           )}
         </div>
@@ -387,13 +455,14 @@ export default function BookingScreen({ initial, onBack }) {
               <strong style={{ color: C.ink800 }}>индивидуальную гравировку на украшение в подарок</strong>
             </p>
 
-            <button onClick={() => openWA(true)} style={{
+            <button onClick={() => openWA(true)} className="wa-btn-shimmer" style={{
               width: '100%', padding: '16px 24px',
               borderRadius: 50, border: 'none', cursor: 'pointer',
               background: C.wa, color: '#fff',
               fontSize: '1rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              marginBottom: 20,
+              marginBottom: 20, boxShadow: '0 4px 22px rgba(37,211,102,0.42)',
+              position: 'relative', overflow: 'hidden',
             }}>
               <WhatsAppIcon />
               Написать в WhatsApp
@@ -417,12 +486,14 @@ export default function BookingScreen({ initial, onBack }) {
             <p style={{ fontSize: '0.88rem', color: C.ink400, margin: '0 0 24px' }}>
               Специальное предложение истекло, но мы будем рады вас видеть.
             </p>
-            <button onClick={() => openWA(false)} style={{
+            <button onClick={() => openWA(false)} className="wa-btn-shimmer" style={{
               width: '100%', padding: '16px 24px',
               borderRadius: 50, border: 'none', cursor: 'pointer',
               background: C.wa, color: '#fff',
               fontSize: '1rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: '0 4px 22px rgba(37,211,102,0.42)',
+              position: 'relative', overflow: 'hidden',
             }}>
               <WhatsAppIcon />
               Забронировать живой показ
