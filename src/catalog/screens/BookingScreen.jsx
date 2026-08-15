@@ -318,7 +318,6 @@ export default function BookingScreen({ initial, onBack }) {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {carat && <RowCard label="Каратность" value={`${carat} кт`} />}
           <BenefitCard
             label="Чистота"
             value="VVS2/VS1"

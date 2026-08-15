@@ -236,17 +236,28 @@ export function useIjewel() {
       runRotateCamera: false,
     });
 
-    // Fallback: if event doesn't fire (viewer reused from previous card),
-    // grab the existing viewer instance directly. Poll until it's available.
+    // Fallback: if ijewel-viewer-ready doesn't fire (viewer reuse across screens),
+    // wait until the viewer's canvas is actually inside OUR container before claiming it.
+    // This prevents grabbing the old screen's still-alive viewer by mistake.
     let fallbackAttempts = 0;
     const fallbackPoll = setInterval(() => {
       if (setupDone) { clearInterval(fallbackPoll); return; }
       const existing = window.webGiViewers?.[0];
       if (existing) {
-        clearInterval(fallbackPoll);
-        setupViewer(existing);
+        const canvas =
+          existing.canvas ??
+          existing.renderer?.domElement ??
+          existing._renderer?.domElement ??
+          existing.element;
+        const inOurContainer = canvas
+          ? containerEl.contains(canvas)
+          : containerEl.childElementCount > 0;
+        if (inOurContainer) {
+          clearInterval(fallbackPoll);
+          setupViewer(existing);
+        }
       }
-      if (++fallbackAttempts > 30) clearInterval(fallbackPoll); // 3s max
+      if (++fallbackAttempts > 60) clearInterval(fallbackPoll); // 6s max
     }, 100);
   }, [bump]);
 
