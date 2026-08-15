@@ -3,126 +3,120 @@ import { ringImage, cardName, SHAPES, CASTS, METAL_LABELS, WA_NUMBER } from '../
 import { formatPrice } from '../data/priceCalc.js';
 
 const TIMER_SECONDS = 600;
-
 function pad(n) { return String(n).padStart(2, '0'); }
-
-function useCountdown(seconds) {
-  const [left, setLeft] = useState(seconds);
-  const startRef = useRef(Date.now());
+function useCountdown(s) {
+  const [left, setLeft] = useState(s);
+  const t0 = useRef(Date.now());
   useEffect(() => {
-    const id = setInterval(() => {
-      setLeft(Math.max(0, seconds - Math.floor((Date.now() - startRef.current) / 1000)));
-    }, 500);
+    const id = setInterval(() => setLeft(Math.max(0, s - Math.floor((Date.now() - t0.current) / 1000))), 500);
     return () => clearInterval(id);
-  }, [seconds]);
+  }, [s]);
   return left;
 }
 
+// ─── tokens ──────────────────────────────────────────────────────────────────
+const C = {
+  paper050: '#FAFBFC',
+  paper100: '#F2F5F9',
+  paper200: '#E9EDF3',
+  paper300: '#DBE2EB',
+  ink800:   '#0B2040',
+  ink600:   '#1E3149',
+  ink400:   '#5B81A1',
+  ink200:   '#C2D1DE',
+  champ700: '#7C6035',
+  champ400: '#DCC29B',
+  champ200: '#EFE4D2',
+  studio:   'linear-gradient(150deg,#6A8EAC,#40648A,#1E3149)',
+  wa:       '#25D366',
+};
+const eyebrow = { fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.champ700, marginBottom: 10 };
+const h2style = { fontFamily: '"Unbounded",sans-serif', fontWeight: 300, fontSize: '1.15rem', letterSpacing: '-0.02em', lineHeight: 1.3, margin: '0 0 10px', color: C.ink800 };
+const lead    = { fontSize: '0.88rem', color: C.ink400, lineHeight: 1.65, margin: 0 };
+const divider = { border: 'none', borderTop: `1.5px solid ${C.paper300}`, margin: 0 };
+const card    = { background: '#fff', border: `1.5px solid ${C.paper300}`, borderRadius: 20, padding: '18px 20px' };
+
+// ─── data ─────────────────────────────────────────────────────────────────────
+const INCLUDED = [
+  'Украшение',
+  'Международный сертификат IGI',
+  'Фирменный футляр',
+  'Фирменный пакет',
+];
+const AFTER_SALE = [
+  ['Ультразвуковая чистка', 'Пожизненно, бесплатно. Ваше украшение всегда будет сиять как в первый день.'],
+  ['Повторное родирование', 'Бесплатно. Восстановим белоснежное покрытие в любое время.'],
+  ['Ремонт и доработки', 'По себестоимости работы мастера. Изготовление второй пары, изменение размера и многое другое.'],
+];
 const SHOW_ITEMS = [
   'Примерите украшения вживую и оцените, как они смотрятся именно на вас',
   'Посмотрите разные формы и размеры бриллиантов и выберите свой вариант',
-  'Увидите сертификаты IGI на бриллианты',
-  'Под микроскопом рассмотрите серийный номер внутри бриллианта и убедитесь в его соответствии сертификату',
+  'Увидите сертификаты IGI и под микроскопом рассмотрите серийный номер внутри бриллианта',
   'Оцените качество наших работ вживую — посадку камней, закрепку, обработку золота',
   'Увидите готовые украшения наших клиентов и оцените результат индивидуальных заказов',
   'Получите консультацию специалиста и подберите форму, размер и дизайн под себя',
   'Примете решение не по фото, а после личного знакомства с украшениями',
 ];
 
-const INCLUDED = [
-  ['Украшение'],
-  ['Международный сертификат IGI'],
-  ['Фирменный футляр'],
-  ['Фирменный пакет'],
-];
+// ─── sub-components ──────────────────────────────────────────────────────────
 
-const DIAMOND_CHARS = [
-  ['Чистота', 'VVS2/VS1', 'Без внутренних трещин и изъянов, видимых глазу'],
-  ['Цвет', 'D/E', 'Абсолютно белый бриллиант, без пожелтевших оттенков'],
-  ['Огранка', 'IDEAL', 'Идеальный блеск и игра света'],
-  ['Сертификат', 'IGI', 'На каждый бриллиант весом 0.50 ct и выше'],
-];
+// Benefit card: label top-left, value prominent left, benefit text right
+function BenefitCard({ label, value, benefit }) {
+  return (
+    <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ fontSize: '0.72rem', fontWeight: 600, color: C.ink400, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        {label}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{ fontFamily: '"Unbounded",sans-serif', fontWeight: 400, fontSize: '1rem', color: C.ink800, flexShrink: 0 }}>
+          {value}
+        </div>
+        {benefit && (
+          <div style={{ fontSize: '0.8rem', color: C.ink400, lineHeight: 1.55, textAlign: 'right' }}>
+            {benefit}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-const SETTING_CHARS = [
-  ['Золото', '4 г', 'Отсутствие экономий — стандарт на 1 украшение'],
-  ['Проба', null, null],
-  ['Конструкция', 'Надёжность', 'Спроектировано для длительной эксплуатации'],
-  ['Дизайн', 'Изящество', 'Создано в собственной студии Neo Diamond'],
-  ['Покрытие', 'Родирование', 'Бесплатное повторное родирование на весь срок'],
-];
+// Simple row card: label left, value right (for shape/carat/metal)
+function RowCard({ label, value }) {
+  return (
+    <div style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+      <span style={{ fontSize: '0.87rem', color: C.ink400 }}>{label}</span>
+      <span style={{ fontSize: '0.87rem', fontWeight: 600, color: C.ink800 }}>{value}</span>
+    </div>
+  );
+}
 
-// ─── styles (inline, brandbook-compliant) ────────────────────────────────────
+// Text benefit card: label + description paragraph
+function TextCard({ label, text }) {
+  return (
+    <div style={{ ...card }}>
+      <div style={{ fontSize: '0.72rem', fontWeight: 600, color: C.ink400, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+        {label}
+      </div>
+      <p style={{ fontSize: '0.87rem', color: C.ink600, lineHeight: 1.6, margin: 0 }}>
+        {text}
+      </p>
+    </div>
+  );
+}
 
-const S = {
-  root: {
-    minHeight: '100dvh',
-    background: '#FAFBFC',        // paper-050
-    color: '#0B2040',             // ink-800
-    fontFamily: 'Manrope, sans-serif',
-    overflowX: 'hidden',
-  },
-  inner: { maxWidth: 480, margin: '0 auto', padding: '0 24px' },
-  eyebrow: {
-    fontSize: '0.68rem', fontWeight: 600,
-    letterSpacing: '0.14em', textTransform: 'uppercase',
-    color: '#7C6035',             // champagne-700
-    marginBottom: 12,
-  },
-  h1: {
-    fontFamily: '"Unbounded", sans-serif',
-    fontWeight: 300, fontSize: '1.55rem',
-    letterSpacing: '-0.02em', lineHeight: 1.25,
-    margin: '0 0 8px', color: '#0B2040',
-  },
-  h2: {
-    fontFamily: '"Unbounded", sans-serif',
-    fontWeight: 400, fontSize: '1.1rem',
-    letterSpacing: '-0.02em',
-    margin: '0 0 8px', color: '#0B2040',
-  },
-  lead: { fontSize: '0.9rem', color: '#5B81A1', lineHeight: 1.65, margin: 0 },
-  divider: { border: 'none', borderTop: '1.5px solid #DBE2EB', margin: '0' },
-  card: {
-    background: '#FFFFFF',
-    border: '1.5px solid #DBE2EB',
-    borderRadius: 24,
-    padding: '20px 20px',
-  },
-  row: {
-    display: 'flex', justifyContent: 'space-between',
-    alignItems: 'flex-start', gap: 16,
-    padding: '13px 0',
-    borderBottom: '1px solid #E9EDF3',
-  },
-  rowLabel: { fontSize: '0.82rem', color: '#5B81A1', flexShrink: 0 },
-  rowValue: { fontSize: '0.82rem', fontWeight: 600, color: '#0B2040', textAlign: 'right' },
-  rowNote: { fontSize: '0.75rem', color: '#5B81A1', marginTop: 2, textAlign: 'right' },
-  backBtn: {
-    position: 'fixed', top: 14, left: 14, zIndex: 50,
-    background: 'rgba(250,251,252,0.92)',
-    border: '1.5px solid #DBE2EB',
-    backdropFilter: 'blur(16px)', borderRadius: 50,
-    padding: '0 16px', height: 36,
-    display: 'flex', alignItems: 'center', gap: 4,
-    color: '#0B2040', cursor: 'pointer',
-    fontSize: '0.82rem', fontFamily: 'Manrope, sans-serif', fontWeight: 500,
-  },
-};
-
-// ─── component ────────────────────────────────────────────────────────────────
-
+// ─── main ─────────────────────────────────────────────────────────────────────
 export default function BookingScreen({ initial, onBack }) {
   const { shape, shank, cast, carat, purity, metalLabel, gem1Label, price } = initial;
-
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
   const castLabel   = CASTS.find(c => c.id === cast)?.label ?? cast;
   const productName = cardName(shank, cast, shapeLabel);
   const img         = ringImage(shank, cast, shape);
   const metalPurity = METAL_LABELS[purity] ?? purity;
 
-  const timeLeft = useCountdown(TIMER_SECONDS);
-  const mins = Math.floor(timeLeft / 60);
-  const secs = timeLeft % 60;
+  const timeLeft  = useCountdown(TIMER_SECONDS);
+  const mins      = Math.floor(timeLeft / 60);
+  const secs      = timeLeft % 60;
   const isExpired = timeLeft === 0;
 
   function buildWA(withEngraving) {
@@ -137,243 +131,236 @@ export default function BookingScreen({ initial, onBack }) {
       withEngraving && !isExpired ? '\nХочу получить индивидуальную гравировку в подарок.' : '',
     ].filter(v => v !== false && v !== undefined).join('\n');
   }
-
   function openWA(withEngraving = false) {
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildWA(withEngraving))}`, '_blank');
   }
 
   return (
-    <div style={S.root}>
+    <div style={{ minHeight: '100dvh', background: C.paper050, color: C.ink800, fontFamily: 'Manrope, sans-serif', overflowX: 'hidden' }}>
 
-      {/* Google Fonts */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
 
-      <button style={S.backBtn} onClick={onBack}>
+      {/* Back */}
+      <button onClick={onBack} style={{
+        position: 'fixed', top: 14, left: 14, zIndex: 50,
+        background: 'rgba(250,251,252,0.92)', border: `1.5px solid ${C.paper300}`,
+        backdropFilter: 'blur(16px)', borderRadius: 50,
+        padding: '0 16px', height: 36, display: 'flex', alignItems: 'center', gap: 4,
+        color: C.ink800, cursor: 'pointer', fontSize: '0.82rem',
+        fontFamily: 'Manrope, sans-serif', fontWeight: 500,
+      }}>
         &lsaquo; Назад
       </button>
 
-      {/* ── HERO ── */}
-      <section style={{ paddingTop: 72, paddingBottom: 56 }}>
-        <div style={S.inner}>
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <section style={{ padding: '72px 24px 48px', maxWidth: 480, margin: '0 auto' }}>
 
-          {img && (
-            <div style={{
-              width: '100%', maxWidth: 320, margin: '0 auto 32px',
-              aspectRatio: '1/1', borderRadius: 24, overflow: 'hidden',
-              background: 'linear-gradient(150deg,#6A8EAC,#40648A,#1E3149)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <img src={img} alt={productName} style={{ width: '88%', height: '88%', objectFit: 'contain' }} />
+        {img && (
+          <div style={{
+            width: '100%', maxWidth: 320, margin: '0 auto 28px',
+            aspectRatio: '1/1', borderRadius: 24, overflow: 'hidden',
+            background: C.studio,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <img src={img} alt={productName} style={{ width: '88%', height: '88%', objectFit: 'contain' }} />
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={eyebrow}>Ваш выбор</div>
+          <h1 style={{ fontFamily: '"Unbounded",sans-serif', fontWeight: 300, fontSize: '1.5rem', letterSpacing: '-0.02em', lineHeight: 1.2, margin: '0 0 10px' }}>
+            {productName}
+          </h1>
+          <p style={{ ...lead, marginBottom: 12 }}>
+            {[shapeLabel, carat ? `${carat} кар` : null, gem1Label, metalPurity, metalLabel].filter(Boolean).join(' · ')}
+          </p>
+          {price && (
+            <div style={{ fontFamily: '"Courier New",monospace', fontSize: '1.3rem', fontWeight: 700, color: C.champ700, letterSpacing: '0.04em' }}>
+              от {formatPrice(price)}
             </div>
           )}
+        </div>
 
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={S.eyebrow}>Ваш выбор</div>
-            <h1 style={S.h1}>{productName}</h1>
-            <p style={{ ...S.lead, marginTop: 6 }}>
-              {[shapeLabel, carat ? `${carat} кар` : null, gem1Label, metalPurity, metalLabel]
-                .filter(Boolean).join(' · ')}
-            </p>
-            {price && (
-              <div style={{
-                marginTop: 14, fontFamily: '"Courier New", monospace',
-                fontSize: '1.3rem', fontWeight: 700, color: '#7C6035',
-                letterSpacing: '0.04em',
-              }}>
-                от {formatPrice(price)}
-              </div>
-            )}
+        {/* Срок */}
+        <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 50, background: C.paper100, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.champ700} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
           </div>
+          <div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink400, marginBottom: 3 }}>Срок изготовления</div>
+            <div style={{ fontSize: '0.95rem', fontWeight: 600, color: C.ink800 }}>5–10 рабочих дней</div>
+          </div>
+        </div>
 
-          {/* Production time */}
-          <div style={{ ...S.card, display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 50,
-              background: '#F2F5F9', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', flexShrink: 0,
+        {/* В комплекте */}
+        <div style={{ ...card, marginBottom: 0 }}>
+          <div style={eyebrow}>В комплекте</div>
+          {INCLUDED.map((item, i) => (
+            <div key={item} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 0',
+              borderBottom: i < INCLUDED.length - 1 ? `1px solid ${C.paper200}` : 'none',
             }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C6035" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              </svg>
+              <div style={{ width: 6, height: 6, borderRadius: 50, background: C.champ700, flexShrink: 0 }} />
+              <span style={{ fontSize: '0.87rem', fontWeight: 500 }}>{item}</span>
             </div>
-            <div>
-              <div style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5B81A1', marginBottom: 3 }}>
-                Срок изготовления
-              </div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0B2040' }}>5–10 рабочих дней</div>
-            </div>
-          </div>
-
-          {/* Included */}
-          <div style={S.card}>
-            <div style={{ ...S.eyebrow, marginBottom: 16 }}>В комплекте</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {INCLUDED.map(([label], i) => (
-                <div key={label} style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '11px 0',
-                  borderBottom: i < INCLUDED.length - 1 ? '1px solid #E9EDF3' : 'none',
-                }}>
-                  <div style={{
-                    width: 6, height: 6, borderRadius: 50,
-                    background: '#7C6035', flexShrink: 0,
-                  }} />
-                  <span style={{ fontSize: '0.87rem', fontWeight: 500, color: '#0B2040' }}>{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      <hr style={S.divider} />
+      <hr style={divider} />
 
-      {/* ── CHARACTERISTICS ── */}
-      <section style={{ padding: '56px 0' }}>
-        <div style={S.inner}>
-          <div style={S.eyebrow}>Характеристики</div>
-          <h2 style={S.h2}>Ваш бриллиант</h2>
-          <p style={{ ...S.lead, marginBottom: 24 }}>
-            Мы используем бриллианты с высокими характеристиками — каждый подтверждён международным сертификатом IGI.
-          </p>
-
-          <div style={{ ...S.card, marginBottom: 24 }}>
-            {[
-              ['Форма огранки', shapeLabel, null],
-              carat ? ['Каратность', `${carat} кт`, null] : null,
-              ...DIAMOND_CHARS,
-            ].filter(Boolean).map(([label, value, note], i, arr) => (
-              <div key={label} style={{ ...S.row, borderBottom: i < arr.length - 1 ? '1px solid #E9EDF3' : 'none' }}>
-                <span style={S.rowLabel}>{label}</span>
-                <div>
-                  <div style={S.rowValue}>{value}</div>
-                  {note && <div style={S.rowNote}>{note}</div>}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <h2 style={S.h2}>Оправа</h2>
-          <p style={{ ...S.lead, marginBottom: 24 }}>
-            При создании украшений мы придерживаемся двух принципов — надёжность в эксплуатации и изящность дизайна.
-          </p>
-
-          <div style={S.card}>
-            {[
-              ['Дизайн шинки', shank, null],
-              ['Каст', castLabel, null],
-              ['Металл', metalPurity, null],
-              metalLabel ? ['Цвет золота', metalLabel, null] : null,
-              ['Проба', purity === '750' ? '750 (18к)' : '585 (14к)', null],
-              ['Золото', '4 г', 'Отсутствие экономий — стандарт на 1 украшение'],
-              ['Покрытие', 'Родирование', 'Бесплатное повторное родирование на весь срок'],
-            ].filter(Boolean).map(([label, value, note], i, arr) => (
-              <div key={label} style={{ ...S.row, borderBottom: i < arr.length - 1 ? '1px solid #E9EDF3' : 'none' }}>
-                <span style={S.rowLabel}>{label}</span>
-                <div>
-                  <div style={S.rowValue}>{value}</div>
-                  {note && <div style={S.rowNote}>{note}</div>}
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ── ПОСТ-ПРОДАЖНЫЙ СЕРВИС ───────────────────────────────────────── */}
+      <section style={{ padding: '48px 24px', maxWidth: 480, margin: '0 auto' }}>
+        <div style={eyebrow}>Сервис</div>
+        <h2 style={h2style}>Мы заботимся о вашем украшении всю его жизнь</h2>
+        <p style={{ ...lead, marginBottom: 24 }}>
+          Вы получаете не просто украшение, а долгосрочные отношения со студией. Всё, что нужно для идеального внешнего вида — бесплатно или по себестоимости.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {AFTER_SALE.map(([label, text]) => (
+            <TextCard key={label} label={label} text={text} />
+          ))}
         </div>
       </section>
 
-      <hr style={S.divider} />
+      <hr style={divider} />
 
-      {/* ── LIVE SHOWING ── */}
-      <section style={{ padding: '56px 0 24px' }}>
-        <div style={S.inner}>
-          <div style={S.eyebrow}>Живой показ</div>
-          <h2 style={{ ...S.h2, fontSize: '1.25rem', marginBottom: 6 }}>
-            Приглашаем в наш шоурум
-          </h2>
-          <p style={{ ...S.lead, marginBottom: 32 }}>
-            Вас встретит наш главный специалист по бриллиантам, предложит напитки и проведёт консультацию.
-          </p>
+      {/* ── ПРЕИМУЩЕСТВА ────────────────────────────────────────────────── */}
+      <section style={{ padding: '48px 24px', maxWidth: 480, margin: '0 auto' }}>
+        <div style={eyebrow}>Преимущества</div>
+        <h2 style={h2style}>С нами вы получаете нечто большее, чем просто украшение</h2>
+        <p style={{ ...lead, marginBottom: 24 }}>
+          Вы получаете бриллиант с характеристиками, которые редко встретишь в этой ценовой категории — и оправу, которую создают для надёжности, а не для витрины.
+        </p>
 
-          <div style={{ ...S.card, marginBottom: 32 }}>
-            {SHOW_ITEMS.map((item, i) => (
-              <div key={i} style={{
-                display: 'flex', gap: 14, alignItems: 'flex-start',
-                padding: '12px 0',
-                borderBottom: i < SHOW_ITEMS.length - 1 ? '1px solid #E9EDF3' : 'none',
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <RowCard label="Форма бриллианта" value={shapeLabel} />
+          {carat && <RowCard label="Каратность" value={`${carat} кт`} />}
+          <BenefitCard
+            label="Чистота"
+            value="VVS2/VS1"
+            benefit="Чистый бриллиант без внутренних трещин и изъянов, видимых глазу"
+          />
+          <BenefitCard
+            label="Цвет"
+            value="D/E"
+            benefit="Абсолютно белый бриллиант, без пожелтевших оттенков"
+          />
+          <BenefitCard
+            label="Огранка"
+            value="IDEAL"
+            benefit="Идеальный блеск и игра света — максимум из каждого карата"
+          />
+          <BenefitCard
+            label="Сертификат"
+            value="IGI"
+            benefit="Международная гарантия подлинности и характеристик"
+          />
+          <TextCard
+            label="Качество оправы"
+            text={`Вы получаете украшение из ${metalPurity === '750 (18к)' || purity === '750' ? '18-каратного' : '14-каратного'} золота без компромиссов по весу — не менее 4 г на изделие. Мы не экономим на металле: это напрямую влияет на прочность, надёжность и ощущение украшения на руке.`}
+          />
+          <TextCard
+            label="Долговечность"
+            text="Вы получаете украшение, которое создано служить годами. Надёжная закрепка камней, выверенная посадка, профессиональная обработка — всё это исключает деформации при повседневной носке."
+          />
+          <TextCard
+            label="Программа лояльности"
+            text="Вы становитесь частью нашего сообщества: закрытые мероприятия, лимитированные привилегии от нас и партнёров, а также возможность получать пассивный доход по программе «neo girls»."
+          />
+        </div>
+      </section>
+
+      <hr style={divider} />
+
+      {/* ── ЖИВОЙ ПОКАЗ ─────────────────────────────────────────────────── */}
+      <section style={{ padding: '48px 24px', maxWidth: 480, margin: '0 auto' }}>
+        <div style={eyebrow}>Живой показ</div>
+        <h2 style={h2style}>Приглашаем в наш шоурум</h2>
+        <p style={{ ...lead, marginBottom: 24 }}>
+          Вас встретит наш главный специалист по бриллиантам, предложит напитки и проведёт консультацию.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {SHOW_ITEMS.map((item, i) => (
+            <div key={i} style={{ ...card, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+              <div style={{ width: 6, height: 6, borderRadius: 50, background: C.champ700, flexShrink: 0, marginTop: 6 }} />
+              <span style={{ fontSize: '0.87rem', color: C.ink600, lineHeight: 1.6 }}>{item}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <hr style={divider} />
+
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
+      <section style={{ padding: '56px 24px 80px', maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
+
+        <h2 style={{
+          fontFamily: '"Unbounded",sans-serif',
+          fontWeight: 400, fontSize: '1.45rem',
+          letterSpacing: '-0.02em', lineHeight: 1.25,
+          color: C.ink800, margin: '0 0 16px',
+        }}>
+          Забронируйте живой показ
+        </h2>
+
+        {!isExpired ? (
+          <>
+            <p style={{ fontSize: '0.92rem', color: C.ink600, lineHeight: 1.6, margin: '0 0 28px' }}>
+              Напишите нам прямо сейчас и получите{' '}
+              <strong style={{ color: C.ink800 }}>индивидуальную гравировку на украшение в подарок</strong>
+            </p>
+
+            <button onClick={() => openWA(true)} style={{
+              width: '100%', padding: '16px 24px',
+              borderRadius: 50, border: 'none', cursor: 'pointer',
+              background: C.wa, color: '#fff',
+              fontSize: '1rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              marginBottom: 20,
+            }}>
+              <WhatsAppIcon />
+              Написать в WhatsApp
+            </button>
+
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              background: C.paper100, borderRadius: 12, padding: '10px 18px',
+            }}>
+              <span style={{ fontSize: '0.75rem', color: C.ink400, fontWeight: 500 }}>Предложение истекает через</span>
+              <span style={{
+                fontFamily: '"JetBrains Mono","Courier New",monospace',
+                fontSize: '1.15rem', fontWeight: 700, color: C.champ700, letterSpacing: '0.06em',
               }}>
-                <div style={{
-                  width: 6, height: 6, borderRadius: 50,
-                  background: '#7C6035', flexShrink: 0, marginTop: 7,
-                }} />
-                <span style={{ fontSize: '0.87rem', color: '#1E3149', lineHeight: 1.6 }}>{item}</span>
-              </div>
-            ))}
-          </div>
+                {pad(mins)}:{pad(secs)}
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <p style={{ fontSize: '0.88rem', color: C.ink400, margin: '0 0 24px' }}>
+              Специальное предложение истекло, но мы будем рады вас видеть.
+            </p>
+            <button onClick={() => openWA(false)} style={{
+              width: '100%', padding: '16px 24px',
+              borderRadius: 50, border: 'none', cursor: 'pointer',
+              background: C.wa, color: '#fff',
+              fontSize: '1rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <WhatsAppIcon />
+              Забронировать живой показ
+            </button>
+          </>
+        )}
 
-          {/* CTA */}
-          <div style={{
-            ...S.card,
-            borderColor: '#DCC29B',     // champagne-400 border
-            marginBottom: 16,
-          }}>
-            {!isExpired ? (
-              <>
-                <div style={S.eyebrow}>Специальное предложение</div>
-                <p style={{ fontSize: '0.92rem', color: '#0B2040', lineHeight: 1.6, margin: '0 0 16px' }}>
-                  Напишите нам прямо сейчас и получите{' '}
-                  <strong>индивидуальную гравировку на украшение в подарок</strong>.
-                  Предложение действует только в течение:
-                </p>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 10,
-                  background: '#F2F5F9', borderRadius: 12,
-                  padding: '10px 16px', marginBottom: 20,
-                }}>
-                  <span style={{ fontSize: '0.75rem', color: '#5B81A1', fontWeight: 500 }}>Осталось</span>
-                  <span style={{
-                    fontFamily: '"JetBrains Mono", "Courier New", monospace',
-                    fontSize: '1.2rem', fontWeight: 700, color: '#7C6035',
-                    letterSpacing: '0.06em',
-                  }}>
-                    {pad(mins)}:{pad(secs)}
-                  </span>
-                </div>
-                <button onClick={() => openWA(true)} style={{
-                  width: '100%', padding: '15px 24px',
-                  borderRadius: 50, border: 'none', cursor: 'pointer',
-                  background: '#25D366', color: '#fff',
-                  fontSize: '0.95rem', fontWeight: 700,
-                  fontFamily: 'Manrope, sans-serif',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}>
-                  <WhatsAppIcon />
-                  Написать в WhatsApp
-                </button>
-              </>
-            ) : (
-              <>
-                <p style={{ fontSize: '0.87rem', color: '#5B81A1', margin: '0 0 16px' }}>
-                  Специальное предложение истекло, но мы всё равно будем рады вас видеть.
-                </p>
-                <button onClick={() => openWA(false)} style={{
-                  width: '100%', padding: '15px 24px',
-                  borderRadius: 50, border: 'none', cursor: 'pointer',
-                  background: '#25D366', color: '#fff',
-                  fontSize: '0.95rem', fontWeight: 700,
-                  fontFamily: 'Manrope, sans-serif',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}>
-                  <WhatsAppIcon />
-                  Забронировать живой показ
-                </button>
-              </>
-            )}
-          </div>
-
-          <p style={{ fontSize: '0.75rem', color: '#C2D1DE', textAlign: 'center', marginBottom: 64 }}>
-            Нажимая кнопку, вы перейдёте в WhatsApp — мы ответим в течение нескольких минут
-          </p>
-        </div>
+        <p style={{ fontSize: '0.72rem', color: C.ink200, marginTop: 20 }}>
+          Нажимая кнопку, вы перейдёте в WhatsApp — мы ответим в течение нескольких минут
+        </p>
       </section>
     </div>
   );
