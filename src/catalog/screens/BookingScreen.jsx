@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { cardName, SHAPES, CASTS, METAL_LABELS, WA_NUMBER, SHAPE_IJEWEL, CAST_IJEWEL } from '../data/config.js';
+import { cardName, SHAPES, CASTS, METAL_LABELS, WA_NUMBER } from '../data/config.js';
 import { formatPrice } from '../data/priceCalc.js';
-import { useIjewel } from '../hooks/useIjewel.js';
 
 const TIMER_SECONDS = 600;
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -121,61 +120,12 @@ function MiniWAButton({ onClick }) {
 }
 
 // ─── main ─────────────────────────────────────────────────────────────────────
+// ijewel is passed from App — viewer already running in persistent container above
 export default function BookingScreen({ initial, onBack }) {
   const { shape, shank, cast, carat, purity, metalLabel, gem1Label, price } = initial;
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
   const productName = cardName(shank, cast, shapeLabel);
   const metalPurity = METAL_LABELS[purity] ?? purity;
-
-  // iJewel viewer
-  const ijewel        = useIjewel();
-  const containerRef  = useRef(null);
-  const initDoneRef   = useRef(false);
-  const applyDoneRef  = useRef(false);
-
-  useEffect(() => {
-    if (initDoneRef.current || !containerRef.current) return;
-    initDoneRef.current = true;
-    const tryInit = () => {
-      if (window.ijewelViewer) { ijewel.init(containerRef.current); }
-      else { setTimeout(tryInit, 200); }
-    };
-    tryInit();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!ijewel.isReady || !ijewel.shankVariations.length || applyDoneRef.current) return;
-    const sv = ijewel.shankVariations.find(v => v.id === shank) ??
-               ijewel.shankVariations.find(v => v.id.toLowerCase() === shank.toLowerCase());
-    if (!sv) return;
-    applyDoneRef.current = true;
-    ijewel.applyInitial({ shapeTag: SHAPE_IJEWEL[shape], castTag: CAST_IJEWEL[cast], shankName: sv.id });
-  }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!ijewel.isReady || !ijewel.gem1Options.length) return;
-    const findWhite = opts => opts.find(o => o.label.toLowerCase().includes('бел'));
-    const w1 = findWhite(ijewel.gem1Options);
-    if (w1) ijewel.applyGem('gem1', w1.uuid);
-    const w2 = findWhite(ijewel.gem2Options);
-    if (w2) ijewel.applyGem('gem2', w2.uuid);
-  }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!ijewel.isReady || !ijewel.shankMetalOptions.length) return;
-    const white = ijewel.shankMetalOptions.find(o => o.label.toLowerCase().includes('бел'));
-    if (white) {
-      ijewel.applyShankMetal(white.uuid);
-      const cw = ijewel.castMetalOptions.find(o => o.label === white.label);
-      if (cw) ijewel.applyCastMetal(cw.uuid);
-    }
-  }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!ijewel.isConfigured) return;
-    const t = setTimeout(() => ijewel.startInteractionHint(), 1500);
-    return () => clearTimeout(t);
-  }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const timeLeft  = useCountdown(TIMER_SECONDS);
   const mins      = Math.floor(timeLeft / 60);
@@ -199,7 +149,7 @@ export default function BookingScreen({ initial, onBack }) {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: C.paper050, color: C.ink800, fontFamily: 'Manrope, sans-serif', overflowX: 'hidden' }}>
+    <div style={{ background: C.paper050, color: C.ink800, fontFamily: 'Manrope, sans-serif', overflowX: 'hidden', flex: 1 }}>
 
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -218,29 +168,6 @@ export default function BookingScreen({ initial, onBack }) {
           pointer-events: none;
         }
       `}</style>
-
-      {/* ── VIEWER full-bleed (same as DetailScreen) ─────────────────── */}
-      <div className="cfg-viewer-panel" style={{ position: 'relative' }}>
-        <div ref={containerRef} className="cfg-viewer-container" />
-        {!ijewel.isConfigured && (
-          <div className="cfg-viewer-loader">
-            <div className="cfg-viewer-loader-inner">
-              <p className="cfg-viewer-loader-text">Загрузка украшения...</p>
-            </div>
-          </div>
-        )}
-        {/* Back button overlaid on viewer */}
-        <button onClick={onBack} style={{
-          position: 'absolute', top: 14, left: 14, zIndex: 10,
-          background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)',
-          backdropFilter: 'blur(8px)', borderRadius: 20,
-          padding: '0 14px', height: 34, display: 'flex', alignItems: 'center', gap: 4,
-          color: '#fff', cursor: 'pointer',
-          fontFamily: 'Manrope, sans-serif', fontSize: '0.82rem', fontWeight: 500,
-        }}>
-          ‹ Назад
-        </button>
-      </div>
 
       {/* ── HERO info ────────────────────────────────────────────────────── */}
       <section style={{ padding: '32px 24px 48px', maxWidth: 480, margin: '0 auto' }}>

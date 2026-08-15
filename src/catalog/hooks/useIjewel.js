@@ -214,20 +214,10 @@ export function useIjewel() {
       }, 500);
     };
 
-    // If a viewer already exists, move its canvas into our container directly —
-    // avoids a full model reload and the ijewel-viewer-ready timing trap.
+    // If a viewer already exists (container is persistent, canvas never moved),
+    // just re-hook the refs — no DOM manipulation, no model reload.
     const existingViewer = window.webGiViewers?.[0];
     if (existingViewer) {
-      const canvas =
-        existingViewer.canvas ??
-        existingViewer.renderer?.domElement ??
-        existingViewer._renderer?.domElement ??
-        existingViewer.element;
-      if (canvas && !containerEl.contains(canvas)) {
-        containerEl.appendChild(canvas);
-        try { existingViewer.resize?.(); } catch (_) {}
-        try { existingViewer.renderer?.setSize?.(containerEl.offsetWidth, containerEl.offsetHeight); } catch (_) {}
-      }
       setupViewer(existingViewer);
       return;
     }
@@ -448,8 +438,10 @@ export function useIjewel() {
     try { viewer.fitToView(); } catch (e) { console.warn('[iJewel fitScene]', e); }
   }, []);
 
+  const resetConfigured = useCallback(() => setIsConfigured(false), []);
+
   return {
-    init, isReady, isConfigured, fitScene, startInteractionHint,
+    init, isReady, isConfigured, resetConfigured, fitScene, startInteractionHint,
     shankVariations, gem1Options, gem2Options, shankMetalOptions, castMetalOptions,
     debugInfo,
     applyInitial, applyHead, applyCarat, applyShankMetal, applyCastMetal, applyGem,
