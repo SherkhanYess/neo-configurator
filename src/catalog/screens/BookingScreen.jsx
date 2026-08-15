@@ -46,7 +46,7 @@ const INCLUDED = [
 const AFTER_SALE = [
   ['Ультразвуковая чистка', 'Пожизненно, бесплатно. Ваше украшение всегда будет сиять как в первый день.'],
   ['Повторное родирование', 'Бесплатно. Восстановим белоснежное покрытие в любое время.'],
-  ['Ремонт и доработки', 'По себестоимости работы мастера. Изготовление второй пары, изменение размера и многое другое.'],
+  ['Ремонт и доработки', 'По себестоимости. Изготовление второй пары, изменение размера и многое другое.'],
 ];
 const SHOW_ITEMS = [
   'Примерите украшения вживую и оцените, как они смотрятся именно на вас',
@@ -218,7 +218,7 @@ export default function BookingScreen({ initial, onBack }) {
         <div style={eyebrow}>Сервис</div>
         <h2 style={h2style}>Мы заботимся о вашем украшении всю его жизнь</h2>
         <p style={{ ...lead, marginBottom: 24 }}>
-          Вы получаете не просто украшение, а долгосрочные отношения со студией. Всё, что нужно для идеального внешнего вида — бесплатно или по себестоимости.
+          Вы получаете не просто украшение, а долгосрочные отношения со студией. Это то, чего вы лишаетесь при покупке украшений у байеров из Китая и Дубая.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {AFTER_SALE.map(([label, text]) => (
@@ -238,7 +238,6 @@ export default function BookingScreen({ initial, onBack }) {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <RowCard label="Форма бриллианта" value={shapeLabel} />
           {carat && <RowCard label="Каратность" value={`${carat} кт`} />}
           <BenefitCard
             label="Чистота"
@@ -260,18 +259,73 @@ export default function BookingScreen({ initial, onBack }) {
             value="IGI"
             benefit="Международная гарантия подлинности и характеристик"
           />
-          <TextCard
-            label="Качество оправы"
-            text={`Вы получаете украшение из ${metalPurity === '750 (18к)' || purity === '750' ? '18-каратного' : '14-каратного'} золота без компромиссов по весу — не менее 4 г на изделие. Мы не экономим на металле: это напрямую влияет на прочность, надёжность и ощущение украшения на руке.`}
-          />
-          <TextCard
-            label="Долговечность"
-            text="Вы получаете украшение, которое создано служить годами. Надёжная закрепка камней, выверенная посадка, профессиональная обработка — всё это исключает деформации при повседневной носке."
-          />
-          <TextCard
-            label="Программа лояльности"
-            text="Вы становитесь частью нашего сообщества: закрытые мероприятия, лимитированные привилегии от нас и партнёров, а также возможность получать пассивный доход по программе «neo girls»."
-          />
+          <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: C.ink400, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Качество оправы
+            </div>
+            {[
+              'В среднем тратим 4 г золота на украшение',
+              'Не экономим на сырье — вы получаете благородное украшение, которое редко встретить на рынках Китая и Дубая',
+            ].map((pt, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 6, height: 6, borderRadius: 50, background: C.champ700, flexShrink: 0, marginTop: 6 }} />
+                <span style={{ fontSize: '0.87rem', color: C.ink600, lineHeight: 1.55 }}>{pt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <hr style={divider} />
+
+      {/* ── ПРОГРАММА ЛОЯЛЬНОСТИ ─────────────────────────────────────────── */}
+      <section style={{
+        padding: '48px 24px', maxWidth: 480, margin: '0 auto',
+      }}>
+        <div style={{
+          background: `linear-gradient(135deg, ${C.ink800} 0%, #1a3a5c 60%, #2a4a6e 100%)`,
+          borderRadius: 24, padding: '32px 28px', position: 'relative', overflow: 'hidden',
+        }}>
+          {/* Decorative circles */}
+          <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(220,194,155,0.07)' }} />
+          <div style={{ position: 'absolute', bottom: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(220,194,155,0.05)' }} />
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ ...eyebrow, color: C.champ400, marginBottom: 8 }}>Программа лояльности</div>
+            <h2 style={{
+              fontFamily: '"Unbounded",sans-serif', fontWeight: 300, fontSize: '1.2rem',
+              letterSpacing: '-0.02em', lineHeight: 1.3, margin: '0 0 8px', color: '#fff',
+            }}>
+              neo girls
+            </h2>
+            <div style={{
+              display: 'inline-block',
+              background: `linear-gradient(90deg, ${C.champ700}, ${C.champ400})`,
+              borderRadius: 50, padding: '4px 14px', marginBottom: 20,
+            }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: '0.04em' }}>
+                Пассивный доход
+              </span>
+            </div>
+            <p style={{ fontSize: '0.87rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, margin: '0 0 20px' }}>
+              Вы становитесь частью нашего закрытого сообщества и получаете возможность зарабатывать, просто делясь впечатлениями о своём украшении.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                ['Реферальный доход', 'Получайте вознаграждение за каждого приведённого клиента'],
+                ['Закрытые события', 'Приглашения на мероприятия, недоступные широкой аудитории'],
+                ['Привилегии от партнёров', 'Лимитированные предложения от наших партнёров'],
+              ].map(([title, desc]) => (
+                <div key={title} style={{
+                  background: 'rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 16px',
+                  display: 'flex', flexDirection: 'column', gap: 4,
+                }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: C.champ400 }}>{title}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
