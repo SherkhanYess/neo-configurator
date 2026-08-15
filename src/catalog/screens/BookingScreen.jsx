@@ -171,6 +171,12 @@ export default function BookingScreen({ initial, onBack }) {
     }
   }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!ijewel.isConfigured) return;
+    const t = setTimeout(() => ijewel.startInteractionHint(), 1500);
+    return () => clearTimeout(t);
+  }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const timeLeft  = useCountdown(TIMER_SECONDS);
   const mins      = Math.floor(timeLeft / 60);
   const secs      = timeLeft % 60;
@@ -213,39 +219,31 @@ export default function BookingScreen({ initial, onBack }) {
         }
       `}</style>
 
-      {/* Back */}
-      <button onClick={onBack} style={{
-        position: 'fixed', top: 14, left: 14, zIndex: 50,
-        background: 'rgba(250,251,252,0.92)', border: `1.5px solid ${C.paper300}`,
-        backdropFilter: 'blur(16px)', borderRadius: 50,
-        padding: '0 16px', height: 36, display: 'flex', alignItems: 'center', gap: 4,
-        color: C.ink800, cursor: 'pointer', fontSize: '0.82rem',
-        fontFamily: 'Manrope, sans-serif', fontWeight: 500,
-      }}>
-        &lsaquo; Назад
-      </button>
-
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '72px 24px 48px', maxWidth: 480, margin: '0 auto' }}>
-
-        {/* iJewel viewer */}
-        <div style={{
-          width: '100%', maxWidth: 360, margin: '0 auto 28px',
-          aspectRatio: '1/1', borderRadius: 24, overflow: 'hidden',
-          background: C.studio, position: 'relative',
-        }}>
-          <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-          {!ijewel.isConfigured && (
-            <div style={{
-              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: C.studio,
-            }}>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontFamily: 'Manrope, sans-serif' }}>
-                Загрузка украшения...
-              </p>
+      {/* ── VIEWER full-bleed (same as DetailScreen) ─────────────────── */}
+      <div className="cfg-viewer-panel" style={{ position: 'relative' }}>
+        <div ref={containerRef} className="cfg-viewer-container" />
+        {!ijewel.isConfigured && (
+          <div className="cfg-viewer-loader">
+            <div className="cfg-viewer-loader-inner">
+              <p className="cfg-viewer-loader-text">Загрузка украшения...</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+        {/* Back button overlaid on viewer */}
+        <button onClick={onBack} style={{
+          position: 'absolute', top: 14, left: 14, zIndex: 10,
+          background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)',
+          backdropFilter: 'blur(8px)', borderRadius: 20,
+          padding: '0 14px', height: 34, display: 'flex', alignItems: 'center', gap: 4,
+          color: '#fff', cursor: 'pointer',
+          fontFamily: 'Manrope, sans-serif', fontSize: '0.82rem', fontWeight: 500,
+        }}>
+          ‹ Назад
+        </button>
+      </div>
+
+      {/* ── HERO info ────────────────────────────────────────────────────── */}
+      <section style={{ padding: '32px 24px 48px', maxWidth: 480, margin: '0 auto' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={eyebrow}>Ваш выбор</div>
