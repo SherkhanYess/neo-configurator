@@ -275,12 +275,25 @@ export function useIjewel() {
 
   // Applies head (shape+cast) then shank sequentially — one fully completes before the next
   // starts. Only then sets isConfigured→true so the ring reveals without visual overlap.
+  //
+  // "Double-tap" pattern: the SDK's RingConfigurator tracks which variation is currently
+  // active so it knows what to HIDE when the next one is applied. On first open, the base
+  // model (round+classic+sirius) was loaded via loadModelById OUTSIDE the variation system,
+  // so RC has nothing registered as "current" — applyVariation adds the new variation ON TOP
+  // instead of replacing. Fix: apply the default variation first to register it, then apply
+  // the desired one so RC correctly hides the default and shows only the target.
   const applyInitial = useCallback(async ({ shapeTag, castTag, shankName }) => {
     try {
       const heads = getComponent('head');
       if (heads && shapeTag) {
+        // Register the default (round+classic) so RC knows what to replace
+        const defaultHead = heads.variations?.find(
+          x => matchTag(x, 'shape: round') && matchTag(x, 'cast: classic')
+        ) ?? heads.variations?.[0];
+        if (defaultHead) await applyVariation(heads, defaultHead);
+
         const v = heads.variations?.find(x => matchTag(x, shapeTag) && matchTag(x, castTag));
-        if (v) {
+        if (v && v !== defaultHead) {
           lastRef.current.head = `${shapeTag ?? ''}|${castTag ?? ''}`;
           await applyVariation(heads, v);
         }
@@ -288,20 +301,21 @@ export function useIjewel() {
 
       const shanks = getComponent('shank');
       if (shanks && shankName) {
+        // Register the default shank (Sirius) so RC knows what to replace
+        const defaultShank = shanks.variations?.find(
+          x => (x.title ?? x.name ?? '').replace('.glb', '').toLowerCase() === 'sirius'
+        ) ?? shanks.variations?.[0];
+        if (defaultShank) await applyVariation(shanks, defaultShank);
+
         const v = shanks.variations?.find(
           x => (x.title ?? x.name ?? '').replace('.glb', '') === shankName
         );
-        if (v) {
+        if (v && v !== defaultShank) {
           lastRef.current.shank = shankName;
           await applyVariation(shanks, v);
         }
       }
     } finally {
-      // Brief wait for the SDK's internal transition animation to finish
-      // before revealing the canvas. applyVariation resolves when the variation
-      // is "set", but the visual swap (hide old mesh, show new) may still be
-      // animating. Without this, the overlap can briefly appear before the
-      // visibility:hidden container is shown.
       await new Promise(r => setTimeout(r, 350));
       setIsConfigured(true);
     }
