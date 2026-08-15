@@ -154,41 +154,26 @@ export function useIjewel() {
   const init = useCallback((containerEl) => {
     if (!containerEl || !window.ijewelViewer) return;
 
-    ijewelViewer.loadModelById(FILE_ID, INSTANCE, containerEl, {
-      showConfigurator: false,
-      showCard: false,
-      showLogo: false,
-      useIjewelLogo: false,
-      brandingSettings: { enable: false, showLoadingScreenLogo: false },
-      hideQuality: true,
-      transparentBg: false,
-      hideFullScreen: true,
-      hideFitScene: true,
-      hideCameraViews: true,
-      hideRotateCamera: true,
-      hideResetView: true,
-      hideGltfAnimations: true,
-      runRotateCamera: false,
-    });
+    // ijewel-viewer-ready fires only once per session (SDK singleton).
+    // On 2nd+ card opens the event never re-fires, so we need a fallback
+    // that grabs the existing viewer directly.
+    let setupDone = false;
 
-    window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
-      const viewer = detail.viewer;
+    const setupViewer = (viewer) => {
+      if (setupDone) return;
+      setupDone = true;
+
       viewerRef.current = viewer;
       ringRef.current = viewer.getPluginByType('RingConfigurator');
       matRef.current  = viewer.getPluginByType('MaterialConfiguratorPlugin');
 
-      // Override animateToFitObject so ALL fitToView calls (ours + iJewel's internal)
-      // restore the admin-configured camera from IjewelEditorPlugin.project.cameraConfig.
-      // Read lazily at call time — avoids any timing issues with model/project loading.
       const cameraViews = viewer.getPluginByType('CameraViews');
       if (cameraViews) {
         const _orig = cameraViews.animateToFitObject.bind(cameraViews);
         cameraViews.animateToFitObject = async function(obj, mult, dur, ease, opts) {
-          // camViews[0] takes priority if the designer saved explicit views
           if (this.camViews?.length > 0) {
             return this.animateToView(this.camViews[0], dur ?? 600, ease);
           }
-          // Read admin camera config at call time (project is populated by now)
           try {
             const editorPlugin = viewer.getPluginByType('IjewelEditorPlugin');
             const camCfg = editorPlugin?.project?.cameraConfig;
@@ -210,14 +195,11 @@ export function useIjewel() {
       }
 
       const bumpAndFit = () => { bump(); };
-
-      // Plugin events
       if (ringRef.current) ringRef.current.addEventListener('componentProcessed', bumpAndFit);
       if (matRef.current) {
         matRef.current.addEventListener('deserialize', bump);
         matRef.current.addEventListener('refreshUi',  bump);
       }
-      // Scene event — fires when ring parts are added (advanced template pattern)
       try { viewer.scene?.addEventListener('addSceneObject', bump); } catch (_) {}
 
       setIsReady(true);
@@ -225,13 +207,47 @@ export function useIjewel() {
       pendingRef.current = [];
       bump();
 
-      // Polling fallback: bump every 500ms for 10s in case events don't fire
       let attempts = 0;
       const poll = setInterval(() => {
         bump();
         if (++attempts >= 20) clearInterval(poll);
       }, 500);
+    };
+
+    // Primary path: first load or model reload fires this event
+    window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
+      setupViewer(detail.viewer);
     }, { once: true });
+
+    ijewelViewer.loadModelById(FILE_ID, INSTANCE, containerEl, {
+      showConfigurator: false,
+      showCard: false,
+      showLogo: false,
+      useIjewelLogo: false,
+      brandingSettings: { enable: false, showLoadingScreenLogo: false },
+      hideQuality: true,
+      transparentBg: false,
+      hideFullScreen: true,
+      hideFitScene: true,
+      hideCameraViews: true,
+      hideRotateCamera: true,
+      hideResetView: true,
+      hideGltfAnimations: true,
+      runRotateCamera: false,
+    });
+
+    // Fallback: if event doesn't fire (viewer reused from previous card),
+    // grab the existing viewer instance directly. Poll until it's available.
+    let fallbackAttempts = 0;
+    const fallbackPoll = setInterval(() => {
+      if (setupDone) { clearInterval(fallbackPoll); return; }
+      const existing = window.webGiViewers?.[0];
+      if (existing) {
+        clearInterval(fallbackPoll);
+        setupViewer(existing);
+      }
+      if (++fallbackAttempts > 30) clearInterval(fallbackPoll); // 3s max
+    }, 100);
   }, [bump]);
 
   const run = useCallback((fn) => {
