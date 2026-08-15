@@ -243,34 +243,42 @@ export function useIjewel() {
     if (!shapeTag && !castTag) return;
     if (lastRef.current.head === key) return;
     run(async () => {
+      const ring  = ringRef.current;
       const heads = getComponent('head');
       if (!heads) return;
-      const normCastTag = normalizeTag(castTag ?? '');
-      const isClassic = !castTag || normCastTag === normalizeTag('cast: classic');
       const matchTag = (v, tag) => {
         if (!tag) return true;
         return (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag));
       };
-      const hasCastTag = (v) => (v.tags ?? []).some(t => normalizeTag(t).startsWith('cast:'));
-      // Prefer exact match first
-      let variation = heads.variations?.find((v) => matchTag(v, shapeTag) && matchTag(v, castTag));
-      // For classic: also accept variations with the right shape but NO cast tag (classic is default, untagged)
-      if (!variation && isClassic) {
-        variation = heads.variations?.find((v) => matchTag(v, shapeTag) && !hasCastTag(v));
+      const variation = heads.variations?.find((v) => matchTag(v, shapeTag) && matchTag(v, castTag));
+      if (!variation) return;
+      lastRef.current.head = key;
+      // Use the RingConfigurator plugin's applyVariation — it properly hides all
+      // other variation meshes before showing the new one.
+      if (ring?.applyVariation) {
+        await ring.applyVariation(heads, variation);
+      } else {
+        await heads.applyVariation(variation);
       }
-      if (variation) { lastRef.current.head = key; await heads.applyVariation(variation); }
     });
   }, [run]);
 
   const applyShank = useCallback((name) => {
     if (!name || lastRef.current.shank === name) return;
     run(async () => {
+      const ring   = ringRef.current;
       const shanks = getComponent('shank');
       if (!shanks) return;
       const variation = shanks.variations?.find(
         (v) => (v.title ?? v.name ?? '').replace('.glb', '') === name
       );
-      if (variation) { lastRef.current.shank = name; await shanks.applyVariation(variation); }
+      if (!variation) return;
+      lastRef.current.shank = name;
+      if (ring?.applyVariation) {
+        await ring.applyVariation(shanks, variation);
+      } else {
+        await shanks.applyVariation(variation);
+      }
     });
   }, [run]);
 
@@ -278,12 +286,19 @@ export function useIjewel() {
     const tag = `size: ${carat}ct`;
     if (lastRef.current.carat === tag) return;
     run(async () => {
+      const ring  = ringRef.current;
       const heads = getComponent('head');
       if (!heads) return;
       const variation = heads.variations?.find((v) =>
         (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag))
       );
-      if (variation) { lastRef.current.carat = tag; await heads.applyVariation(variation); }
+      if (!variation) return;
+      lastRef.current.carat = tag;
+      if (ring?.applyVariation) {
+        await ring.applyVariation(heads, variation);
+      } else {
+        await heads.applyVariation(variation);
+      }
     });
   }, [run]);
 
