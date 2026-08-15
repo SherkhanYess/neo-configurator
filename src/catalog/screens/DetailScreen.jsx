@@ -77,16 +77,23 @@ export default function DetailScreen({ ijewel }) {
   const [shapePicker,  setShapePicker]  = useState(false);
   const [prices]                        = useState(() => loadPrices());
 
-  const castRef = useRef(cast);
+  const castRef        = useRef(cast);
+  // Tracks which cardKey has been fully initialized — prevents re-running
+  // when shankVariations identity changes due to the bump() polling interval.
+  const initDoneForRef = useRef(null);
 
-  // Single effect: fires on every card change AND when viewer first becomes ready.
-  // Resets all UI state and applies the new card to the viewer.
+  // Fires on card change (cardKey) AND when viewer first becomes ready (isReady/shankVariations).
+  // Guard: only runs once per cardKey — bump() causes shankVariations to change every 500ms
+  // even when content is identical, which would otherwise re-trigger applyInitial concurrently.
   useEffect(() => {
     if (!ijewel.isReady || !ijewel.shankVariations.length) return;
+    if (initDoneForRef.current === cardKey) return;
 
     const sv = ijewel.shankVariations.find(v => v.id === shankId) ??
                ijewel.shankVariations.find(v => v.id.toLowerCase() === shankId.toLowerCase());
     if (!sv) return;
+
+    initDoneForRef.current = cardKey;
 
     // Reset config UI
     setShape(shapeParam);
