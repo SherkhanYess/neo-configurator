@@ -228,7 +228,7 @@ export default function DetailScreen({ ijewel }) {
     sessionStorage.setItem('nd_booking', JSON.stringify({
       shape, shank: shankId, cast, carat, purity, metalLabel, gem1Label, gem2Label, price,
     }));
-    navigate('/booking');
+    navigate('/catalog/booking');
   }
 
   return (

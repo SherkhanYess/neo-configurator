@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import FilterScreen  from './screens/FilterScreen.jsx';
 import CatalogScreen from './screens/CatalogScreen.jsx';
 import DetailScreen  from './screens/DetailScreen.jsx';
@@ -18,22 +19,18 @@ const BACK_BTN = {
   fontSize: '0.82rem', fontWeight: 500, letterSpacing: '0.01em',
 };
 
-export default function App() {
-  if (new URLSearchParams(window.location.search).has('admin')) {
-    return <AdminScreen />;
-  }
+function CatalogMain() {
+  const location = useLocation();
+  const navigate  = useNavigate();
+  const ijewel        = useIjewel();
+  const viewerRef     = useRef(null);
+  const viewerInitRef = useRef(false);
 
-  const [screen,  setScreen]  = useState('filter');
-  const [shapes,  setShapes]  = useState([]);
-  const [detail,  setDetail]  = useState(null);
-  const [booking, setBooking] = useState(null);
-
-  // iJewel lives here — one instance, one canvas, never unmounts
-  const ijewel         = useIjewel();
-  const viewerRef      = useRef(null);
-  const viewerInitRef  = useRef(false);
-
-  const showViewer = screen === 'detail' || screen === 'booking';
+  // Strip the /catalog prefix to get the sub-path for route matching
+  const subPath = location.pathname.replace(/^\/catalog/, '') || '/';
+  const onProduct = subPath.startsWith('/product');
+  const onBooking = subPath.startsWith('/booking');
+  const showViewer = onProduct || onBooking;
 
   useEffect(() => {
     if (!showViewer || viewerInitRef.current || !viewerRef.current) return;
@@ -48,23 +45,8 @@ export default function App() {
     tryInit();
   }, [showViewer]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function pickShapes(s)  { setShapes(s); setScreen('catalog'); }
-  function openDetail(p)  {
-    setDetail(p);
-    ijewel.resetConfigured(); // show loader while new card's shape/shank apply
-    ijewel.fitScene();        // reset camera to default position
-    setScreen('detail');
-  }
-  function openBooking(d) {
-    setBooking(d);
-    // don't reset isConfigured — ring is already shown correctly from DetailScreen
-    setScreen('booking');
-  }
-
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
-
-      {/* ── Persistent viewer — always in DOM so WebGL canvas never moves ── */}
       <div
         className="cfg-viewer-panel"
         style={{ display: showViewer ? undefined : 'none', position: 'relative', flexShrink: 0 }}
@@ -79,40 +61,27 @@ export default function App() {
           </div>
         )}
 
-        {screen === 'detail' && (
-          <button style={BACK_BTN} onClick={() => setScreen('catalog')}>‹ Назад</button>
-        )}
-        {screen === 'booking' && (
-          <button style={BACK_BTN} onClick={() => setScreen('detail')}>‹ Назад</button>
+        {showViewer && (
+          <button style={BACK_BTN} onClick={() => navigate(-1)}>‹ Назад</button>
         )}
       </div>
 
-      {/* ── Screens ──────────────────────────────────────────────────────── */}
-      {screen === 'filter' && (
-        <FilterScreen onConfirm={pickShapes} />
-      )}
-      {screen === 'catalog' && (
-        <CatalogScreen
-          activeShapes={shapes}
-          onChangeShapes={() => setScreen('filter')}
-          onOpen={openDetail}
-        />
-      )}
-      {screen === 'detail' && detail && (
-        <DetailScreen
-          initial={detail}
-          ijewel={ijewel}
-          onBack={() => setScreen('catalog')}
-          onBook={openBooking}
-        />
-      )}
-      {screen === 'booking' && booking && (
-        <BookingScreen
-          initial={booking}
-          ijewel={ijewel}
-          onBack={() => setScreen('detail')}
-        />
-      )}
+      <Routes>
+        <Route path="/catalog"                                      element={<FilterScreen />} />
+        <Route path="/catalog/filter"                               element={<FilterScreen />} />
+        <Route path="/catalog/list"                                 element={<CatalogScreen />} />
+        <Route path="/catalog/product/:shank/:cast/:shape"          element={<DetailScreen ijewel={ijewel} />} />
+        <Route path="/catalog/booking"                              element={<BookingScreen />} />
+        <Route path="/catalog/admin"                                element={<AdminScreen />} />
+      </Routes>
     </div>
+  );
+}
+
+export default function CatalogApp() {
+  return (
+    <BrowserRouter>
+      <CatalogMain />
+    </BrowserRouter>
   );
 }

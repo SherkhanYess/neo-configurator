@@ -128,7 +128,7 @@ export default function BookingScreen() {
   const timeLeft  = useCountdown(TIMER_SECONDS);
 
   useEffect(() => {
-    if (!stored) navigate('/');
+    if (!stored) navigate('/catalog');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!stored) return null;

@@ -14,7 +14,7 @@ export default function FilterScreen() {
 
   function confirm() {
     const shapes = selected.length ? selected : SHAPES.map(s => s.id);
-    navigate(`/catalog?shapes=${shapes.join(',')}`);
+    navigate(`/catalog/list?shapes=${shapes.join(',')}`);
   }
 
   return (
