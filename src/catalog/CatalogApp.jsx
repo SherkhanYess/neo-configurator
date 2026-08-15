@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import FilterScreen  from './screens/FilterScreen.jsx';
 import CatalogScreen from './screens/CatalogScreen.jsx';
@@ -31,6 +31,17 @@ function CatalogMain() {
   const onProduct = subPath.startsWith('/product');
   const onBooking = subPath.startsWith('/booking');
   const showViewer = onProduct || onBooking;
+
+  // Fires synchronously after DOM update but BEFORE browser paint.
+  // In the old useState CatalogApp, resetConfigured() was called inside openDetail()
+  // as a user-event handler — same React batch as setScreen('detail'), so the loader
+  // rendered together with DetailScreen on mount. React Router breaks that: navigate()
+  // and resetConfigured() are in different layers. useLayoutEffect restores the guarantee:
+  // isConfigured=false is set synchronously before any frame is painted, so the canvas
+  // is always hidden (via visibility:hidden) before applyInitial makes SDK changes.
+  useLayoutEffect(() => {
+    if (onProduct) ijewel.resetConfigured();
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!showViewer || viewerInitRef.current || !viewerRef.current) return;
