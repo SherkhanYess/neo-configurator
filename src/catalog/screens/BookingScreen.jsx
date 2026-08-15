@@ -102,6 +102,21 @@ function TextCard({ label, text }) {
   );
 }
 
+function MiniWAButton({ onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      width: '100%', marginTop: 20,
+      padding: '13px 20px', borderRadius: 50, border: 'none', cursor: 'pointer',
+      background: C.wa, color: '#fff',
+      fontSize: '0.9rem', fontWeight: 600, fontFamily: 'Manrope, sans-serif',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}>
+      <WhatsAppIcon />
+      Записаться на живой показ
+    </button>
+  );
+}
+
 // ─── main ─────────────────────────────────────────────────────────────────────
 export default function BookingScreen({ initial, onBack }) {
   const { shape, shank, cast, carat, purity, metalLabel, gem1Label, price } = initial;
@@ -206,6 +221,7 @@ export default function BookingScreen({ initial, onBack }) {
             </div>
           ))}
         </div>
+        <MiniWAButton onClick={() => openWA(false)} />
       </section>
 
       <hr style={divider} />
@@ -222,6 +238,7 @@ export default function BookingScreen({ initial, onBack }) {
             <TextCard key={label} label={label} text={text} />
           ))}
         </div>
+        <MiniWAButton onClick={() => openWA(false)} />
       </section>
 
       <hr style={divider} />
@@ -271,6 +288,7 @@ export default function BookingScreen({ initial, onBack }) {
             ))}
           </div>
         </div>
+        <MiniWAButton onClick={() => openWA(false)} />
       </section>
 
       <hr style={divider} />
