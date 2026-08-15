@@ -93,6 +93,7 @@ export default function DetailScreen({ ijewel }) {
   // applyInitial concurrently. hasVariations (boolean) only changes false→true once.
   useEffect(() => {
     if (!ijewel.isReady || !hasVariations) return;
+    window.scrollTo({ top: 0, behavior: 'instant' });
 
     const sv = ijewel.shankVariations.find(v => v.id === shankId) ??
                ijewel.shankVariations.find(v => v.id.toLowerCase() === shankId.toLowerCase());
@@ -233,7 +234,7 @@ export default function DetailScreen({ ijewel }) {
 
   return (
     <>
-      <div className="cfg-panel cfg-panel--light" style={{ paddingBottom: 160, flex: 1 }}>
+      <div className="cfg-panel cfg-panel--light" style={{ paddingBottom: 160, flex: 1, opacity: ijewel.isConfigured ? 1 : 0, transition: 'opacity 0.25s ease' }}>
 
         <div className="cfg-step-content" style={{ paddingBottom: 0 }}>
           <div style={{ marginBottom: 16 }}>

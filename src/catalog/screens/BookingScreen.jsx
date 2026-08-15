@@ -45,9 +45,9 @@ const INCLUDED = [
   'Фирменный пакет',
 ];
 const AFTER_SALE = [
-  ['Ультразвуковая чистка', 'Пожизненно, бесплатно. Ваше украшение всегда будет сиять как в первый день.'],
-  ['Повторное родирование', 'Бесплатно. Восстановим белоснежное покрытие в любое время.'],
-  ['Ремонт и доработки', 'По себестоимости. Изготовление второй пары, изменение размера и многое другое.'],
+  ['Ультразвуковая чистка', 'Пожизненно и бесплатно. Украшение сияет точно так же, как в день первого надевания — спустя год, пять, десять лет.'],
+  ['Повторное родирование', 'Бесплатно и в любое время. Белое золото всегда остаётся по-настоящему белым — мы следим за этим вместе с вами.'],
+  ['Ремонт и доработки', 'По себестоимости материалов. Подгоним размер, создадим пару, изменим форму. Мы рядом — не только в момент покупки.'],
 ];
 const SHOW_ITEMS = [
   'Примерите украшения вживую — посмотрите разные формы и размеры бриллиантов на своей руке',
@@ -58,23 +58,21 @@ const SHOW_ITEMS = [
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
-// Benefit card: label top-left, value prominent left, benefit text right
+// Benefit card: label eyebrow, value prominent, benefit below
 function BenefitCard({ label, value, benefit }) {
   return (
-    <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 600, color: C.ink400, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+    <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ fontSize: '0.68rem', fontWeight: 600, color: C.ink400, letterSpacing: '0.11em', textTransform: 'uppercase' }}>
         {label}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ fontFamily: '"Unbounded",sans-serif', fontWeight: 400, fontSize: '1rem', color: C.ink800, flexShrink: 0 }}>
-          {value}
-        </div>
-        {benefit && (
-          <div style={{ fontSize: '0.8rem', color: C.ink400, lineHeight: 1.55, textAlign: 'right' }}>
-            {benefit}
-          </div>
-        )}
+      <div style={{ fontFamily: '"Unbounded",sans-serif', fontWeight: 400, fontSize: '1.05rem', color: C.ink800 }}>
+        {value}
       </div>
+      {benefit && (
+        <div style={{ fontSize: '0.82rem', color: C.ink400, lineHeight: 1.55 }}>
+          {benefit}
+        </div>
+      )}
     </div>
   );
 }
@@ -107,12 +105,13 @@ function MiniWAButton({ onClick }) {
   return (
     <button onClick={onClick} className="wa-btn-shimmer" style={{
       width: '100%', marginTop: 28,
-      padding: '14px 20px', borderRadius: 50, border: 'none', cursor: 'pointer',
+      padding: '17px 20px', borderRadius: 50, border: 'none', cursor: 'pointer',
       background: C.wa, color: '#fff',
-      fontSize: '0.9rem', fontWeight: 600, fontFamily: 'Manrope, sans-serif',
+      fontSize: '0.97rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-      boxShadow: '0 4px 18px rgba(37,211,102,0.38)',
+      boxShadow: '0 4px 20px rgba(37,211,102,0.42)',
       position: 'relative', overflow: 'hidden',
+      minHeight: 56,
     }}>
       <WhatsAppIcon />
       Записаться на живой показ
@@ -124,11 +123,21 @@ function MiniWAButton({ onClick }) {
 export default function BookingScreen() {
   const navigate = useNavigate();
   const stored = JSON.parse(sessionStorage.getItem('nd_booking') ?? 'null');
+  const heroRef = useRef(null);
 
   const timeLeft  = useCountdown(TIMER_SECONDS);
 
   useEffect(() => {
     if (!stored) navigate('/catalog');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Smooth-scroll so «Ваш выбор» lands at the top of the viewport after navigation
+  useEffect(() => {
+    if (!heroRef.current) return;
+    const t = setTimeout(() => {
+      heroRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+    return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!stored) return null;
@@ -182,7 +191,7 @@ export default function BookingScreen() {
       {/* ── HERO info ────────────────────────────────────────────────────── */}
       <section style={{ padding: '32px 24px 48px', maxWidth: 480, margin: '0 auto' }}>
 
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <div ref={heroRef} style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={eyebrow}>Ваш выбор</div>
           <h1 style={{ fontFamily: '"Unbounded",sans-serif', fontWeight: 300, fontSize: '1.5rem', letterSpacing: '-0.02em', lineHeight: 1.2, margin: '0 0 10px' }}>
             {productName}
