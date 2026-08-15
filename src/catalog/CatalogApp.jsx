@@ -48,9 +48,18 @@ export default function App() {
     tryInit();
   }, [showViewer]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function pickShapes(s)  { setShapes(s);  setScreen('catalog'); }
-  function openDetail(p)  { setDetail(p);  ijewel.resetConfigured(); setScreen('detail');  }
-  function openBooking(d) { setBooking(d); ijewel.resetConfigured(); setScreen('booking'); }
+  function pickShapes(s)  { setShapes(s); setScreen('catalog'); }
+  function openDetail(p)  {
+    setDetail(p);
+    ijewel.resetConfigured(); // show loader while new card's shape/shank apply
+    ijewel.fitScene();        // reset camera to default position
+    setScreen('detail');
+  }
+  function openBooking(d) {
+    setBooking(d);
+    // don't reset isConfigured — ring is already shown correctly from DetailScreen
+    setScreen('booking');
+  }
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
