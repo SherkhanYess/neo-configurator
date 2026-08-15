@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SHAPES, SHANKS, CASTS, VALID_COMBOS, SHAPE_IJEWEL, CAST_IJEWEL, cardName } from '../data/config.js';
+import { SHAPES, SHANKS, CASTS, SHAPE_IJEWEL, CAST_IJEWEL, cardName } from '../data/config.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { loadPrices } from '../data/prices.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
@@ -60,8 +60,10 @@ export default function DetailScreen({ ijewel }) {
   const { shank: shankSlug, cast, shape: shapeParam } = useParams();
   const navigate = useNavigate();
 
-  const shankId = slugToShankId(shankSlug);
-  const cardKey = `${shankSlug}/${cast}/${shapeParam}`;
+  const shankId    = slugToShankId(shankSlug);
+  const cardKey    = `${shankSlug}/${cast}/${shapeParam}`;
+  // Stable boolean: false→true once, never reverts — safe dep without reference churn
+  const hasVariations = ijewel.shankVariations.length > 0;
 
   const [shape,        setShape]        = useState(shapeParam);
   const [carat,        setCarat]        = useState(null);
@@ -77,69 +79,88 @@ export default function DetailScreen({ ijewel }) {
   const [shapePicker,  setShapePicker]  = useState(false);
   const [prices]                        = useState(() => loadPrices());
 
-  const castRef        = useRef(cast);
-  // Tracks which cardKey has been fully initialized — prevents re-running
-  // when shankVariations identity changes due to the bump() polling interval.
-  const initDoneForRef = useRef(null);
+  // Stores the 3D config to apply — set in Phase 1, consumed in Phase 2.
+  // Using state (not ref) so Phase 2 fires in a separate React render cycle,
+  // guaranteeing the loader overlay is painted before any 3D changes happen.
+  const [pendingInit, setPendingInit] = useState(null);
 
-  // Fires on card change (cardKey) AND when viewer first becomes ready (isReady/shankVariations).
-  // Guard: only runs once per cardKey — bump() causes shankVariations to change every 500ms
-  // even when content is identical, which would otherwise re-trigger applyInitial concurrently.
+  const castRef = useRef(cast);
+
+  // ─── Phase 1: Reset UI + schedule loader ────────────────────────────────────
+  // Fires when: card changes, viewer first ready, variations first populated.
+  // Does NOT include shankVariations as dep — its reference changes every 500ms
+  // due to bump() polling even when content is identical, which would re-trigger
+  // applyInitial concurrently. hasVariations (boolean) only changes false→true once.
   useEffect(() => {
-    if (!ijewel.isReady || !ijewel.shankVariations.length) return;
-    if (initDoneForRef.current === cardKey) return;
+    if (!ijewel.isReady || !hasVariations) return;
 
     const sv = ijewel.shankVariations.find(v => v.id === shankId) ??
                ijewel.shankVariations.find(v => v.id.toLowerCase() === shankId.toLowerCase());
     if (!sv) return;
 
-    initDoneForRef.current = cardKey;
-
-    // Reset config UI
+    // Reset all selection UI
     setShape(shapeParam);
     setCarat(null);
     setPurity('585');
     setCombinedGold(false);
     setShapePicker(false);
+    setGem1(null);    setGem1Label(null);
+    setGem2(null);    setGem2Label(null);
+    setMetal(null);   setMetalLabel(null);
+    setCastMetal(null);
     castRef.current = cast;
 
-    // Reset viewer for this card
+    // These two batched together: React renders once with loader shown + pendingInit set.
+    // Phase 2 fires only AFTER that render, guaranteeing the loader is on screen
+    // before the SDK makes any 3D changes.
     ijewel.resetConfigured();
+    setPendingInit({ shapeTag: SHAPE_IJEWEL[shapeParam], castTag: CAST_IJEWEL[cast], shankName: sv.id });
+  }, [cardKey, ijewel.isReady, hasVariations]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Phase 2: Apply 3D changes after loader is painted ──────────────────────
+  // `useEffect` always runs post-paint, so by the time this fires the loader
+  // overlay is already visible — the SDK's internal model swap is hidden.
+  useEffect(() => {
+    if (!pendingInit) return;
+    setPendingInit(null);
+
     ijewel.fitScene();
-    ijewel.applyInitial({
-      shapeTag:  SHAPE_IJEWEL[shapeParam],
-      castTag:   CAST_IJEWEL[cast],
-      shankName: sv.id,
-    });
+    ijewel.applyInitial(pendingInit);
+  }, [pendingInit]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Auto-select white gem
-    const findWhite = opts => opts.find(o => o.label.toLowerCase().includes('бел'));
-    const w1 = findWhite(ijewel.gem1Options);
-    if (w1) { setGem1(w1.uuid); setGem1Label(w1.label); ijewel.applyGem('gem1', w1.uuid); }
-    else    { setGem1(null);    setGem1Label(null); }
-    const w2 = findWhite(ijewel.gem2Options);
-    if (w2) { setGem2(w2.uuid); setGem2Label(w2.label); ijewel.applyGem('gem2', w2.uuid); }
-    else    { setGem2(null);    setGem2Label(null); }
+  // ─── Phase 3: Auto-select defaults once ring is configured ──────────────────
+  // Fires after applyInitial → setIsConfigured(true). By that point gem1/metal
+  // are null (reset in Phase 1), so we apply white defaults if available.
+  useEffect(() => {
+    if (!ijewel.isConfigured) return;
 
-    // Auto-select white metal
-    const white = ijewel.shankMetalOptions.find(o => o.label.toLowerCase().includes('бел'));
-    if (white) {
-      setMetal(white.uuid); setMetalLabel(white.label);
-      ijewel.applyShankMetal(white.uuid);
-      const castWhite = ijewel.castMetalOptions.find(o => o.label === white.label);
-      if (castWhite) { setCastMetal(castWhite.uuid); ijewel.applyCastMetal(castWhite.uuid); }
-    } else {
-      setMetal(null); setMetalLabel(null); setCastMetal(null);
+    if (!gem1 && ijewel.gem1Options.length) {
+      const findWhite = opts => opts.find(o => o.label.toLowerCase().includes('бел'));
+      const w1 = findWhite(ijewel.gem1Options);
+      if (w1) { setGem1(w1.uuid); setGem1Label(w1.label); ijewel.applyGem('gem1', w1.uuid); }
+      const w2 = findWhite(ijewel.gem2Options);
+      if (w2) { setGem2(w2.uuid); setGem2Label(w2.label); ijewel.applyGem('gem2', w2.uuid); }
     }
-  }, [cardKey, ijewel.isReady, ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Interaction hint once configured
+    if (!metal && ijewel.shankMetalOptions.length) {
+      const white = ijewel.shankMetalOptions.find(o => o.label.toLowerCase().includes('бел'));
+      if (white) {
+        setMetal(white.uuid); setMetalLabel(white.label);
+        ijewel.applyShankMetal(white.uuid);
+        const castWhite = ijewel.castMetalOptions.find(o => o.label === white.label);
+        if (castWhite) { setCastMetal(castWhite.uuid); ijewel.applyCastMetal(castWhite.uuid); }
+      }
+    }
+  }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Interaction hint ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!ijewel.isConfigured) return;
     const t = setTimeout(() => ijewel.startInteractionHint(), 1500);
     return () => clearTimeout(t);
   }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Handlers ────────────────────────────────────────────────────────────────
   const castUuidByLabel = useCallback((label) => {
     const shankColor = LABEL_COLORS[label];
     let m = ijewel.castMetalOptions.find(o => o.label === label);
@@ -186,6 +207,7 @@ export default function DetailScreen({ ijewel }) {
     ijewel.applyGem('gem2', uuid);
   }, [ijewel]);
 
+  // ─── Render ──────────────────────────────────────────────────────────────────
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
   const productName = cardName(shankId, cast, shapeLabel);
 
