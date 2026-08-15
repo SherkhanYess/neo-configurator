@@ -245,11 +245,19 @@ export function useIjewel() {
     run(async () => {
       const heads = getComponent('head');
       if (!heads) return;
+      const normCastTag = normalizeTag(castTag ?? '');
+      const isClassic = !castTag || normCastTag === normalizeTag('cast: classic');
       const matchTag = (v, tag) => {
         if (!tag) return true;
         return (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag));
       };
-      const variation = heads.variations?.find((v) => matchTag(v, shapeTag) && matchTag(v, castTag));
+      const hasCastTag = (v) => (v.tags ?? []).some(t => normalizeTag(t).startsWith('cast:'));
+      // Prefer exact match first
+      let variation = heads.variations?.find((v) => matchTag(v, shapeTag) && matchTag(v, castTag));
+      // For classic: also accept variations with the right shape but NO cast tag (classic is default, untagged)
+      if (!variation && isClassic) {
+        variation = heads.variations?.find((v) => matchTag(v, shapeTag) && !hasCastTag(v));
+      }
       if (variation) { lastRef.current.head = key; await heads.applyVariation(variation); }
     });
   }, [run]);
