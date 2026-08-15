@@ -100,8 +100,9 @@ export function useIjewel() {
   const matRef    = useRef(null);
   const viewerRef = useRef(null);
 
-  const [isReady, setIsReady] = useState(false);
-  const [tick, setTick]       = useState(0); // incremented on every plugin event → triggers useMemo recompute
+  const [isReady,      setIsReady]      = useState(false);
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [tick, setTick]                 = useState(0);
 
   const isReadyRef = useRef(false);
   const pendingRef = useRef([]);
@@ -238,46 +239,70 @@ export function useIjewel() {
     try { fn(); } catch (e) { console.warn('[iJewel]', e); }
   }, []);
 
+  const matchTag = (v, tag) => {
+    if (!tag) return true;
+    return (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag));
+  };
+
+  // Applies head (shape+cast) and shank sequentially via the official RingConfigurator
+  // plugin method, which properly hides previous variation meshes before showing new ones.
+  // Shows the ring only after both are done (isConfigured → true).
+  const applyInitial = useCallback(async ({ shapeTag, castTag, shankName }) => {
+    const ring = ringRef.current;
+    if (!ring?.applyVariation) return;
+
+    const heads = getComponent('head');
+    if (heads && shapeTag) {
+      const v = heads.variations?.find(x => matchTag(x, shapeTag) && matchTag(x, castTag));
+      if (v) {
+        lastRef.current.head = `${shapeTag ?? ''}|${castTag ?? ''}`;
+        await ring.applyVariation(heads, v);
+      }
+    }
+
+    const shanks = getComponent('shank');
+    if (shanks && shankName) {
+      const v = shanks.variations?.find(
+        x => (x.title ?? x.name ?? '').replace('.glb', '') === shankName
+      );
+      if (v) {
+        lastRef.current.shank = shankName;
+        await ring.applyVariation(shanks, v);
+      }
+    }
+
+    setIsConfigured(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // For user-triggered shape changes (shape picker) — single variation, no loading state needed.
   const applyHead = useCallback((shapeTag, castTag) => {
     const key = `${shapeTag ?? ''}|${castTag ?? ''}`;
     if (!shapeTag && !castTag) return;
     if (lastRef.current.head === key) return;
     run(async () => {
+      const ring  = ringRef.current;
       const heads = getComponent('head');
-      if (!heads) return;
-      const matchTag = (v, tag) => {
-        if (!tag) return true;
-        return (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag));
-      };
-      const variation = heads.variations?.find((v) => matchTag(v, shapeTag) && matchTag(v, castTag));
-      if (!variation) return;
+      if (!heads || !ring?.applyVariation) return;
+      const v = heads.variations?.find(x => matchTag(x, shapeTag) && matchTag(x, castTag));
+      if (!v) return;
       lastRef.current.head = key;
-      await heads.applyVariation(variation);
+      await ring.applyVariation(heads, v);
     });
-  }, [run]);
-
-  const applyShank = useCallback((name) => {
-    if (!name || lastRef.current.shank === name) return;
-    run(async () => {
-      const shanks = getComponent('shank');
-      if (!shanks) return;
-      const variation = shanks.variations?.find(
-        (v) => (v.title ?? v.name ?? '').replace('.glb', '') === name
-      );
-      if (variation) { lastRef.current.shank = name; await shanks.applyVariation(variation); }
-    });
-  }, [run]);
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const applyCarat = useCallback((carat) => {
     const tag = `size: ${carat}ct`;
     if (lastRef.current.carat === tag) return;
     run(async () => {
+      const ring  = ringRef.current;
       const heads = getComponent('head');
-      if (!heads) return;
-      const variation = heads.variations?.find((v) =>
-        (v.tags ?? []).map(normalizeTag).includes(normalizeTag(tag))
+      if (!heads || !ring?.applyVariation) return;
+      const v = heads.variations?.find(x =>
+        (x.tags ?? []).map(normalizeTag).includes(normalizeTag(tag))
       );
-      if (variation) { lastRef.current.carat = tag; await heads.applyVariation(variation); }
+      if (!v) return;
+      lastRef.current.carat = tag;
+      await ring.applyVariation(heads, v);
     });
   }, [run]);
 
@@ -389,10 +414,10 @@ export function useIjewel() {
   }, []);
 
   return {
-    init, isReady, fitScene, startInteractionHint,
+    init, isReady, isConfigured, fitScene, startInteractionHint,
     shankVariations, gem1Options, gem2Options, shankMetalOptions, castMetalOptions,
     debugInfo,
-    applyHead, applyShank, applyCarat, applyShankMetal, applyCastMetal, applyGem,
+    applyInitial, applyHead, applyCarat, applyShankMetal, applyCastMetal, applyGem,
     restoreFromLabels,
   };
 }

@@ -72,10 +72,10 @@ export default function DetailScreen({ initial, onBack }) {
   const [prices,       setPrices]       = useState(() => loadPrices());
 
   const ijewel = useIjewel();
-  const containerRef    = useRef(null);
-  const initialisedRef  = useRef(false);
-  const castRef         = useRef(cast);
-  const shankAppliedRef = useRef(false);
+  const containerRef   = useRef(null);
+  const initialisedRef = useRef(false);
+  const castRef        = useRef(cast);
+  const initialDoneRef = useRef(false);
 
   // Poll for SDK then init
   useEffect(() => {
@@ -91,33 +91,27 @@ export default function DetailScreen({ initial, onBack }) {
     tryInit();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-
-  // On ready: start interaction hint (shape applied below when components load).
+  // Once components are loaded, apply head+shank sequentially via official plugin API,
+  // then reveal the ring (isConfigured). Retries each bump until both are found.
   useEffect(() => {
-    if (!ijewel.isReady) return;
-    const t = setTimeout(() => ijewel.startInteractionHint(), 2500);
-    return () => clearTimeout(t);
-  }, [ijewel.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Apply shape + cast head — retries on every bump until applyHead finds the variation.
-  // applyHead guards via lastRef.current.head so it won't re-apply after success.
-  useEffect(() => {
-    if (!ijewel.isReady || !ijewel.shankVariations.length) return;
-    const shapeTag = SHAPE_IJEWEL[shape];
-    const castTag  = CAST_IJEWEL[cast];
-    ijewel.applyHead(shapeTag, castTag);
-  }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Apply shank when variations load
-  useEffect(() => {
-    if (!ijewel.isReady || !ijewel.shankVariations.length || shankAppliedRef.current) return;
-    const variation = ijewel.shankVariations.find(v => v.id === shank) ??
+    if (!ijewel.isReady || !ijewel.shankVariations.length || initialDoneRef.current) return;
+    const shankVariation = ijewel.shankVariations.find(v => v.id === shank) ??
       ijewel.shankVariations.find(v => v.id.toLowerCase() === shank.toLowerCase());
-    if (variation) {
-      shankAppliedRef.current = true;
-      ijewel.applyShank(variation.id);
-    }
+    if (!shankVariation) return; // shank not found yet — wait for next bump
+    initialDoneRef.current = true;
+    ijewel.applyInitial({
+      shapeTag:  SHAPE_IJEWEL[shape],
+      castTag:   CAST_IJEWEL[cast],
+      shankName: shankVariation.id,
+    });
   }, [ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Start interaction hint after ring is fully configured
+  useEffect(() => {
+    if (!ijewel.isConfigured) return;
+    const t = setTimeout(() => ijewel.startInteractionHint(), 1500);
+    return () => clearTimeout(t);
+  }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-select white gem
   useEffect(() => {
@@ -226,7 +220,7 @@ export default function DetailScreen({ initial, onBack }) {
       {/* iJewel Viewer */}
       <div className="cfg-viewer-panel" style={{ position: 'relative' }}>
         <div ref={containerRef} className="cfg-viewer-container" />
-        {!ijewel.isReady && (
+        {!ijewel.isConfigured && (
           <div className="cfg-viewer-loader">
             <div className="cfg-viewer-loader-inner">
               <p className="cfg-viewer-loader-text">Загрузка украшения...</p>
