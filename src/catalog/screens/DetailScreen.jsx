@@ -76,7 +76,6 @@ export default function DetailScreen({ initial, onBack }) {
   const initialisedRef  = useRef(false);
   const castRef         = useRef(cast);
   const shankAppliedRef = useRef(false);
-  const headAppliedRef  = useRef(false);
 
   // Poll for SDK then init
   useEffect(() => {
@@ -100,10 +99,10 @@ export default function DetailScreen({ initial, onBack }) {
     return () => clearTimeout(t);
   }, [ijewel.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Apply shape + cast head once ring components are loaded (shankVariations populated = components ready).
+  // Apply shape + cast head — retries on every bump until applyHead finds the variation.
+  // applyHead guards via lastRef.current.head so it won't re-apply after success.
   useEffect(() => {
-    if (!ijewel.isReady || !ijewel.shankVariations.length || headAppliedRef.current) return;
-    headAppliedRef.current = true;
+    if (!ijewel.isReady || !ijewel.shankVariations.length) return;
     const shapeTag = SHAPE_IJEWEL[shape];
     const castTag  = CAST_IJEWEL[cast];
     ijewel.applyHead(shapeTag, castTag);
