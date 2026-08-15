@@ -154,9 +154,6 @@ export function useIjewel() {
   const init = useCallback((containerEl) => {
     if (!containerEl || !window.ijewelViewer) return;
 
-    // ijewel-viewer-ready fires only once per session (SDK singleton).
-    // On 2nd+ card opens the event never re-fires, so we need a fallback
-    // that grabs the existing viewer directly.
     let setupDone = false;
 
     const setupViewer = (viewer) => {
@@ -167,8 +164,11 @@ export function useIjewel() {
       ringRef.current = viewer.getPluginByType('RingConfigurator');
       matRef.current  = viewer.getPluginByType('MaterialConfiguratorPlugin');
 
+      // Camera override — intercept animateToFitObject so the ring always
+      // lands at the designer's saved camera pose instead of auto-fitting.
       const cameraViews = viewer.getPluginByType('CameraViews');
-      if (cameraViews) {
+      if (cameraViews && !cameraViews.__nd_patched) {
+        cameraViews.__nd_patched = true;
         const _orig = cameraViews.animateToFitObject.bind(cameraViews);
         cameraViews.animateToFitObject = async function(obj, mult, dur, ease, opts) {
           if (this.camViews?.length > 0) {
@@ -214,7 +214,25 @@ export function useIjewel() {
       }, 500);
     };
 
-    // Primary path: first load or model reload fires this event
+    // If a viewer already exists, move its canvas into our container directly —
+    // avoids a full model reload and the ijewel-viewer-ready timing trap.
+    const existingViewer = window.webGiViewers?.[0];
+    if (existingViewer) {
+      const canvas =
+        existingViewer.canvas ??
+        existingViewer.renderer?.domElement ??
+        existingViewer._renderer?.domElement ??
+        existingViewer.element;
+      if (canvas && !containerEl.contains(canvas)) {
+        containerEl.appendChild(canvas);
+        try { existingViewer.resize?.(); } catch (_) {}
+        try { existingViewer.renderer?.setSize?.(containerEl.offsetWidth, containerEl.offsetHeight); } catch (_) {}
+      }
+      setupViewer(existingViewer);
+      return;
+    }
+
+    // First load: SDK fires ijewel-viewer-ready once when model is ready.
     window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
       setupViewer(detail.viewer);
     }, { once: true });
@@ -236,28 +254,13 @@ export function useIjewel() {
       runRotateCamera: false,
     });
 
-    // Fallback: if ijewel-viewer-ready doesn't fire (viewer reuse across screens),
-    // wait until the viewer's canvas is actually inside OUR container before claiming it.
-    // This prevents grabbing the old screen's still-alive viewer by mistake.
+    // Safety fallback in case the event misfires (very first load edge case).
     let fallbackAttempts = 0;
     const fallbackPoll = setInterval(() => {
       if (setupDone) { clearInterval(fallbackPoll); return; }
-      const existing = window.webGiViewers?.[0];
-      if (existing) {
-        const canvas =
-          existing.canvas ??
-          existing.renderer?.domElement ??
-          existing._renderer?.domElement ??
-          existing.element;
-        const inOurContainer = canvas
-          ? containerEl.contains(canvas)
-          : containerEl.childElementCount > 0;
-        if (inOurContainer) {
-          clearInterval(fallbackPoll);
-          setupViewer(existing);
-        }
-      }
-      if (++fallbackAttempts > 60) clearInterval(fallbackPoll); // 6s max
+      const v = window.webGiViewers?.[0];
+      if (v) { clearInterval(fallbackPoll); setupViewer(v); }
+      if (++fallbackAttempts > 60) clearInterval(fallbackPoll);
     }, 100);
   }, [bump]);
 
