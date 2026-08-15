@@ -51,7 +51,14 @@ function CatalogMain() {
         className="cfg-viewer-panel"
         style={{ display: showViewer ? undefined : 'none', position: 'relative', flexShrink: 0 }}
       >
-        <div ref={viewerRef} className="cfg-viewer-container" />
+        {/* visibility:hidden hides the WebGL canvas while not configured,
+            regardless of z-index stacking. The canvas keeps its GL context
+            and the SDK renders normally — it's just invisible to the user. */}
+        <div
+          ref={viewerRef}
+          className="cfg-viewer-container"
+          style={!ijewel.isConfigured && showViewer ? { visibility: 'hidden' } : undefined}
+        />
 
         {!ijewel.isConfigured && showViewer && (
           <div className="cfg-viewer-loader">

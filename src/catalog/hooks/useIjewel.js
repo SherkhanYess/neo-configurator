@@ -297,6 +297,12 @@ export function useIjewel() {
         }
       }
     } finally {
+      // Brief wait for the SDK's internal transition animation to finish
+      // before revealing the canvas. applyVariation resolves when the variation
+      // is "set", but the visual swap (hide old mesh, show new) may still be
+      // animating. Without this, the overlap can briefly appear before the
+      // visibility:hidden container is shown.
+      await new Promise(r => setTimeout(r, 350));
       setIsConfigured(true);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
