@@ -7,7 +7,6 @@ import { LABEL_COLORS } from '../hooks/useIjewel.js';
 
 const CARAT_OPTIONS = [1, 1.5, 2, 3, 4, 5];
 
-// URL slug → shank ID (e.g. "neo-luxe" → "Neo Luxe")
 function slugToShankId(slug) {
   return SHANKS.find(s => s.id.toLowerCase().replace(/\s+/g, '-') === slug)?.id ?? slug;
 }
@@ -62,6 +61,7 @@ export default function DetailScreen({ ijewel }) {
   const navigate = useNavigate();
 
   const shankId = slugToShankId(shankSlug);
+  const cardKey = `${shankSlug}/${cast}/${shapeParam}`;
 
   const [shape,        setShape]        = useState(shapeParam);
   const [carat,        setCarat]        = useState(null);
@@ -75,74 +75,63 @@ export default function DetailScreen({ ijewel }) {
   const [castMetal,    setCastMetal]    = useState(null);
   const [combinedGold, setCombinedGold] = useState(false);
   const [shapePicker,  setShapePicker]  = useState(false);
-  const [prices,       setPrices]       = useState(() => loadPrices());
+  const [prices]                        = useState(() => loadPrices());
 
-  const castRef        = useRef(cast);
-  const initialDoneRef = useRef(false);
+  const castRef = useRef(cast);
 
-  // Reset state when URL changes (different card)
+  // Single effect: fires on every card change AND when viewer first becomes ready.
+  // Resets all UI state and applies the new card to the viewer.
   useEffect(() => {
-    setShape(shapeParam);
-    setCarat(null);
-    setGem1(null); setGem1Label(null);
-    setGem2(null); setGem2Label(null);
-    setPurity('585');
-    setMetal(null); setMetalLabel(null);
-    setCastMetal(null); setCombinedGold(false);
-    initialDoneRef.current = false;
-    ijewel.resetConfigured();
-    ijewel.fitScene();
-    castRef.current = cast;
-  }, [shankSlug, cast, shapeParam]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!ijewel.isReady || !ijewel.shankVariations.length) return;
 
-  // Apply this card's shape/cast/shank once viewer is ready and variations are loaded
-  useEffect(() => {
-    if (!ijewel.isReady || !ijewel.shankVariations.length || initialDoneRef.current) return;
     const sv = ijewel.shankVariations.find(v => v.id === shankId) ??
                ijewel.shankVariations.find(v => v.id.toLowerCase() === shankId.toLowerCase());
     if (!sv) return;
-    initialDoneRef.current = true;
+
+    // Reset config UI
+    setShape(shapeParam);
+    setCarat(null);
+    setPurity('585');
+    setCombinedGold(false);
+    setShapePicker(false);
+    castRef.current = cast;
+
+    // Reset viewer for this card
+    ijewel.resetConfigured();
+    ijewel.fitScene();
     ijewel.applyInitial({
-      shapeTag:  SHAPE_IJEWEL[shape],
+      shapeTag:  SHAPE_IJEWEL[shapeParam],
       castTag:   CAST_IJEWEL[cast],
       shankName: sv.id,
     });
-  }, [ijewel.isReady, ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Start interaction hint after ring is configured
-  useEffect(() => {
-    if (!ijewel.isConfigured) return;
-    const t = setTimeout(() => ijewel.startInteractionHint(), 1500);
-    return () => clearTimeout(t);
-  }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Auto-select white gem on load
-  useEffect(() => {
-    if (!ijewel.isReady || gem1) return;
+    // Auto-select white gem
     const findWhite = opts => opts.find(o => o.label.toLowerCase().includes('бел'));
     const w1 = findWhite(ijewel.gem1Options);
     if (w1) { setGem1(w1.uuid); setGem1Label(w1.label); ijewel.applyGem('gem1', w1.uuid); }
+    else    { setGem1(null);    setGem1Label(null); }
     const w2 = findWhite(ijewel.gem2Options);
     if (w2) { setGem2(w2.uuid); setGem2Label(w2.label); ijewel.applyGem('gem2', w2.uuid); }
-  }, [ijewel.gem1Options]); // eslint-disable-line react-hooks/exhaustive-deps
+    else    { setGem2(null);    setGem2Label(null); }
 
-  // Auto-select white metal on load
-  useEffect(() => {
-    if (!ijewel.isReady || metal) return;
+    // Auto-select white metal
     const white = ijewel.shankMetalOptions.find(o => o.label.toLowerCase().includes('бел'));
     if (white) {
       setMetal(white.uuid); setMetalLabel(white.label);
       ijewel.applyShankMetal(white.uuid);
       const castWhite = ijewel.castMetalOptions.find(o => o.label === white.label);
-      if (castWhite) ijewel.applyCastMetal(castWhite.uuid);
+      if (castWhite) { setCastMetal(castWhite.uuid); ijewel.applyCastMetal(castWhite.uuid); }
+    } else {
+      setMetal(null); setMetalLabel(null); setCastMetal(null);
     }
-  }, [ijewel.shankMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cardKey, ijewel.isReady, ijewel.shankVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleShapeChange = useCallback((newShape) => {
-    setShape(newShape);
-    setShapePicker(false);
-    ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
-  }, [ijewel]);
+  // Interaction hint once configured
+  useEffect(() => {
+    if (!ijewel.isConfigured) return;
+    const t = setTimeout(() => ijewel.startInteractionHint(), 1500);
+    return () => clearTimeout(t);
+  }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const castUuidByLabel = useCallback((label) => {
     const shankColor = LABEL_COLORS[label];
@@ -151,6 +140,12 @@ export default function DetailScreen({ ijewel }) {
     if (!m) m = ijewel.castMetalOptions.find(o => o.label?.toLowerCase().startsWith(label?.split(' ')[0]?.toLowerCase()));
     return m?.uuid ?? null;
   }, [ijewel.castMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleShapeChange = useCallback((newShape) => {
+    setShape(newShape);
+    setShapePicker(false);
+    ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
+  }, [ijewel]);
 
   const handleShankMetal = useCallback((uuid, label) => {
     setMetal(uuid); setMetalLabel(label);
@@ -201,10 +196,9 @@ export default function DetailScreen({ ijewel }) {
   const hasScatter = cast !== 'bezel';
 
   function handleBook() {
-    const bookingData = {
+    sessionStorage.setItem('nd_booking', JSON.stringify({
       shape, shank: shankId, cast, carat, purity, metalLabel, gem1Label, gem2Label, price,
-    };
-    sessionStorage.setItem('nd_booking', JSON.stringify(bookingData));
+    }));
     navigate('/booking');
   }
 
