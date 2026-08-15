@@ -1,3 +1,4 @@
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SHAPES, VALID_COMBOS, cardName, ringImage } from '../data/config.js';
 import { loadPrices } from '../data/prices.js';
 
@@ -10,6 +11,11 @@ function basePrice(shankId, castId) {
 }
 function formatPrice(n) {
   return n.toLocaleString('ru-KZ') + ' ₸';
+}
+
+// Shank ID → URL slug (e.g. "Neo Luxe" → "neo-luxe")
+function shankToSlug(id) {
+  return id.toLowerCase().replace(/\s+/g, '-');
 }
 
 function ProductCard({ shape, shank, cast, onClick }) {
@@ -39,21 +45,30 @@ function ProductCard({ shape, shank, cast, onClick }) {
   );
 }
 
-export default function CatalogScreen({ activeShapes, onChangeShapes, onOpen }) {
-  // Show combos for all selected shapes
-  const shapes = activeShapes?.length ? activeShapes : SHAPES.map(s => s.id);
+export default function CatalogScreen() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const shapesParam = searchParams.get('shapes');
+  const activeShapes = shapesParam
+    ? shapesParam.split(',').filter(id => SHAPES.find(s => s.id === id))
+    : SHAPES.map(s => s.id);
 
   const products = [];
-  for (const shape of shapes) {
+  for (const shape of activeShapes) {
     for (const { shank, cast } of VALID_COMBOS) {
       products.push({ shape, shank, cast });
     }
   }
 
-  const shapeLabels = shapes
+  const shapeLabels = activeShapes
     .map(id => SHAPES.find(s => s.id === id)?.label)
     .filter(Boolean)
     .join(', ');
+
+  function openProduct(p) {
+    navigate(`/product/${shankToSlug(p.shank)}/${p.cast}/${p.shape}`);
+  }
 
   return (
     <div className="catalog-screen">
@@ -61,9 +76,8 @@ export default function CatalogScreen({ activeShapes, onChangeShapes, onOpen }) 
         <img src="/assets/logo-ink.png" alt="Neo Diamond" className="catalog-logo" />
       </div>
 
-      {/* Shape selector button */}
       <div className="catalog-shapes-bar">
-        <button className="catalog-shapes-btn" onClick={onChangeShapes}>
+        <button className="catalog-shapes-btn" onClick={() => navigate('/')}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
@@ -72,13 +86,12 @@ export default function CatalogScreen({ activeShapes, onChangeShapes, onOpen }) 
         </button>
       </div>
 
-      {/* Grid */}
       <div className="product-grid">
         {products.map(p => (
           <ProductCard
             key={`${p.shape}-${p.shank}-${p.cast}`}
             {...p}
-            onClick={() => onOpen(p)}
+            onClick={() => openProduct(p)}
           />
         ))}
       </div>

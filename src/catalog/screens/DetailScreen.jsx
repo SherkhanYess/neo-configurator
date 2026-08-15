@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { SHAPES, CASTS, SHAPE_IJEWEL, CAST_IJEWEL, cardName } from '../data/config.js';
+import { useParams, useNavigate } from 'react-router-dom';
+import { SHAPES, SHANKS, CASTS, VALID_COMBOS, SHAPE_IJEWEL, CAST_IJEWEL, cardName } from '../data/config.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { loadPrices } from '../data/prices.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 
 const CARAT_OPTIONS = [1, 1.5, 2, 3, 4, 5];
+
+// URL slug → shank ID (e.g. "neo-luxe" → "Neo Luxe")
+function slugToShankId(slug) {
+  return SHANKS.find(s => s.id.toLowerCase().replace(/\s+/g, '-') === slug)?.id ?? slug;
+}
 
 function DotPicker({ options, chosen, onChoose }) {
   if (!options?.length) return null;
@@ -51,12 +57,13 @@ function ShapeMiniPicker({ activeShape, onSelect, onClose }) {
   );
 }
 
-// ijewel is passed from App (persistent, never recreated)
-export default function DetailScreen({ initial, ijewel, onBack, onBook }) {
-  const [shape, setShape]       = useState(initial.shape);
-  const shank = initial.shank;
-  const cast  = initial.cast;
+export default function DetailScreen({ ijewel }) {
+  const { shank: shankSlug, cast, shape: shapeParam } = useParams();
+  const navigate = useNavigate();
 
+  const shankId = slugToShankId(shankSlug);
+
+  const [shape,        setShape]        = useState(shapeParam);
   const [carat,        setCarat]        = useState(null);
   const [gem1,         setGem1]         = useState(null);
   const [gem1Label,    setGem1Label]    = useState(null);
@@ -73,21 +80,26 @@ export default function DetailScreen({ initial, ijewel, onBack, onBook }) {
   const castRef        = useRef(cast);
   const initialDoneRef = useRef(false);
 
-  // Re-init hook state for this card (viewer is already running in the persistent container)
+  // Reset state when URL changes (different card)
   useEffect(() => {
-    if (!ijewel.isReady) {
-      // Viewer not ready yet — init was just called from App, wait for isReady
-      return;
-    }
-    // isReady already true (reuse): re-trigger applyInitial by resetting the done flag
-    // The shankVariations effect below handles the actual application
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setShape(shapeParam);
+    setCarat(null);
+    setGem1(null); setGem1Label(null);
+    setGem2(null); setGem2Label(null);
+    setPurity('585');
+    setMetal(null); setMetalLabel(null);
+    setCastMetal(null); setCombinedGold(false);
+    initialDoneRef.current = false;
+    ijewel.resetConfigured();
+    ijewel.fitScene();
+    castRef.current = cast;
+  }, [shankSlug, cast, shapeParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply this card's shape/cast/shank once viewer is ready and variations are loaded
   useEffect(() => {
     if (!ijewel.isReady || !ijewel.shankVariations.length || initialDoneRef.current) return;
-    const sv = ijewel.shankVariations.find(v => v.id === shank) ??
-               ijewel.shankVariations.find(v => v.id.toLowerCase() === shank.toLowerCase());
+    const sv = ijewel.shankVariations.find(v => v.id === shankId) ??
+               ijewel.shankVariations.find(v => v.id.toLowerCase() === shankId.toLowerCase());
     if (!sv) return;
     initialDoneRef.current = true;
     ijewel.applyInitial({
@@ -173,15 +185,14 @@ export default function DetailScreen({ initial, ijewel, onBack, onBook }) {
   }, [ijewel]);
 
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
-  const castLabel   = CASTS.find(c => c.id === cast)?.label ?? cast;
-  const productName = cardName(shank, cast, shapeLabel);
+  const productName = cardName(shankId, cast, shapeLabel);
 
-  const choices = { shankLabel: shank, cast, castLabel, carat, purity, gem1Label, gem2Label };
+  const choices = { shankLabel: shankId, cast, castLabel: cast, carat, purity, gem1Label, gem2Label };
   const price = carat
     ? calcPrice(choices, prices)
     : (() => {
         if (!prices) return null;
-        let base = prices.baseByShank?.[shank] ?? 0;
+        let base = prices.baseByShank?.[shankId] ?? 0;
         if (cast !== 'classic') base += prices.casts?.[cast] ?? 0;
         if (purity === '750') base += prices.purity750surcharge ?? 0;
         return base;
@@ -189,9 +200,16 @@ export default function DetailScreen({ initial, ijewel, onBack, onBook }) {
 
   const hasScatter = cast !== 'bezel';
 
+  function handleBook() {
+    const bookingData = {
+      shape, shank: shankId, cast, carat, purity, metalLabel, gem1Label, gem2Label, price,
+    };
+    sessionStorage.setItem('nd_booking', JSON.stringify(bookingData));
+    navigate('/booking');
+  }
+
   return (
     <>
-      {/* Config panel — viewer lives in App above this */}
       <div className="cfg-panel cfg-panel--light" style={{ paddingBottom: 160, flex: 1 }}>
 
         <div className="cfg-step-content" style={{ paddingBottom: 0 }}>
@@ -294,9 +312,7 @@ export default function DetailScreen({ initial, ijewel, onBack, onBook }) {
           <span className="detail-cta-label">Стоимость</span>
           <span className="detail-cta-price">{price ? formatPrice(price) : '—'}</span>
         </div>
-        <button className="detail-cta-book" onClick={() => onBook({
-          shape, shank, cast, carat, purity, metalLabel, gem1Label, gem2Label, price,
-        })}>
+        <button className="detail-cta-book" onClick={handleBook}>
           Подтвердить выбор
         </button>
       </div>

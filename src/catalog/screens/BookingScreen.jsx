@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { cardName, SHAPES, CASTS, METAL_LABELS, WA_NUMBER } from '../data/config.js';
+import { useNavigate } from 'react-router-dom';
+import { cardName, SHAPES, METAL_LABELS, WA_NUMBER } from '../data/config.js';
 import { formatPrice } from '../data/priceCalc.js';
 
 const TIMER_SECONDS = 600;
@@ -120,14 +121,23 @@ function MiniWAButton({ onClick }) {
 }
 
 // ─── main ─────────────────────────────────────────────────────────────────────
-// ijewel is passed from App — viewer already running in persistent container above
-export default function BookingScreen({ initial, onBack }) {
-  const { shape, shank, cast, carat, purity, metalLabel, gem1Label, price } = initial;
+export default function BookingScreen() {
+  const navigate = useNavigate();
+  const stored = JSON.parse(sessionStorage.getItem('nd_booking') ?? 'null');
+
+  const timeLeft  = useCountdown(TIMER_SECONDS);
+
+  useEffect(() => {
+    if (!stored) navigate('/');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!stored) return null;
+
+  const { shape, shank, cast, carat, purity, metalLabel, gem1Label, price } = stored;
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
   const productName = cardName(shank, cast, shapeLabel);
   const metalPurity = METAL_LABELS[purity] ?? purity;
 
-  const timeLeft  = useCountdown(TIMER_SECONDS);
   const mins      = Math.floor(timeLeft / 60);
   const secs      = timeLeft % 60;
   const isExpired = timeLeft === 0;

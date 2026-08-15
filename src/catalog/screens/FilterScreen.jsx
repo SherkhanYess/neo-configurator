@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
 
-export default function FilterScreen({ onConfirm }) {
+export default function FilterScreen() {
+  const navigate  = useNavigate();
   const [selected, setSelected] = useState([]);
 
   function toggle(id) {
@@ -11,7 +13,8 @@ export default function FilterScreen({ onConfirm }) {
   }
 
   function confirm() {
-    onConfirm(selected.length ? selected : SHAPES.map(s => s.id));
+    const shapes = selected.length ? selected : SHAPES.map(s => s.id);
+    navigate(`/catalog?shapes=${shapes.join(',')}`);
   }
 
   return (
