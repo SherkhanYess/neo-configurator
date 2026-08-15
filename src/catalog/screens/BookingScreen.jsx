@@ -49,13 +49,10 @@ const AFTER_SALE = [
   ['Ремонт и доработки', 'По себестоимости. Изготовление второй пары, изменение размера и многое другое.'],
 ];
 const SHOW_ITEMS = [
-  'Примерите украшения вживую и оцените, как они смотрятся именно на вас',
-  'Посмотрите разные формы и размеры бриллиантов и выберите свой вариант',
-  'Увидите сертификаты IGI и под микроскопом рассмотрите серийный номер внутри бриллианта',
-  'Оцените качество наших работ вживую — посадку камней, закрепку, обработку золота',
-  'Увидите готовые украшения наших клиентов и оцените результат индивидуальных заказов',
-  'Получите консультацию специалиста и подберите форму, размер и дизайн под себя',
-  'Примете решение не по фото, а после личного знакомства с украшениями',
+  'Примерите украшения вживую — посмотрите разные формы и размеры бриллиантов на своей руке',
+  'Рассмотрите сертификаты IGI и серийный номер внутри бриллианта под микроскопом',
+  'Оцените качество работ вживую: посадку камней, закрепку и обработку золота',
+  'Получите консультацию специалиста и примите решение не по фото, а после живого знакомства',
 ];
 
 // ─── sub-components ──────────────────────────────────────────────────────────
@@ -291,37 +288,36 @@ export default function BookingScreen({ initial, onBack }) {
           <div style={{ position: 'absolute', bottom: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(220,194,155,0.05)' }} />
 
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ ...eyebrow, color: C.champ400, marginBottom: 8 }}>Программа лояльности</div>
-            <h2 style={{
-              fontFamily: '"Unbounded",sans-serif', fontWeight: 300, fontSize: '1.2rem',
-              letterSpacing: '-0.02em', lineHeight: 1.3, margin: '0 0 8px', color: '#fff',
-            }}>
-              neo girls
-            </h2>
-            <div style={{
-              display: 'inline-block',
-              background: `linear-gradient(90deg, ${C.champ700}, ${C.champ400})`,
-              borderRadius: 50, padding: '4px 14px', marginBottom: 20,
-            }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', letterSpacing: '0.04em' }}>
-                Пассивный доход
-              </span>
+            {/* Header */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ ...eyebrow, color: C.champ400, marginBottom: 12 }}>Программа лояльности</div>
+              <h2 style={{
+                fontFamily: '"Unbounded",sans-serif', fontWeight: 400, fontSize: '2rem',
+                letterSpacing: '-0.03em', lineHeight: 1.05, margin: '0 0 12px',
+                background: `linear-gradient(100deg, #fff 40%, ${C.champ400})`,
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>
+                neo girls
+              </h2>
+              <p style={{ fontSize: '0.87rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, margin: 0 }}>
+                Станьте частью нашего закрытого сообщества и зарабатывайте вместе с нами.
+              </p>
             </div>
-            <p style={{ fontSize: '0.87rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, margin: '0 0 20px' }}>
-              Вы становитесь частью нашего закрытого сообщества и получаете возможность зарабатывать, просто делясь впечатлениями о своём украшении.
-            </p>
+
+            <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: 20 }} />
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                ['Реферальный доход', 'Получайте вознаграждение за каждого приведённого клиента'],
-                ['Закрытые события', 'Приглашения на мероприятия, недоступные широкой аудитории'],
-                ['Привилегии от партнёров', 'Лимитированные предложения от наших партнёров'],
+                ['Пассивный доход', 'Придумайте дизайн украшения вместе с нами, добавьте его в наш каталог и получайте проценты с каждой продажи этого дизайна'],
+                ['Закрытые мероприятия', 'Приглашения на закрытые встречи с инфлюенсерами и интересными личностями. Будьте там, куда многие не могут попасть.'],
+                ['Привилегии от партнёров', 'Лимитированные скидки, подарки, бонусы и даже бесплатные услуги от наших партнёров'],
               ].map(([title, desc]) => (
                 <div key={title} style={{
                   background: 'rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 16px',
-                  display: 'flex', flexDirection: 'column', gap: 4,
+                  display: 'flex', flexDirection: 'column', gap: 6,
                 }}>
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: C.champ400 }}>{title}</span>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{desc}</span>
+                  <span style={{ fontSize: '0.82rem', fontWeight: 700, color: C.champ400, letterSpacing: '0.02em' }}>{title}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.55 }}>{desc}</span>
                 </div>
               ))}
             </div>
@@ -333,10 +329,14 @@ export default function BookingScreen({ initial, onBack }) {
 
       {/* ── ЖИВОЙ ПОКАЗ ─────────────────────────────────────────────────── */}
       <section style={{ padding: '48px 24px', maxWidth: 480, margin: '0 auto' }}>
-        <div style={eyebrow}>Живой показ</div>
-        <h2 style={h2style}>Приглашаем в наш шоурум</h2>
+        <h2 style={{
+          fontFamily: '"Unbounded",sans-serif', fontWeight: 400, fontSize: '1.35rem',
+          letterSpacing: '-0.02em', lineHeight: 1.25, margin: '0 0 10px', color: C.ink800,
+        }}>
+          Приглашаем вас на живой показ
+        </h2>
         <p style={{ ...lead, marginBottom: 24 }}>
-          Вас встретит наш главный специалист по бриллиантам, предложит напитки и проведёт консультацию.
+          Вас встретит наш главный специалист по бриллиантам, предложит напитки и проведёт личную консультацию.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {SHOW_ITEMS.map((item, i) => (
