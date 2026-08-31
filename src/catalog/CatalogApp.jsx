@@ -45,10 +45,19 @@ function CatalogMain() {
     if (onRingProduct || onPusetyProduct) ijewel.resetConfigured();
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-init viewer when switching between categories (fileId changes)
+  // When fileId changes (category switch), force re-init on next showViewer
+  const prevFileIdRef = useRef(fileId);
+  useEffect(() => {
+    if (prevFileIdRef.current !== fileId) {
+      prevFileIdRef.current = fileId;
+      viewerInitRef.current = false;
+    }
+  }, [fileId]);
+
+  // Init viewer when entering a product page; re-init when category changes
   useEffect(() => {
     if (!showViewer || !viewerRef.current) return;
-    if (viewerInitRef.current && window.__nd_viewer_file_id === fileId) return;
+    if (viewerInitRef.current) return;
 
     const tryInit = () => {
       if (window.ijewelViewer) {

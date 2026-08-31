@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState, useMemo } from 'react';
+import { useRef, useCallback, useState, useMemo, useEffect } from 'react';
 export const RING_FILE_ID   = 'MBYHa_BtQluSyH-pAufiAg';
 export const PUSETЫ_FILE_ID = 'W_rSwFUyS_CtAyfx1BTS1A';
 const INSTANCE = 'neodiamondkz';
@@ -110,6 +110,22 @@ export function useIjewel(fileId = RING_FILE_ID) {
   const lastRef    = useRef({});
   isReadyRef.current = isReady;
 
+  // Always up-to-date fileId — avoids stale closure in init useCallback
+  const fileIdRef = useRef(fileId);
+  fileIdRef.current = fileId;
+
+  // When category changes (fileId changes), reset all plugin refs and state
+  // so the hook is clean for the new model that will be loaded.
+  useEffect(() => {
+    ringRef.current   = null;
+    matRef.current    = null;
+    viewerRef.current = null;
+    pendingRef.current = [];
+    lastRef.current   = {};
+    setIsReady(false);
+    setIsConfigured(false);
+  }, [fileId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const bump = useCallback(() => setTick((t) => t + 1), []);
 
   // Live reads from refs — recompute whenever tick changes (same pattern as iJewel's own renderUI)
@@ -215,28 +231,30 @@ export function useIjewel(fileId = RING_FILE_ID) {
       }, 500);
     };
 
+    const currentFileId = fileIdRef.current;
+
     // If the same model is already loaded, just re-hook refs — no reload.
     const existingViewer = window.webGiViewers?.[0];
-    if (existingViewer && window.__nd_viewer_file_id === fileId) {
+    if (existingViewer && window.__nd_viewer_file_id === currentFileId) {
       setupViewer(existingViewer);
       return;
     }
 
     // Different model (category switch) — dispose old viewer and reload.
-    if (existingViewer && window.__nd_viewer_file_id !== fileId) {
+    if (existingViewer && window.__nd_viewer_file_id !== currentFileId) {
       try { existingViewer.dispose?.(); } catch (_) {}
       if (window.webGiViewers) window.webGiViewers.length = 0;
       containerEl.innerHTML = '';
     }
 
-    window.__nd_viewer_file_id = fileId;
+    window.__nd_viewer_file_id = currentFileId;
 
     // First load / reload: SDK fires ijewel-viewer-ready when model is ready.
     window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
       setupViewer(detail.viewer);
     }, { once: true });
 
-    ijewelViewer.loadModelById(fileId, INSTANCE, containerEl, {
+    ijewelViewer.loadModelById(currentFileId, INSTANCE, containerEl, {
       showConfigurator: false,
       showCard: false,
       showLogo: false,

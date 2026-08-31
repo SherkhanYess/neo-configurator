@@ -1,9 +1,5 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { SHAPES, PUSETЫ_VALID_COMBOS, PUSETЫ_SHAPES_BY_CAST, pusetyCardName } from '../data/config.js';
-
-function formatPrice(n) {
-  return n.toLocaleString('ru-KZ') + ' ₸';
-}
+import { SHAPES, PUSETЫ_VALID_COMBOS, pusetyCardName } from '../data/config.js';
 
 function PusetyCard({ cast, shape, onClick }) {
   const shapeObj = SHAPES.find(s => s.id === shape);
@@ -12,12 +8,12 @@ function PusetyCard({ cast, shape, onClick }) {
   return (
     <button className="product-card" onClick={onClick}>
       <div className="product-card__img-wrap">
-        <div className="product-card__studio-bg">
+        <div className="product-card__studio-bg" style={{ background: '#f8f8f8' }}>
           <img
             src={`/assets/shapes/${shapeObj?.file ?? `${shape}.jpg`}`}
             alt={name}
             className="product-card__ring"
-            style={{ mixBlendMode: 'multiply', background: '#fff' }}
+            style={{ width: '70%', height: '70%', objectFit: 'contain', mixBlendMode: 'multiply' }}
           />
         </div>
       </div>
@@ -35,15 +31,12 @@ export default function PusetyListScreen() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const castParam   = searchParams.get('cast') ?? 'classic';
-  const shapesParam = searchParams.get('shapes');
+  const shapesParam  = searchParams.get('shapes');
   const activeShapes = shapesParam
     ? shapesParam.split(',').filter(id => SHAPES.find(s => s.id === id))
-    : PUSETЫ_SHAPES_BY_CAST[castParam] ?? PUSETЫ_SHAPES_BY_CAST.classic;
+    : SHAPES.map(s => s.id);
 
-  const products = PUSETЫ_VALID_COMBOS.filter(
-    c => c.cast === castParam && activeShapes.includes(c.shape)
-  );
+  const products = PUSETЫ_VALID_COMBOS.filter(c => activeShapes.includes(c.shape));
 
   const shapeLabels = activeShapes
     .map(id => SHAPES.find(s => s.id === id)?.label)
@@ -61,7 +54,7 @@ export default function PusetyListScreen() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
-          <span>{shapeLabels || 'Все формы'} · {castParam === 'halo' ? 'Halo' : 'Classic'}</span>
+          <span>Пусеты · {shapeLabels || 'Все формы'}</span>
           <span className="catalog-shapes-btn__change">Изменить</span>
         </button>
       </div>
