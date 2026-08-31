@@ -2,17 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
 
-function tabStyle(active) {
-  return {
-    padding: '8px 24px', borderRadius: 20,
-    border: `1.5px solid ${active ? 'var(--ink-800)' : 'var(--border)'}`,
-    background: active ? 'var(--ink-800)' : 'transparent',
-    color: active ? '#fff' : 'var(--text-secondary)',
-    fontFamily: 'var(--font-body)', fontSize: '0.82rem', fontWeight: 600,
-    cursor: 'pointer', transition: 'all 0.18s',
-  };
-}
-
 export default function FilterScreen() {
   const navigate  = useNavigate();
   const [selected, setSelected] = useState([]);
@@ -32,13 +21,6 @@ export default function FilterScreen() {
     <div className="filter-screen">
       <div className="filter-header">
         <img src="/assets/logo-ink.png" alt="Neo Diamond" className="filter-logo" />
-
-        {/* Category tabs */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 20 }}>
-          <button style={tabStyle(true)}>Кольца</button>
-          <button onClick={() => navigate('/catalog/pusety')} style={tabStyle(false)}>Пусеты</button>
-        </div>
-
         <h1 className="filter-title">Выберите форму бриллианта</h1>
         <p className="filter-sub">Можно выбрать несколько — покажем все подходящие украшения</p>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SHAPES, PUSETЫ_CASTS, SHAPE_IJEWEL, CAST_IJEWEL, pusetyCardName } from '../data/config.js';
+import { SHAPES, PUSETЫ_SHAPES_BY_CAST, PUSETЫ_CASTS, SHAPE_IJEWEL, CAST_IJEWEL, pusetyCardName } from '../data/config.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 
 const CARAT_OPTIONS = [0.5, 1, 1.5, 2, 3];
@@ -28,27 +28,53 @@ function DotPicker({ options, chosen, onChoose }) {
   );
 }
 
+function ShapeMiniPicker({ cast, activeShape, onSelect, onClose }) {
+  const available = SHAPES.filter(s => PUSETЫ_SHAPES_BY_CAST[cast]?.includes(s.id));
+  return (
+    <div className="shape-mini-overlay" onClick={onClose}>
+      <div className="shape-mini-popup" onClick={e => e.stopPropagation()}>
+        <div className="shape-mini-grid">
+          {available.map(s => (
+            <button
+              key={s.id}
+              className={`shape-mini-btn${activeShape === s.id ? ' shape-mini-btn--active' : ''}`}
+              onClick={() => { onSelect(s.id); onClose(); }}
+              title={s.label}
+            >
+              <img src={`/assets/shapes/${s.file}`} alt={s.label} className="shape-mini-img" />
+              <span className="shape-mini-label">{s.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PusetyDetailScreen({ ijewel }) {
   const { cast, shape: shapeParam } = useParams();
   const navigate = useNavigate();
 
   const cardKey = `${cast}/${shapeParam}`;
 
-  const [shape,      setShape]      = useState(shapeParam);
-  const [carat,      setCarat]      = useState(null);
-  const [gem1,       setGem1]       = useState(null);
-  const [gem1Label,  setGem1Label]  = useState(null);
-  const [metal,      setMetal]      = useState(null);
-  const [metalLabel, setMetalLabel] = useState(null);
-  const [purity,     setPurity]     = useState('585');
+  const [shape,        setShape]        = useState(shapeParam);
+  const [carat,        setCarat]        = useState(null);
+  const [gem1,         setGem1]         = useState(null);
+  const [gem1Label,    setGem1Label]    = useState(null);
+  const [metal,        setMetal]        = useState(null);
+  const [metalLabel,   setMetalLabel]   = useState(null);
+  const [purity,       setPurity]       = useState('585');
+  const [shapePicker,  setShapePicker]  = useState(false);
+  const [pendingInit,  setPendingInit]  = useState(null);
 
-  const [pendingInit, setPendingInit] = useState(null);
+  const castRef = useRef(cast);
 
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
+  const castLabel   = cast === 'halo' ? 'Halo' : 'Classic';
   const productName = pusetyCardName(cast, shapeLabel);
 
   // ─── Phase 1: Reset UI + schedule loader ──────────────────────────────────
-  // For pusety there are no shank variations — gate only on isReady
+  // Pusety has no shank variations — gate only on isReady.
   useEffect(() => {
     if (!ijewel.isReady) return;
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -56,8 +82,10 @@ export default function PusetyDetailScreen({ ijewel }) {
     setShape(shapeParam);
     setCarat(null);
     setPurity('585');
-    setGem1(null);    setGem1Label(null);
-    setMetal(null);   setMetalLabel(null);
+    setShapePicker(false);
+    setGem1(null);  setGem1Label(null);
+    setMetal(null); setMetalLabel(null);
+    castRef.current = cast;
 
     ijewel.resetConfigured();
     setPendingInit({ shapeTag: SHAPE_IJEWEL[shapeParam], castTag: CAST_IJEWEL[cast] });
@@ -82,10 +110,7 @@ export default function PusetyDetailScreen({ ijewel }) {
 
     if (!metal && ijewel.shankMetalOptions.length) {
       const w = ijewel.shankMetalOptions.find(o => o.label.toLowerCase().includes('бел'));
-      if (w) {
-        setMetal(w.uuid); setMetalLabel(w.label);
-        ijewel.applyShankMetal(w.uuid);
-      }
+      if (w) { setMetal(w.uuid); setMetalLabel(w.label); ijewel.applyShankMetal(w.uuid); }
     }
   }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -96,9 +121,16 @@ export default function PusetyDetailScreen({ ijewel }) {
     return () => clearTimeout(t);
   }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Shape change ─────────────────────────────────────────────────────────
+  const handleShapeChange = useCallback((newShape) => {
+    setShape(newShape);
+    setShapePicker(false);
+    ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
+  }, [ijewel]);
+
   function handleBook() {
     sessionStorage.setItem('nd_booking', JSON.stringify({
-      shape, shank: 'Пусеты', cast, carat, purity, metalLabel, gem1Label, price: null,
+      shape, shank: `Пусеты ${castLabel}`, cast, carat, purity, metalLabel, gem1Label, price: null,
     }));
     navigate('/catalog/booking');
   }
@@ -119,6 +151,17 @@ export default function PusetyDetailScreen({ ijewel }) {
             }}>
               {productName}
             </h2>
+            <button
+              onClick={() => setShapePicker(true)}
+              style={{
+                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                fontSize: '0.78rem', color: 'var(--cfg-ink-muted, #5b81a1)',
+                textDecoration: 'underline', textUnderlineOffset: 3,
+                fontFamily: 'var(--font-body, Manrope, sans-serif)',
+              }}
+            >
+              Поменять форму бриллианта
+            </button>
           </div>
         </div>
 
@@ -183,6 +226,15 @@ export default function PusetyDetailScreen({ ijewel }) {
           Подтвердить выбор
         </button>
       </div>
+
+      {shapePicker && (
+        <ShapeMiniPicker
+          cast={cast}
+          activeShape={shape}
+          onSelect={handleShapeChange}
+          onClose={() => setShapePicker(false)}
+        />
+      )}
     </>
   );
 }

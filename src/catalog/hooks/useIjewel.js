@@ -130,10 +130,11 @@ export function useIjewel(fileId = RING_FILE_ID) {
 
   // Live reads from refs — recompute whenever tick changes (same pattern as iJewel's own renderUI)
   const shankVariations   = useMemo(() => readShankVariations(ringRef.current),              [tick]); // eslint-disable-line react-hooks/exhaustive-deps
-  const gem1Options       = useMemo(() => readGroupOptions(matRef.current, ['центрального', 'gem1', 'center', 'central'], true),        [tick]); // eslint-disable-line react-hooks/exhaustive-deps
-  const gem2Options       = useMemo(() => readGroupOptions(matRef.current, ['боковых', 'gem2', 'side', 'scatter', 'россып'], true),      [tick]); // eslint-disable-line react-hooks/exhaustive-deps
-  const shankMetalOptions = useMemo(() => readGroupOptions(matRef.current, ['шинки', 'shank', 'band', 'ring', 'metal shank'], false),     [tick]); // eslint-disable-line react-hooks/exhaustive-deps
-  const castMetalOptions  = useMemo(() => readGroupOptions(matRef.current, ['каста', 'cast', 'head metal', 'setting', 'prong'], false),   [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Hints cover both ring names (шинки/shank) and pusety/earring names (metal/gold/earring)
+  const gem1Options       = useMemo(() => readGroupOptions(matRef.current, ['центрального', 'gem1', 'center', 'central', 'diamond', 'gem'], true),                             [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const gem2Options       = useMemo(() => readGroupOptions(matRef.current, ['боковых', 'gem2', 'side', 'scatter', 'россып'], true),                                            [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shankMetalOptions = useMemo(() => readGroupOptions(matRef.current, ['шинки', 'shank', 'band', 'ring', 'metal shank', 'metal', 'gold', 'earring', 'пусет'], false),    [tick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const castMetalOptions  = useMemo(() => readGroupOptions(matRef.current, ['каста', 'cast', 'head metal', 'setting', 'prong'], false),                                        [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const debugInfo = useMemo(() => { // eslint-disable-line react-hooks/exhaustive-deps
     if (!new URLSearchParams(window.location.search).get('debug')) return null;

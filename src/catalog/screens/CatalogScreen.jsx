@@ -1,5 +1,5 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { SHAPES, VALID_COMBOS, cardName, ringImage } from '../data/config.js';
+import { SHAPES, VALID_COMBOS, PUSETЫ_VALID_COMBOS, cardName, pusetyCardName, ringImage } from '../data/config.js';
 import { loadPrices } from '../data/prices.js';
 
 const _prices = loadPrices();
@@ -9,32 +9,20 @@ function basePrice(shankId, castId) {
   const cast = castId !== 'classic' ? (_prices.casts?.[castId] ?? 0) : 0;
   return base + cast;
 }
-function formatPrice(n) {
-  return n.toLocaleString('ru-KZ') + ' ₸';
-}
+function formatPrice(n) { return n.toLocaleString('ru-KZ') + ' ₸'; }
+function shankToSlug(id) { return id.toLowerCase().replace(/\s+/g, '-'); }
 
-// Shank ID → URL slug (e.g. "Neo Luxe" → "neo-luxe")
-function shankToSlug(id) {
-  return id.toLowerCase().replace(/\s+/g, '-');
-}
-
-function ProductCard({ shape, shank, cast, onClick }) {
+function RingCard({ shape, shank, cast, onClick }) {
   const shapeObj = SHAPES.find(s => s.id === shape);
-  const name = cardName(shank, cast, shapeObj?.label ?? shape);
+  const name  = cardName(shank, cast, shapeObj?.label ?? shape);
   const price = basePrice(shank, cast);
-  const img = ringImage(shank, cast, shape);
+  const img   = ringImage(shank, cast, shape);
 
   return (
     <button className="product-card" onClick={onClick}>
       <div className="product-card__img-wrap">
         <div className="product-card__studio-bg">
-          {img && (
-            <img
-              src={img}
-              alt={name}
-              className="product-card__ring"
-            />
-          )}
+          {img && <img src={img} alt={name} className="product-card__ring" />}
         </div>
       </div>
       <div className="product-card__body">
@@ -45,30 +33,59 @@ function ProductCard({ shape, shank, cast, onClick }) {
   );
 }
 
+function PusetyCard({ shape, cast, onClick }) {
+  const shapeObj = SHAPES.find(s => s.id === shape);
+  const name = pusetyCardName(cast, shapeObj?.label ?? shape);
+
+  return (
+    <button className="product-card" onClick={onClick}>
+      <div className="product-card__img-wrap">
+        <div className="product-card__studio-bg">
+          <img
+            src={`/assets/shapes/${shapeObj?.file ?? `${shape}.jpg`}`}
+            alt={name}
+            className="product-card__ring"
+            style={{ mixBlendMode: 'multiply', background: '#fff', objectFit: 'contain', width: '70%', height: '70%' }}
+          />
+        </div>
+      </div>
+      <div className="product-card__body">
+        <div className="product-card__name">{name}</div>
+        <div className="product-card__price" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+          Уточните цену
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export default function CatalogScreen() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const shapesParam = searchParams.get('shapes');
+  const shapesParam  = searchParams.get('shapes');
   const activeShapes = shapesParam
     ? shapesParam.split(',').filter(id => SHAPES.find(s => s.id === id))
     : SHAPES.map(s => s.id);
 
-  const products = [];
+  // Rings
+  const rings = [];
   for (const shape of activeShapes) {
     for (const { shank, cast } of VALID_COMBOS) {
-      products.push({ shape, shank, cast });
+      rings.push({ type: 'ring', shape, shank, cast });
     }
   }
+
+  // Pusety — only shapes that exist in pusety catalog
+  const pusety = PUSETЫ_VALID_COMBOS.filter(c => activeShapes.includes(c.shape))
+    .map(c => ({ type: 'pusety', ...c }));
+
+  const products = [...rings, ...pusety];
 
   const shapeLabels = activeShapes
     .map(id => SHAPES.find(s => s.id === id)?.label)
     .filter(Boolean)
     .join(', ');
-
-  function openProduct(p) {
-    navigate(`/catalog/product/${shankToSlug(p.shank)}/${p.cast}/${p.shape}`);
-  }
 
   return (
     <div className="catalog-screen">
@@ -87,13 +104,21 @@ export default function CatalogScreen() {
       </div>
 
       <div className="product-grid">
-        {products.map(p => (
-          <ProductCard
-            key={`${p.shape}-${p.shank}-${p.cast}`}
-            {...p}
-            onClick={() => openProduct(p)}
-          />
-        ))}
+        {products.map(p =>
+          p.type === 'ring' ? (
+            <RingCard
+              key={`ring-${p.shape}-${p.shank}-${p.cast}`}
+              shape={p.shape} shank={p.shank} cast={p.cast}
+              onClick={() => navigate(`/catalog/product/${shankToSlug(p.shank)}/${p.cast}/${p.shape}`)}
+            />
+          ) : (
+            <PusetyCard
+              key={`pusety-${p.cast}-${p.shape}`}
+              shape={p.shape} cast={p.cast}
+              onClick={() => navigate(`/catalog/pusety/product/${p.cast}/${p.shape}`)}
+            />
+          )
+        )}
       </div>
     </div>
   );

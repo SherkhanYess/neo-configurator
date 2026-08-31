@@ -5,8 +5,6 @@ import CatalogScreen      from './screens/CatalogScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
 import BookingScreen      from './screens/BookingScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
-import PusetyFilterScreen from './screens/PusetyFilterScreen.jsx';
-import PusetyListScreen   from './screens/PusetyListScreen.jsx';
 import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
 import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
 import './index.css';
@@ -96,18 +94,11 @@ function CatalogMain() {
       </div>
 
       <Routes>
-        {/* ── Кольца ── */}
         <Route path="/catalog"                                   element={<FilterScreen />} />
         <Route path="/catalog/filter"                            element={<FilterScreen />} />
         <Route path="/catalog/list"                              element={<CatalogScreen />} />
         <Route path="/catalog/product/:shank/:cast/:shape"       element={<DetailScreen ijewel={ijewel} />} />
-
-        {/* ── Пусеты ── */}
-        <Route path="/catalog/pusety"                            element={<PusetyFilterScreen />} />
-        <Route path="/catalog/pusety/list"                       element={<PusetyListScreen />} />
         <Route path="/catalog/pusety/product/:cast/:shape"       element={<PusetyDetailScreen ijewel={ijewel} />} />
-
-        {/* ── Общие ── */}
         <Route path="/catalog/booking"                           element={<BookingScreen />} />
         <Route path="/catalog/admin"                             element={<AdminScreen />} />
       </Routes>
