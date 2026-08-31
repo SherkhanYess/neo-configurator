@@ -89,8 +89,34 @@ export const METAL_COLORS = [
   { id: 'rose',   label: 'Розовое' },
 ];
 
-export const IJEWEL_INSTANCE = 'neodiamondkz';
-export const IJEWEL_FILE_ID  = 'MBYHa_BtQluSyH-pAufiAg';
+export const IJEWEL_INSTANCE   = 'neodiamondkz';
+export const IJEWEL_FILE_ID    = 'MBYHa_BtQluSyH-pAufiAg';
+export const PUSETЫ_IJEWEL_FILE_ID = 'W_rSwFUyS_CtAyfx1BTS1A';
+
+// ── Пусеты ────────────────────────────────────────────────────────────────────
+// Casts available for pusety
+export const PUSETЫ_CASTS = [
+  { id: 'classic', label: 'Classic' },
+  { id: 'halo',    label: 'Halo' },
+];
+
+// Shapes available per cast for pusety.
+// Halo missing: heart, asscher, princess, cushion (to be added later)
+export const PUSETЫ_SHAPES_BY_CAST = {
+  classic: ['round','princess','radiant','cushion','oval','pear','heart','marquise','emerald','asscher'],
+  halo:    ['round','oval','pear','marquise','emerald','radiant'],
+};
+
+// All valid cast × shape combos for pusety catalog grid
+export const PUSETЫ_VALID_COMBOS = [
+  ...PUSETЫ_SHAPES_BY_CAST.classic.map(shape => ({ cast: 'classic', shape })),
+  ...PUSETЫ_SHAPES_BY_CAST.halo   .map(shape => ({ cast: 'halo',    shape })),
+];
+
+export function pusetyCardName(castId, shapeLabel) {
+  const castLabel = castId === 'halo' ? 'Halo' : 'Classic';
+  return `Пусеты ${castLabel} ${shapeLabel}`;
+}
 
 export const WA_NUMBER = '77766708505';
 

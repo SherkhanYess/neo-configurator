@@ -1,11 +1,14 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import FilterScreen  from './screens/FilterScreen.jsx';
-import CatalogScreen from './screens/CatalogScreen.jsx';
-import DetailScreen  from './screens/DetailScreen.jsx';
-import BookingScreen from './screens/BookingScreen.jsx';
-import AdminScreen   from './screens/AdminScreen.jsx';
-import { useIjewel } from './hooks/useIjewel.js';
+import FilterScreen       from './screens/FilterScreen.jsx';
+import CatalogScreen      from './screens/CatalogScreen.jsx';
+import DetailScreen       from './screens/DetailScreen.jsx';
+import BookingScreen      from './screens/BookingScreen.jsx';
+import AdminScreen        from './screens/AdminScreen.jsx';
+import PusetyFilterScreen from './screens/PusetyFilterScreen.jsx';
+import PusetyListScreen   from './screens/PusetyListScreen.jsx';
+import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
+import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
 import './index.css';
 import './configurator.css';
 
@@ -21,30 +24,32 @@ const BACK_BTN = {
 
 function CatalogMain() {
   const location = useLocation();
-  const navigate  = useNavigate();
-  const ijewel        = useIjewel();
+  const navigate = useNavigate();
+
+  const subPath      = location.pathname.replace(/^\/catalog/, '') || '/';
+  const onRingProduct  = subPath.startsWith('/product');
+  const onPusetyProduct = subPath.startsWith('/pusety/product');
+  const onBooking      = subPath.startsWith('/booking');
+
+  const showViewer = onRingProduct || onPusetyProduct || onBooking;
+
+  // Determine which iJewel model to load based on current route
+  const fileId = onPusetyProduct ? PUSETЫ_FILE_ID : RING_FILE_ID;
+
+  const ijewel        = useIjewel(fileId);
   const viewerRef     = useRef(null);
   const viewerInitRef = useRef(false);
 
-  // Strip the /catalog prefix to get the sub-path for route matching
-  const subPath = location.pathname.replace(/^\/catalog/, '') || '/';
-  const onProduct = subPath.startsWith('/product');
-  const onBooking = subPath.startsWith('/booking');
-  const showViewer = onProduct || onBooking;
-
-  // Fires synchronously after DOM update but BEFORE browser paint.
-  // In the old useState CatalogApp, resetConfigured() was called inside openDetail()
-  // as a user-event handler — same React batch as setScreen('detail'), so the loader
-  // rendered together with DetailScreen on mount. React Router breaks that: navigate()
-  // and resetConfigured() are in different layers. useLayoutEffect restores the guarantee:
-  // isConfigured=false is set synchronously before any frame is painted, so the canvas
-  // is always hidden (via visibility:hidden) before applyInitial makes SDK changes.
+  // Reset isConfigured synchronously before paint when entering a product page
   useLayoutEffect(() => {
-    if (onProduct) ijewel.resetConfigured();
+    if (onRingProduct || onPusetyProduct) ijewel.resetConfigured();
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-init viewer when switching between categories (fileId changes)
   useEffect(() => {
-    if (!showViewer || viewerInitRef.current || !viewerRef.current) return;
+    if (!showViewer || !viewerRef.current) return;
+    if (viewerInitRef.current && window.__nd_viewer_file_id === fileId) return;
+
     const tryInit = () => {
       if (window.ijewelViewer) {
         viewerInitRef.current = true;
@@ -54,7 +59,7 @@ function CatalogMain() {
       }
     };
     tryInit();
-  }, [showViewer]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showViewer, fileId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
@@ -62,9 +67,6 @@ function CatalogMain() {
         className="cfg-viewer-panel"
         style={{ display: showViewer ? undefined : 'none', position: 'relative', flexShrink: 0 }}
       >
-        {/* visibility:hidden hides the WebGL canvas while not configured,
-            regardless of z-index stacking. The canvas keeps its GL context
-            and the SDK renders normally — it's just invisible to the user. */}
         <div
           ref={viewerRef}
           className="cfg-viewer-container"
@@ -85,12 +87,20 @@ function CatalogMain() {
       </div>
 
       <Routes>
-        <Route path="/catalog"                                      element={<FilterScreen />} />
-        <Route path="/catalog/filter"                               element={<FilterScreen />} />
-        <Route path="/catalog/list"                                 element={<CatalogScreen />} />
-        <Route path="/catalog/product/:shank/:cast/:shape"          element={<DetailScreen ijewel={ijewel} />} />
-        <Route path="/catalog/booking"                              element={<BookingScreen />} />
-        <Route path="/catalog/admin"                                element={<AdminScreen />} />
+        {/* ── Кольца ── */}
+        <Route path="/catalog"                                   element={<FilterScreen />} />
+        <Route path="/catalog/filter"                            element={<FilterScreen />} />
+        <Route path="/catalog/list"                              element={<CatalogScreen />} />
+        <Route path="/catalog/product/:shank/:cast/:shape"       element={<DetailScreen ijewel={ijewel} />} />
+
+        {/* ── Пусеты ── */}
+        <Route path="/catalog/pusety"                            element={<PusetyFilterScreen />} />
+        <Route path="/catalog/pusety/list"                       element={<PusetyListScreen />} />
+        <Route path="/catalog/pusety/product/:cast/:shape"       element={<PusetyDetailScreen ijewel={ijewel} />} />
+
+        {/* ── Общие ── */}
+        <Route path="/catalog/booking"                           element={<BookingScreen />} />
+        <Route path="/catalog/admin"                             element={<AdminScreen />} />
       </Routes>
     </div>
   );

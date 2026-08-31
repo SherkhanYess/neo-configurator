@@ -1,5 +1,6 @@
 import { useRef, useCallback, useState, useMemo } from 'react';
-const FILE_ID  = 'MBYHa_BtQluSyH-pAufiAg';
+export const RING_FILE_ID   = 'MBYHa_BtQluSyH-pAufiAg';
+export const PUSETЫ_FILE_ID = 'W_rSwFUyS_CtAyfx1BTS1A';
 const INSTANCE = 'neodiamondkz';
 
 const normalizeTag = (t) => (t ?? '').replace(/:\s*/, ': ').toLowerCase().trim();
@@ -95,7 +96,7 @@ function readShankVariations(ring) {
   });
 }
 
-export function useIjewel() {
+export function useIjewel(fileId = RING_FILE_ID) {
   const ringRef   = useRef(null);
   const matRef    = useRef(null);
   const viewerRef = useRef(null);
@@ -214,20 +215,28 @@ export function useIjewel() {
       }, 500);
     };
 
-    // If a viewer already exists (container is persistent, canvas never moved),
-    // just re-hook the refs — no DOM manipulation, no model reload.
+    // If the same model is already loaded, just re-hook refs — no reload.
     const existingViewer = window.webGiViewers?.[0];
-    if (existingViewer) {
+    if (existingViewer && window.__nd_viewer_file_id === fileId) {
       setupViewer(existingViewer);
       return;
     }
 
-    // First load: SDK fires ijewel-viewer-ready once when model is ready.
+    // Different model (category switch) — dispose old viewer and reload.
+    if (existingViewer && window.__nd_viewer_file_id !== fileId) {
+      try { existingViewer.dispose?.(); } catch (_) {}
+      if (window.webGiViewers) window.webGiViewers.length = 0;
+      containerEl.innerHTML = '';
+    }
+
+    window.__nd_viewer_file_id = fileId;
+
+    // First load / reload: SDK fires ijewel-viewer-ready when model is ready.
     window.addEventListener('ijewel-viewer-ready', ({ detail }) => {
       setupViewer(detail.viewer);
     }, { once: true });
 
-    ijewelViewer.loadModelById(FILE_ID, INSTANCE, containerEl, {
+    ijewelViewer.loadModelById(fileId, INSTANCE, containerEl, {
       showConfigurator: false,
       showCard: false,
       showLogo: false,
