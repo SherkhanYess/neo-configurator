@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SHAPES, SHANKS, CASTS, SHAPE_IJEWEL, CAST_IJEWEL, cardName } from '../data/config.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
-import { loadPrices } from '../data/prices.js';
+import { usePrices } from '../data/prices.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { track, EVENTS } from '../lib/track.js';
 
@@ -78,7 +78,7 @@ export default function DetailScreen({ ijewel }) {
   const [castMetal,    setCastMetal]    = useState(null);
   const [combinedGold, setCombinedGold] = useState(false);
   const [shapePicker,  setShapePicker]  = useState(false);
-  const [prices]                        = useState(() => loadPrices());
+  const prices                          = usePrices();
 
   // Stores the 3D config to apply — set in Phase 1, consumed in Phase 2.
   // Using state (not ref) so Phase 2 fires in a separate React render cycle,

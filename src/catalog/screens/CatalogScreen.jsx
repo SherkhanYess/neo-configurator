@@ -1,23 +1,21 @@
 import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SHAPES, VALID_COMBOS, PUSETЫ_VALID_COMBOS, cardName, pusetyCardName, ringImage } from '../data/config.js';
-import { loadPrices } from '../data/prices.js';
+import { usePrices } from '../data/prices.js';
 import { track, EVENTS } from '../lib/track.js';
 
-const _prices = loadPrices();
-
-function basePrice(shankId, castId) {
-  const base = _prices.baseByShank?.[shankId] ?? 0;
-  const cast = castId !== 'classic' ? (_prices.casts?.[castId] ?? 0) : 0;
+function basePrice(prices, shankId, castId) {
+  const base = prices.baseByShank?.[shankId] ?? 0;
+  const cast = castId !== 'classic' ? (prices.casts?.[castId] ?? 0) : 0;
   return base + cast;
 }
 function formatPrice(n) { return n.toLocaleString('ru-KZ') + ' ₸'; }
 function shankToSlug(id) { return id.toLowerCase().replace(/\s+/g, '-'); }
 
-function RingCard({ shape, shank, cast, onClick }) {
+function RingCard({ shape, shank, cast, prices, onClick }) {
   const shapeObj = SHAPES.find(s => s.id === shape);
   const name  = cardName(shank, cast, shapeObj?.label ?? shape);
-  const price = basePrice(shank, cast);
+  const price = basePrice(prices, shank, cast);
   const img   = ringImage(shank, cast, shape);
 
   return (
@@ -76,6 +74,7 @@ function PusetyCard({ shape, cast, onClick }) {
 export default function CatalogScreen() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const prices = usePrices();
 
   const shapesParam  = searchParams.get('shapes');
   const activeShapes = shapesParam
@@ -130,7 +129,7 @@ export default function CatalogScreen() {
           p.type === 'ring' ? (
             <RingCard
               key={`ring-${p.shape}-${p.shank}-${p.cast}`}
-              shape={p.shape} shank={p.shank} cast={p.cast}
+              shape={p.shape} shank={p.shank} cast={p.cast} prices={prices}
               onClick={() => navigate(`/catalog/product/${shankToSlug(p.shank)}/${p.cast}/${p.shape}`)}
             />
           ) : (

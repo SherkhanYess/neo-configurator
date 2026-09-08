@@ -1,243 +1,158 @@
 import { useState, useCallback } from 'react';
-import { PRICE_DEFAULTS, loadPrices, savePrices, resetPrices, SHANK_LABELS } from '../data/prices.js';
-import { formatPrice } from '../data/priceCalc.js';
+import Dashboard from '../admin/Dashboard.jsx';
+import PricesTab from '../admin/PricesTab.jsx';
 
-const CAST_LABELS = { halo: 'Хало', bezel: 'Безель' };
+// Admin panel for the catalog.
+//
+// Deliberately separate from /admin, which belongs to the configurator on the
+// root path and is left untouched.
+//
+// The token is the same ADMIN_TOKEN the price and stats endpoints check. It is
+// held in localStorage so a reload does not log you out; every request carries
+// it and the server is what actually enforces access.
 
-function NumInput({ value, onChange, step = 1000 }) {
+const TOKEN_KEY = 'nd_admin';
+
+const C = {
+  paper050: '#FAFBFC', paper100: '#F2F5F9', paper300: '#DBE2EB',
+  ink800: '#0B2040', ink600: '#1E3149', ink400: '#5B81A1',
+  champ400: '#DCC29B',
+};
+
+const TABS = [
+  { id: 'dashboard', label: 'Дашборд' },
+  { id: 'prices',    label: 'Цены' },
+];
+
+function Login({ onSubmit, error }) {
+  const [value, setValue] = useState('');
+
   return (
-    <input
-      type="number"
-      step={step}
-      value={value}
-      onChange={e => onChange(Number(e.target.value) || 0)}
-      style={{
-        width: '100%',
-        padding: '10px 14px',
-        border: '1.5px solid #DBE2EB',
-        borderRadius: 12,
-        fontSize: '0.92rem',
-        fontFamily: 'JetBrains Mono, Courier New, monospace',
-        fontWeight: 500,
-        color: '#0B2040',
-        background: '#FAFBFC',
-        outline: 'none',
-        boxSizing: 'border-box',
-      }}
-    />
-  );
-}
+    <div style={{
+      minHeight: '100dvh', background: C.paper100,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24, fontFamily: 'Manrope, sans-serif',
+    }}>
+      <form
+        onSubmit={(e) => { e.preventDefault(); onSubmit(value.trim()); }}
+        style={{
+          background: '#fff', border: `1.5px solid ${C.paper300}`,
+          borderRadius: 24, padding: '32px 28px', width: '100%', maxWidth: 380,
+          display: 'flex', flexDirection: 'column', gap: 16,
+        }}
+      >
+        <div>
+          <div style={{
+            fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.16em',
+            textTransform: 'uppercase', color: C.ink400, marginBottom: 8,
+          }}>
+            Neo Diamond
+          </div>
+          <h1 style={{
+            fontFamily: '"Unbounded", sans-serif', fontWeight: 300,
+            fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0, color: C.ink800,
+          }}>
+            Админка каталога
+          </h1>
+        </div>
 
-function Section({ title, children }) {
-  return (
-    <div style={{ marginBottom: 40 }}>
-      <div style={{
-        fontSize: '0.68rem', fontFamily: 'Manrope, sans-serif',
-        fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase',
-        color: '#5B81A1', marginBottom: 16,
-      }}>{title}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {children}
-      </div>
-    </div>
-  );
-}
+        <input
+          type="password"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Пароль"
+          autoComplete="current-password"
+          style={{
+            width: '100%', padding: '13px 16px', borderRadius: 14,
+            border: `1.5px solid ${C.paper300}`, background: C.paper050,
+            fontSize: '0.95rem', color: C.ink800,
+            fontFamily: 'Manrope, sans-serif', outline: 'none', boxSizing: 'border-box',
+          }}
+        />
 
-function Field({ label, value, onChange, hint }) {
-  return (
-    <div>
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-        marginBottom: 6,
-      }}>
-        <label style={{ fontSize: '0.85rem', color: '#0B2040', fontFamily: 'Manrope, sans-serif', fontWeight: 500 }}>
-          {label}
-        </label>
-        {hint && (
-          <span style={{ fontSize: '0.78rem', color: '#5B81A1', fontFamily: 'Manrope, sans-serif' }}>
-            {hint}
-          </span>
-        )}
-      </div>
-      <NumInput value={value} onChange={onChange} />
+        {error && <div style={{ fontSize: '0.83rem', color: '#A8322B' }}>{error}</div>}
+
+        <button type="submit" style={{
+          height: 48, border: 'none', borderRadius: 999, background: C.ink800,
+          color: '#fff', fontSize: '0.9rem', fontWeight: 600,
+          fontFamily: 'Manrope, sans-serif', cursor: 'pointer',
+        }}>
+          Войти
+        </button>
+      </form>
     </div>
   );
 }
 
 export default function AdminScreen() {
-  const [prices, setPrices]  = useState(() => loadPrices());
-  const [saved,  setSaved]   = useState(false);
+  const [token, setToken] = useState(() => {
+    try { return localStorage.getItem(TOKEN_KEY) ?? ''; } catch (_) { return ''; }
+  });
+  const [tab, setTab] = useState('dashboard');
 
-  const setBase = useCallback((shank, val) => {
-    setPrices(p => ({ ...p, baseByShank: { ...p.baseByShank, [shank]: val } }));
-    setSaved(false);
+  const handleLogin = useCallback((value) => {
+    if (!value) return;
+    try { localStorage.setItem(TOKEN_KEY, value); } catch (_) {}
+    setToken(value);
   }, []);
 
-  const setCast = useCallback((cast, val) => {
-    setPrices(p => ({ ...p, casts: { ...p.casts, [cast]: val } }));
-    setSaved(false);
+  const handleLogout = useCallback(() => {
+    try { localStorage.removeItem(TOKEN_KEY); } catch (_) {}
+    setToken('');
   }, []);
 
-  const setField = useCallback((key, val) => {
-    setPrices(p => ({ ...p, [key]: val }));
-    setSaved(false);
-  }, []);
-
-  function handleSave() {
-    savePrices(prices);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
-
-  function handleReset() {
-    if (!confirm('Сбросить все цены к значениям по умолчанию?')) return;
-    resetPrices();
-    setPrices(PRICE_DEFAULTS);
-    setSaved(false);
-  }
-
-  const inputHint = (val) => val ? formatPrice(val) : null;
+  if (!token) return <Login onSubmit={handleLogin} />;
 
   return (
-    <div style={{
-      minHeight: '100dvh',
-      background: '#F2F5F9',
-      fontFamily: 'Manrope, sans-serif',
-    }}>
-      {/* Header */}
-      <div style={{
-        background: '#0B2040',
-        padding: '20px 24px',
-        position: 'sticky', top: 0, zIndex: 10,
-      }}>
-        <div style={{ maxWidth: 560, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ color: '#DCC29B', fontSize: '0.65rem', letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 2 }}>
-              Neo Diamond
+    <div style={{ minHeight: '100dvh', background: C.paper100, fontFamily: 'Manrope, sans-serif' }}>
+
+      <div style={{ background: C.ink800, position: 'sticky', top: 0, zIndex: 30 }}>
+        <div style={{ maxWidth: 560, margin: '0 auto', padding: '18px 24px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div>
+              <div style={{
+                color: C.champ400, fontSize: '0.63rem', letterSpacing: '0.16em',
+                textTransform: 'uppercase', fontWeight: 600, marginBottom: 3,
+              }}>
+                Neo Diamond
+              </div>
+              <div style={{ color: C.paper050, fontSize: '1rem', fontWeight: 600, letterSpacing: '-0.01em' }}>
+                Админка каталога
+              </div>
             </div>
-            <div style={{ color: '#FAFBFC', fontSize: '1rem', fontWeight: 600, letterSpacing: '-0.01em' }}>
-              Управление ценами
-            </div>
+            <button onClick={handleLogout} style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: '#C2D1DE', fontSize: '0.78rem', fontWeight: 500,
+              fontFamily: 'Manrope, sans-serif', padding: 4,
+            }}>
+              Выйти
+            </button>
           </div>
-          <a
-            href="/"
-            style={{
-              color: '#C2D1DE', fontSize: '0.8rem', textDecoration: 'none',
-              fontWeight: 500,
-            }}
-          >
-            ← Каталог
-          </a>
+
+          <div style={{ display: 'flex', gap: 4 }}>
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  padding: '10px 18px', border: 'none', cursor: 'pointer',
+                  background: 'none',
+                  color: tab === t.id ? C.paper050 : '#7C93AD',
+                  fontFamily: 'Manrope, sans-serif',
+                  fontSize: '0.85rem', fontWeight: tab === t.id ? 700 : 500,
+                  borderBottom: `2px solid ${tab === t.id ? C.champ400 : 'transparent'}`,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Form */}
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '32px 24px 160px' }}>
-
-        <Section title="Базовая цена по дизайну шинки">
-          {SHANK_LABELS.map(shank => (
-            <Field
-              key={shank}
-              label={shank}
-              value={prices.baseByShank[shank] ?? 0}
-              onChange={v => setBase(shank, v)}
-              hint={inputHint(prices.baseByShank[shank])}
-            />
-          ))}
-          <p style={{ fontSize: '0.76rem', color: '#5B81A1', margin: '4px 0 0', lineHeight: 1.5 }}>
-            Базовая цена включает: кольцо с 1 карат белым бриллиантом, 585 пробу, классический каст
-          </p>
-        </Section>
-
-        <Section title="Надбавки за тип каста">
-          {Object.entries(CAST_LABELS).map(([id, label]) => (
-            <Field
-              key={id}
-              label={label}
-              value={prices.casts[id] ?? 0}
-              onChange={v => setCast(id, v)}
-              hint={inputHint(prices.casts[id])}
-            />
-          ))}
-        </Section>
-
-        <Section title="Каратность">
-          <Field
-            label="Цена за карат (сверх 1 кт)"
-            value={prices.caratPrice}
-            onChange={v => setField('caratPrice', v)}
-            hint={inputHint(prices.caratPrice)}
-          />
-          <p style={{ fontSize: '0.76rem', color: '#5B81A1', margin: '4px 0 0', lineHeight: 1.5 }}>
-            При выборе 1.5 кт → надбавка 0.5 × цена за карат
-          </p>
-        </Section>
-
-        <Section title="Металл">
-          <Field
-            label="Надбавка 750 проба (18к)"
-            value={prices.purity750surcharge}
-            onChange={v => setField('purity750surcharge', v)}
-            hint={inputHint(prices.purity750surcharge)}
-          />
-        </Section>
-
-        <Section title="Цвет бриллиантов (фэнси)">
-          <Field
-            label="Центральный бриллиант — надбавка за карат"
-            value={prices.fancyColorSurcharge}
-            onChange={v => setField('fancyColorSurcharge', v)}
-            hint={inputHint(prices.fancyColorSurcharge)}
-          />
-          <Field
-            label="Россыпные бриллианты — фиксированная надбавка"
-            value={prices.scatterFancySurcharge}
-            onChange={v => setField('scatterFancySurcharge', v)}
-            hint={inputHint(prices.scatterFancySurcharge)}
-          />
-          <p style={{ fontSize: '0.76rem', color: '#5B81A1', margin: '4px 0 0', lineHeight: 1.5 }}>
-            При хало-касте россыпная надбавка применяется дважды
-          </p>
-        </Section>
-
-      </div>
-
-      {/* Sticky save bar */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20,
-        background: 'rgba(250,251,252,0.97)', borderTop: '1.5px solid #DBE2EB',
-        backdropFilter: 'blur(16px)',
-        padding: '16px 24px',
-      }}>
-        <div style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 12 }}>
-          <button
-            onClick={handleReset}
-            style={{
-              flex: '0 0 auto',
-              padding: '0 20px', height: 48,
-              border: '1.5px solid #DBE2EB',
-              borderRadius: 999, background: '#fff',
-              fontSize: '0.85rem', fontWeight: 500, color: '#5B81A1',
-              cursor: 'pointer', fontFamily: 'Manrope, sans-serif',
-            }}
-          >
-            Сбросить
-          </button>
-          <button
-            onClick={handleSave}
-            style={{
-              flex: 1,
-              height: 48,
-              border: 'none', borderRadius: 999,
-              background: saved ? '#2e7d32' : '#0B2040',
-              fontSize: '0.9rem', fontWeight: 600, color: '#fff',
-              cursor: 'pointer', fontFamily: 'Manrope, sans-serif',
-              transition: 'background 0.2s',
-            }}
-          >
-            {saved ? 'Сохранено' : 'Сохранить'}
-          </button>
-        </div>
+      <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 24px 40px' }}>
+        {tab === 'dashboard' && <Dashboard token={token} />}
+        {tab === 'prices'    && <PricesTab token={token} />}
       </div>
     </div>
   );
