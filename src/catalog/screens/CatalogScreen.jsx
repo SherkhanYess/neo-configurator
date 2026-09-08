@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SHAPES, VALID_COMBOS, PUSETЫ_VALID_COMBOS, cardName, pusetyCardName, ringImage } from '../data/config.js';
 import { loadPrices } from '../data/prices.js';
+import { track, EVENTS } from '../lib/track.js';
 
 const _prices = loadPrices();
 
@@ -98,6 +100,14 @@ export default function CatalogScreen() {
     .map(id => SHAPES.find(s => s.id === id)?.label)
     .filter(Boolean)
     .join(', ');
+
+  useEffect(() => {
+    track(EVENTS.CATALOG_VIEW, {
+      shapes: activeShapes.join(','),
+      shapeCount: activeShapes.length,
+      products: products.length,
+    });
+  }, [shapesParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="catalog-screen">

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SHAPES, PUSETЫ_SHAPES_BY_CAST, PUSETЫ_CASTS, SHAPE_IJEWEL, CAST_IJEWEL, pusetyCardName } from '../data/config.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
+import { track, EVENTS } from '../lib/track.js';
 
 const CARAT_OPTIONS = [0.5, 1, 1.5, 2, 3];
 
@@ -69,6 +70,15 @@ export default function PusetyDetailScreen({ ijewel }) {
 
   const castRef = useRef(cast);
 
+  useEffect(() => {
+    track(EVENTS.PRODUCT_OPEN, {
+      category: 'pusety',
+      model:    'Пусеты',
+      cast:     cast,
+      shape:    shapeParam,
+    });
+  }, [cardKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
   const castLabel   = cast === 'halo' ? 'Halo' : 'Classic';
   const productName = pusetyCardName(cast, shapeLabel);
@@ -125,6 +135,7 @@ export default function PusetyDetailScreen({ ijewel }) {
   const handleShapeChange = useCallback((newShape) => {
     setShape(newShape);
     setShapePicker(false);
+    track(EVENTS.CONFIG_CHANGE, { field: 'shape', value: newShape });
     ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
   }, [ijewel]);
 
@@ -173,7 +184,11 @@ export default function PusetyDetailScreen({ ijewel }) {
               {CARAT_OPTIONS.map(c => (
                 <button key={c} type="button"
                   className={`carat-btn${carat === c ? ' carat-btn--active' : ''}`}
-                  onClick={() => { setCarat(c); ijewel.applyCarat(c); }}
+                  onClick={() => {
+                    setCarat(c);
+                    track(EVENTS.CONFIG_CHANGE, { field: 'carat', value: c });
+                    ijewel.applyCarat(c);
+                  }}
                 >
                   {c} ct
                 </button>
@@ -185,7 +200,9 @@ export default function PusetyDetailScreen({ ijewel }) {
             <div className="cfg-section">
               <div className="cfg-section-label">Цвет бриллианта</div>
               <DotPicker options={ijewel.gem1Options} chosen={gem1} onChoose={(uuid, label) => {
-                setGem1(uuid); setGem1Label(label); ijewel.applyGem('gem1', uuid);
+                setGem1(uuid); setGem1Label(label);
+                track(EVENTS.CONFIG_CHANGE, { field: 'gem1', value: label });
+                ijewel.applyGem('gem1', uuid);
               }} />
             </div>
           )}
@@ -196,7 +213,10 @@ export default function PusetyDetailScreen({ ijewel }) {
               {[{ value: '585' }, { value: '750' }].map(p => (
                 <button key={p.value} type="button"
                   className={`cfg-purity-btn${purity === p.value ? ' is-selected' : ''}`}
-                  onClick={() => setPurity(p.value)}
+                  onClick={() => {
+                    setPurity(p.value);
+                    track(EVENTS.CONFIG_CHANGE, { field: 'purity', value: p.value });
+                  }}
                 >
                   <span className="cfg-purity-value">{p.value}</span>
                   <span className="cfg-opt-price">{p.value === '585' ? 'включено' : '+20 000 ₸'}</span>
@@ -209,7 +229,9 @@ export default function PusetyDetailScreen({ ijewel }) {
             <div className="cfg-section">
               <div className="cfg-section-label">Цвет золота</div>
               <DotPicker options={ijewel.shankMetalOptions} chosen={metal} onChoose={(uuid, label) => {
-                setMetal(uuid); setMetalLabel(label); ijewel.applyShankMetal(uuid);
+                setMetal(uuid); setMetalLabel(label);
+                track(EVENTS.CONFIG_CHANGE, { field: 'metal', value: label });
+                ijewel.applyShankMetal(uuid);
               }} />
             </div>
           )}

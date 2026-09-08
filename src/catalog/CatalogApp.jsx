@@ -7,6 +7,7 @@ import BookingScreen      from './screens/BookingScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
 import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
 import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
+import { track, EVENTS } from './lib/track.js';
 import './index.css';
 import './configurator.css';
 
@@ -37,6 +38,11 @@ function CatalogMain() {
   const ijewel        = useIjewel(fileId);
   const viewerRef     = useRef(null);
   const viewerInitRef = useRef(false);
+
+  // Top of the funnel: one per tab session, whichever catalog screen was entered first.
+  useEffect(() => {
+    track(EVENTS.SESSION_START, {}, { once: true });
+  }, []);
 
   // Reset isConfigured synchronously before paint when entering a product page
   useLayoutEffect(() => {

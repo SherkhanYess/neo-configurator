@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cardName, SHAPES, METAL_LABELS, WA_NUMBER } from '../data/config.js';
 import { formatPrice } from '../data/priceCalc.js';
+import { track, EVENTS } from '../lib/track.js';
 
 const TIMER_SECONDS = 600;
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -156,6 +157,18 @@ export default function BookingScreen() {
     if (!stored) navigate('/catalog');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Intent to buy: reached the booking screen with a configured piece.
+  useEffect(() => {
+    if (!stored) return;
+    track(EVENTS.BOOKING_OPEN, {
+      model: stored.shank,
+      cast:  stored.cast,
+      shape: stored.shape,
+      carat: stored.carat ?? null,
+      price: stored.price ?? null,
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Smooth-scroll so «Ваш выбор» lands at the top of the viewport after navigation
   useEffect(() => {
     if (!heroRef.current) return;
@@ -189,6 +202,17 @@ export default function BookingScreen() {
     ].filter(v => v !== false && v !== undefined).join('\n');
   }
   function openWA(withEngraving = false) {
+    // The visitor leaves for WhatsApp immediately, so track() uses sendBeacon —
+    // the request survives the page going away.
+    track(EVENTS.WA_CLICK, {
+      model:      shank,
+      cast:       cast,
+      shape:      shape,
+      carat:      carat ?? null,
+      price:      price ?? null,
+      engraving:  !!withEngraving,
+      expired:    isExpired,
+    });
     window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildWA(withEngraving))}`, '_blank');
   }
 

@@ -4,6 +4,7 @@ import { SHAPES, SHANKS, CASTS, SHAPE_IJEWEL, CAST_IJEWEL, cardName } from '../d
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { loadPrices } from '../data/prices.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
+import { track, EVENTS } from '../lib/track.js';
 
 const CARAT_OPTIONS = [1, 1.5, 2, 3, 4, 5];
 
@@ -85,6 +86,16 @@ export default function DetailScreen({ ijewel }) {
   const [pendingInit, setPendingInit] = useState(null);
 
   const castRef = useRef(cast);
+
+  // Which models actually get opened — independent of whether the 3D finished loading.
+  useEffect(() => {
+    track(EVENTS.PRODUCT_OPEN, {
+      category: 'ring',
+      model:    shankId,
+      cast:     cast,
+      shape:    shapeParam,
+    });
+  }, [cardKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Phase 1: Reset UI + schedule loader ────────────────────────────────────
   // Fires when: card changes, viewer first ready, variations first populated.
@@ -173,11 +184,13 @@ export default function DetailScreen({ ijewel }) {
   const handleShapeChange = useCallback((newShape) => {
     setShape(newShape);
     setShapePicker(false);
+    track(EVENTS.CONFIG_CHANGE, { field: 'shape', value: newShape });
     ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
   }, [ijewel]);
 
   const handleShankMetal = useCallback((uuid, label) => {
     setMetal(uuid); setMetalLabel(label);
+    track(EVENTS.CONFIG_CHANGE, { field: 'metal', value: label });
     ijewel.applyShankMetal(uuid);
     if (!combinedGold) {
       const cu = castUuidByLabel(label);
@@ -200,6 +213,7 @@ export default function DetailScreen({ ijewel }) {
 
   const handleGem1 = useCallback((uuid, label) => {
     setGem1(uuid); setGem1Label(label);
+    track(EVENTS.CONFIG_CHANGE, { field: 'gem1', value: label });
     ijewel.applyGem('gem1', uuid);
   }, [ijewel]);
 
@@ -267,7 +281,11 @@ export default function DetailScreen({ ijewel }) {
               {CARAT_OPTIONS.map(c => (
                 <button key={c} type="button"
                   className={`carat-btn${carat === c ? ' carat-btn--active' : ''}`}
-                  onClick={() => { setCarat(c); ijewel.applyCarat(c); }}
+                  onClick={() => {
+                    setCarat(c);
+                    track(EVENTS.CONFIG_CHANGE, { field: 'carat', value: c });
+                    ijewel.applyCarat(c);
+                  }}
                 >
                   {c} ct
                 </button>
@@ -295,7 +313,10 @@ export default function DetailScreen({ ijewel }) {
               {[{ value: '585' }, { value: '750' }].map(p => (
                 <button key={p.value} type="button"
                   className={`cfg-purity-btn${purity === p.value ? ' is-selected' : ''}`}
-                  onClick={() => setPurity(p.value)}
+                  onClick={() => {
+                    setPurity(p.value);
+                    track(EVENTS.CONFIG_CHANGE, { field: 'purity', value: p.value });
+                  }}
                 >
                   <span className="cfg-purity-value">{p.value}</span>
                   <span className="cfg-opt-price">

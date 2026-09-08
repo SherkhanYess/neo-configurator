@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
+import { track, EVENTS } from '../lib/track.js';
 
 export default function FilterScreen() {
   const navigate  = useNavigate();
   const [selected, setSelected] = useState([]);
 
   function toggle(id) {
+    // Tracking stays outside the state updater — React may invoke an updater
+    // more than once, so a side effect in there fires more than once too.
+    if (!selected.includes(id)) track(EVENTS.SHAPE_SELECT, { shape: id });
     setSelected(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
