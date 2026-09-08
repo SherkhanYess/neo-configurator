@@ -1,14 +1,14 @@
 export const SHAPES = [
-  { id: 'round',    label: 'Круглый',   file: 'round.jpg' },
-  { id: 'princess', label: 'Принцесса', file: 'princess.jpg' },
-  { id: 'radiant',  label: 'Радиант',   file: 'radiant.jpg' },
-  { id: 'cushion',  label: 'Кушон',     file: 'cushion.jpg' },
-  { id: 'oval',     label: 'Овал',      file: 'oval.jpg' },
-  { id: 'pear',     label: 'Груша',     file: 'pear.jpg' },
-  { id: 'heart',    label: 'Сердце',    file: 'heart.jpg' },
-  { id: 'marquise', label: 'Маркиз',    file: 'marquise.jpg' },
-  { id: 'emerald',  label: 'Изумруд',   file: 'emerald.jpg' },
-  { id: 'asscher',  label: 'Ашер',      file: 'asscher.jpg' },
+  { id: 'round',    label: 'Круглый',   file: 'round.webp' },
+  { id: 'princess', label: 'Принцесса', file: 'princess.webp' },
+  { id: 'radiant',  label: 'Радиант',   file: 'radiant.webp' },
+  { id: 'cushion',  label: 'Кушон',     file: 'cushion.webp' },
+  { id: 'oval',     label: 'Овал',      file: 'oval.webp' },
+  { id: 'pear',     label: 'Груша',     file: 'pear.webp' },
+  { id: 'heart',    label: 'Сердце',    file: 'heart.webp' },
+  { id: 'marquise', label: 'Маркиз',    file: 'marquise.webp' },
+  { id: 'emerald',  label: 'Изумруд',   file: 'emerald.webp' },
+  { id: 'asscher',  label: 'Ашер',      file: 'asscher.webp' },
 ];
 
 // Real shank designs from iJewel. id = exact iJewel variation name.

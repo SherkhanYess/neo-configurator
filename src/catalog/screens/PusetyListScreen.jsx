@@ -13,7 +13,7 @@ function PusetyCard({ cast, shape, onClick }) {
             src={`/assets/shapes/${shapeObj?.file ?? `${shape}.jpg`}`}
             alt={name}
             className="product-card__ring"
-            style={{ width: '70%', height: '70%', objectFit: 'contain', mixBlendMode: 'multiply' }}
+            style={{ width: '70%', height: '70%', objectFit: 'contain' }}
           />
         </div>
       </div>

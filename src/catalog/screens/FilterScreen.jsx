@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
+import { useProducts, enabledShapes } from '../data/products.js';
 import { track, EVENTS } from '../lib/track.js';
 
 export default function FilterScreen() {
   const navigate  = useNavigate();
+  const products  = useProducts();
+  const shapes    = enabledShapes(products);
   const [selected, setSelected] = useState([]);
 
   function toggle(id) {
@@ -17,8 +20,8 @@ export default function FilterScreen() {
   }
 
   function confirm() {
-    const shapes = selected.length ? selected : SHAPES.map(s => s.id);
-    navigate(`/catalog/list?shapes=${shapes.join(',')}`);
+    const ids = selected.length ? selected : shapes.map(s => s.id);
+    navigate(`/catalog/list?shapes=${ids.join(',')}`);
   }
 
   return (
@@ -30,7 +33,7 @@ export default function FilterScreen() {
       </div>
 
       <div className="shape-grid">
-        {SHAPES.map((shape) => (
+        {shapes.map((shape) => (
           <button
             key={shape.id}
             className={`shape-tile${selected.includes(shape.id) ? ' shape-tile--active' : ''}`}

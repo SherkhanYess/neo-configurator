@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import Dashboard from '../admin/Dashboard.jsx';
 import PricesTab from '../admin/PricesTab.jsx';
+import ProductsTab from '../admin/ProductsTab.jsx';
 
 // Admin panel for the catalog.
 //
@@ -21,6 +22,7 @@ const C = {
 
 const TABS = [
   { id: 'dashboard', label: 'Дашборд' },
+  { id: 'products',  label: 'Товары' },
   { id: 'prices',    label: 'Цены' },
 ];
 
@@ -152,6 +154,7 @@ export default function AdminScreen() {
 
       <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 24px 40px' }}>
         {tab === 'dashboard' && <Dashboard token={token} />}
+        {tab === 'products'  && <ProductsTab token={token} />}
         {tab === 'prices'    && <PricesTab token={token} />}
       </div>
     </div>
