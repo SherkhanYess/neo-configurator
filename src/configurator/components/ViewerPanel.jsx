@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import logoWhite from '../../assets/logo/neo-diamond-logo-white.png';
-import { loadIjewelSDK } from '../../lib/loadIjewel.js';
 
 export function ViewerPanel({ onInit, isReady, hidden }) {
   const containerRef = useRef(null);
@@ -8,8 +7,6 @@ export function ViewerPanel({ onInit, isReady, hidden }) {
 
   useEffect(() => {
     if (initialised.current || !containerRef.current) return;
-
-    loadIjewelSDK().catch(() => {});
 
     const tryInit = () => {
       if (window.ijewelViewer) {

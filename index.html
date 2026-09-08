@@ -35,11 +35,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <!-- iJewel 3D SDK (~4.2 MB) is no longer loaded here. It blocked rendering on
-         every page, including screens with no 3D. It is now fetched on demand by
-         src/lib/loadIjewel.js when a viewer is about to mount. Warm the connection
-         early so that download starts faster when it is actually needed. -->
-    <link rel="preconnect" href="https://releases.ijewel3d.com" crossorigin />
+    <script src="https://releases.ijewel3d.com/libs/webgi-v0/bundle-0.22.0.js"></script>
+    <script src="https://releases.ijewel3d.com/libs/mini-viewer/0.6.8/bundle.nowebgi.iife.js"></script>
   </head>
   <body>
     <div id="root"></div>
