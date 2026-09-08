@@ -22,7 +22,17 @@ function RingCard({ shape, shank, cast, onClick }) {
     <button className="product-card" onClick={onClick}>
       <div className="product-card__img-wrap">
         <div className="product-card__studio-bg">
-          {img && <img src={img} alt={name} className="product-card__ring" />}
+          {img && (
+            <img
+              src={img}
+              alt={name}
+              className="product-card__ring"
+              loading="lazy"
+              decoding="async"
+              width="700"
+              height="700"
+            />
+          )}
         </div>
       </div>
       <div className="product-card__body">
@@ -45,6 +55,8 @@ function PusetyCard({ shape, cast, onClick }) {
             src={`/assets/shapes/${shapeObj?.file ?? `${shape}.jpg`}`}
             alt={name}
             className="product-card__ring"
+            loading="lazy"
+            decoding="async"
             style={{ mixBlendMode: 'multiply', background: '#fff', objectFit: 'contain', width: '70%', height: '70%' }}
           />
         </div>

@@ -78,7 +78,7 @@ export function ringImage(shankId, castId, shapeId) {
   const slug = MODEL_SLUG[modelName(shankId, castId)];
   if (!slug) return null;
   const shape = shapeId ?? 'round';
-  return `/assets/rings/${slug}-${shape}.png`;
+  return `/assets/rings/${slug}-${shape}.webp`;
 }
 
 export const METALS = ['585', '750'];

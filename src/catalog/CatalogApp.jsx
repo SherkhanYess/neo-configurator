@@ -7,6 +7,7 @@ import BookingScreen      from './screens/BookingScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
 import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
 import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
+import { loadIjewelSDK } from '../lib/loadIjewel.js';
 import './index.css';
 import './configurator.css';
 
@@ -56,6 +57,9 @@ function CatalogMain() {
   useEffect(() => {
     if (!showViewer || !viewerRef.current) return;
     if (viewerInitRef.current) return;
+
+    // Kick off the 4.2 MB SDK download only now that a viewer is needed.
+    loadIjewelSDK().catch(() => {});
 
     const tryInit = () => {
       if (window.ijewelViewer) {
