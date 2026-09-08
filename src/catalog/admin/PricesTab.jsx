@@ -74,6 +74,7 @@ export default function PricesTab({ token }) {
 
   const setBase  = useCallback((shank, v) => { setPrices(p => ({ ...p, baseByShank: { ...p.baseByShank, [shank]: v } })); setStatus(''); }, []);
   const setCast  = useCallback((cast,  v) => { setPrices(p => ({ ...p, casts: { ...p.casts, [cast]: v } })); setStatus(''); }, []);
+  const setPusety = useCallback((id, v) => { setPrices(p => ({ ...p, baseByPusety: { ...p.baseByPusety, [id]: v } })); setStatus(''); }, []);
   const setField = useCallback((key,   v) => { setPrices(p => ({ ...p, [key]: v })); setStatus(''); }, []);
 
   async function handleSave() {
@@ -112,6 +113,18 @@ export default function PricesTab({ token }) {
         ))}
         <p style={note}>
           Базовая цена включает: кольцо с 1 карат белым бриллиантом, 585 пробу, классический каст
+        </p>
+      </Section>
+
+      <Section title="Базовая цена пусетов">
+        {[['classic', 'Classic'], ['halo', 'Halo']].map(([id, label]) => (
+          <Field key={id} label={label}
+            value={prices.baseByPusety?.[id] ?? 0}
+            onChange={v => setPusety(id, v)}
+            hint={hint(prices.baseByPusety?.[id])} />
+        ))}
+        <p style={note}>
+          Пока стоит 0, каталог показывает «цена по запросу» вместо суммы
         </p>
       </Section>
 

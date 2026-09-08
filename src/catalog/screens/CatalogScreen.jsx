@@ -44,9 +44,10 @@ function RingCard({ shape, shank, cast, prices, products, onClick }) {
   );
 }
 
-function PusetyCard({ shape, cast, products, onClick }) {
+function PusetyCard({ shape, cast, products, prices, onClick }) {
   const shapeObj = SHAPES.find(s => s.id === shape);
-  const name = pusetyCardName(cast, shapeLabelOf(products, shape));
+  const name  = pusetyCardName(cast, shapeLabelOf(products, shape));
+  const price = prices?.baseByPusety?.[cast] ?? 0;
 
   return (
     <button className="product-card" onClick={onClick}>
@@ -64,9 +65,13 @@ function PusetyCard({ shape, cast, products, onClick }) {
       </div>
       <div className="product-card__body">
         <div className="product-card__name">{name}</div>
-        <div className="product-card__price" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-          Уточните цену
-        </div>
+        {price ? (
+          <div className="product-card__price">{formatPrice(price)}</div>
+        ) : (
+          <div className="product-card__price" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+            Цена по запросу
+          </div>
+        )}
       </div>
     </button>
   );
@@ -136,7 +141,7 @@ export default function CatalogScreen() {
           ) : (
             <PusetyCard
               key={`pusety-${p.cast}-${p.shape}`}
-              shape={p.shape} cast={p.cast} products={productCfg}
+              shape={p.shape} cast={p.cast} products={productCfg} prices={prices}
               onClick={() => navigate(`/catalog/pusety/product/${p.cast}/${p.shape}`)}
             />
           )

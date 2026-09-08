@@ -23,6 +23,12 @@ export const PRICE_DEFAULTS = {
     halo:  150000,
     bezel: 100000,
   },
+  // Пусеты. 0 означает «цена не задана» — карточка показывает «по запросу»,
+  // чтобы не выдумывать сумму за владельца.
+  baseByPusety: {
+    classic: 0,
+    halo:    0,
+  },
   caratPrice:            200000,
   purity750surcharge:    100000,
   fancyColorSurcharge:   100000,
@@ -34,8 +40,9 @@ function merge(saved) {
   return {
     ...PRICE_DEFAULTS,
     ...saved,
-    baseByShank: { ...PRICE_DEFAULTS.baseByShank, ...(saved.baseByShank ?? {}) },
-    casts:       { ...PRICE_DEFAULTS.casts,       ...(saved.casts ?? {}) },
+    baseByShank:  { ...PRICE_DEFAULTS.baseByShank,  ...(saved.baseByShank ?? {}) },
+    casts:        { ...PRICE_DEFAULTS.casts,        ...(saved.casts ?? {}) },
+    baseByPusety: { ...PRICE_DEFAULTS.baseByPusety, ...(saved.baseByPusety ?? {}) },
   };
 }
 

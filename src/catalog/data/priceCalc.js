@@ -55,6 +55,34 @@ export function calcPrice(choices, prices) {
 }
 
 /**
+ * Estimated pusety price.
+ *
+ * Pusety are a single piece — post and setting in one — so there is no shank
+ * and no combined gold. A base of 0 means the owner has not set a price yet;
+ * the caller shows "по запросу" rather than a made-up figure.
+ *
+ * @returns {number|null}
+ */
+export function calcPusetyPrice({ cast, carat, purity, gem1Label }, prices) {
+  const base = prices?.baseByPusety?.[cast] ?? 0;
+  if (!base) return null;
+
+  let total = base;
+
+  if (carat) {
+    total += (prices.caratPrice ?? 0) * Math.max(0, carat - 1);
+  }
+  if (purity === '750' && prices.purity750surcharge) {
+    total += prices.purity750surcharge;
+  }
+  if (gem1Label && !gem1Label.toLowerCase().includes('бел') && prices.fancyColorSurcharge) {
+    total += prices.fancyColorSurcharge * (carat ?? 1);
+  }
+
+  return Math.round(total);
+}
+
+/**
  * Format price as "450 000 ₸"
  */
 export function formatPrice(price) {

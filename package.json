@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "node tests/stats.test.mjs"
+    "test": "node tests/stats.test.mjs && node tests/pusety-price.test.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

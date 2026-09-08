@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SHAPES, PUSETЫ_SHAPES_BY_CAST, PUSETЫ_CASTS, SHAPE_IJEWEL, CAST_IJEWEL, pusetyCardName } from '../data/config.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
+import { usePrices } from '../data/prices.js';
+import { calcPusetyPrice, formatPrice } from '../data/priceCalc.js';
 import { track, EVENTS } from '../lib/track.js';
 
 const CARAT_OPTIONS = [0.5, 1, 1.5, 2, 3];
@@ -69,6 +71,7 @@ export default function PusetyDetailScreen({ ijewel }) {
   const [pendingInit,  setPendingInit]  = useState(null);
 
   const castRef = useRef(cast);
+  const prices  = usePrices();
 
   useEffect(() => {
     track(EVENTS.PRODUCT_OPEN, {
@@ -82,6 +85,7 @@ export default function PusetyDetailScreen({ ijewel }) {
   const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
   const castLabel   = cast === 'halo' ? 'Halo' : 'Classic';
   const productName = pusetyCardName(cast, shapeLabel);
+  const price       = calcPusetyPrice({ cast, carat, purity, gem1Label }, prices);
 
   // ─── Phase 1: Reset UI + schedule loader ──────────────────────────────────
   // Pusety has no shank variations — gate only on isReady.
@@ -141,7 +145,7 @@ export default function PusetyDetailScreen({ ijewel }) {
 
   function handleBook() {
     sessionStorage.setItem('nd_booking', JSON.stringify({
-      shape, shank: `Пусеты ${castLabel}`, cast, carat, purity, metalLabel, gem1Label, price: null,
+      shape, shank: `Пусеты ${castLabel}`, cast, carat, purity, metalLabel, gem1Label, price,
     }));
     navigate('/catalog/booking');
   }
@@ -242,7 +246,7 @@ export default function PusetyDetailScreen({ ijewel }) {
       <div className="detail-cta-bar">
         <div className="detail-cta-price-row">
           <span className="detail-cta-label">Стоимость</span>
-          <span className="detail-cta-price">по запросу</span>
+          <span className="detail-cta-price">{price ? formatPrice(price) : 'по запросу'}</span>
         </div>
         <button className="detail-cta-book" onClick={handleBook}>
           Подтвердить выбор
