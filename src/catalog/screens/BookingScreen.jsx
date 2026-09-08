@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cardName, SHAPES, METAL_LABELS, WA_NUMBER } from '../data/config.js';
 import { formatPrice } from '../data/priceCalc.js';
-import LeadCaptureModal from '../components/LeadCaptureModal.jsx';
 
 const TIMER_SECONDS = 600;
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -151,9 +150,6 @@ export default function BookingScreen() {
   const stored = JSON.parse(sessionStorage.getItem('nd_booking') ?? 'null');
   const heroRef = useRef(null);
 
-  const [leadModal,  setLeadModal]  = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-
   const timeLeft  = useCountdown(TIMER_SECONDS);
 
   useEffect(() => {
@@ -192,47 +188,8 @@ export default function BookingScreen() {
       withEngraving && !isExpired ? '\nХочу получить индивидуальную гравировку в подарок.' : '',
     ].filter(v => v !== false && v !== undefined).join('\n');
   }
-  // The WhatsApp buttons now ask for a name and phone first, so the lead is
-  // recorded even when the visitor never presses "send" inside WhatsApp.
   function openWA(withEngraving = false) {
-    setLeadModal({ withEngraving });
-  }
-
-  function handleLeadSubmit({ name, phone }) {
-    setSubmitting(true);
-    const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildWA(leadModal?.withEngraving))}`;
-
-    // Opened synchronously inside the submit gesture, otherwise popup blockers
-    // swallow it. The lead is sent afterwards and is never allowed to block.
-    window.open(waUrl, '_blank', 'noopener,noreferrer');
-
-    let utm = {};
-    try { utm = JSON.parse(sessionStorage.getItem('nd_utm') ?? '{}') ?? {}; } catch (_) {}
-
-    fetch('/api/submit-lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        phone,
-        estimatedPrice: price ?? null,
-        config: {
-          shapeLabel: shapeLabel,
-          shankLabel: shank,
-          castLabel:  cast,
-          carat:      carat,
-          gem1Label:  gem1Label,
-          gem2Label:  stored.gem2Label,
-          purity:     purity,
-          metalLabel: metalLabel,
-        },
-        configUrl: window.location.href,
-        utm,
-      }),
-    }).catch(() => {});
-
-    setLeadModal(null);
-    setSubmitting(false);
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildWA(withEngraving))}`, '_blank');
   }
 
   return (
@@ -516,14 +473,6 @@ export default function BookingScreen() {
           Нажимая кнопку, вы перейдёте в WhatsApp — мы ответим в течение нескольких минут
         </p>
       </section>
-
-      {leadModal && (
-        <LeadCaptureModal
-          submitting={submitting}
-          onClose={() => setLeadModal(null)}
-          onSubmit={handleLeadSubmit}
-        />
-      )}
     </div>
   );
 }
