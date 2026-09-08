@@ -18,15 +18,23 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
+// The sequential path a visitor walks. config_change is deliberately absent:
+// a visitor can reach the booking screen without touching a single option, so
+// counting it as a stage produced drop-off figures above 100%. It is reported
+// separately below as an engagement signal.
 const FUNNEL = [
   'session_start',
   'shape_select',
   'catalog_view',
   'product_open',
-  'config_change',
   'booking_open',
   'wa_click',
 ];
+
+// Measured per session but off to the side of the funnel.
+const ENGAGEMENT = ['config_change'];
+
+const TRACKED = [...FUNNEL, ...ENGAGEMENT];
 
 const MAX_DAYS = 92;
 const FETCH_CHUNK = 40;
@@ -46,9 +54,9 @@ function daysBetween(from, to) {
 }
 
 // Turns one day of raw events into the compact shape the dashboard reads.
-function rollUp(day, records) {
+export function rollUp(day, records) {
   const sessions      = new Set();
-  const stepSessions  = Object.fromEntries(FUNNEL.map(s => [s, new Set()]));
+  const stepSessions  = Object.fromEntries(TRACKED.map(s => [s, new Set()]));
   const citySessions  = new Map();
   const utmSessions   = new Map();
   const shapes        = new Map();
@@ -93,7 +101,7 @@ function rollUp(day, records) {
     day,
     events:   records.length,
     sessions: sessions.size,
-    funnel:   Object.fromEntries(FUNNEL.map(s => [s, stepSessions[s].size])),
+    funnel:   Object.fromEntries(TRACKED.map(s => [s, stepSessions[s].size])),
     cities:   uniqueMap(citySessions),
     utm:      uniqueMap(utmSessions),
     shapes:   countMap(shapes),
@@ -138,11 +146,11 @@ async function dayStats(store, rollups, day) {
 }
 
 // Sums daily summaries into one range-wide view.
-function mergeDays(days) {
+export function mergeDays(days) {
   const total = {
     events: 0,
     sessions: 0,
-    funnel: Object.fromEntries(FUNNEL.map(s => [s, 0])),
+    funnel: Object.fromEntries(TRACKED.map(s => [s, 0])),
     cities: {}, utm: {}, shapes: {}, models: {}, categories: {}, carats: {},
   };
   const addInto = (target, src) => {
@@ -174,15 +182,25 @@ function mergeDays(days) {
   let prev = top;
   total.conversion = FUNNEL.map((step) => {
     const n = total.funnel[step] ?? 0;
+    // A step can be entered directly — a shared product link skips the grid —
+    // so the ratio is capped: a stage never converts more than everyone before it.
+    const ofPrevious = prev ? Math.min(100, +(n / prev * 100).toFixed(1)) : 0;
     const row = {
       step,
       sessions: n,
-      ofTotal:    top  ? +(n / top  * 100).toFixed(1) : 0,
-      ofPrevious: prev ? +(n / prev * 100).toFixed(1) : 0,
+      ofTotal: top ? +(n / top * 100).toFixed(1) : 0,
+      ofPrevious,
     };
     prev = n || prev;
     return row;
   });
+
+  total.engagement = Object.fromEntries(
+    ENGAGEMENT.map(s => [s, {
+      sessions: total.funnel[s] ?? 0,
+      ofTotal:  top ? +((total.funnel[s] ?? 0) / top * 100).toFixed(1) : 0,
+    }])
+  );
 
   return total;
 }
