@@ -127,21 +127,27 @@ function AfterSaleCard({ name, price, detail }) {
   );
 }
 
-function MiniWAButton({ onClick }) {
+// A real <a href>, not a scripted window.open.
+// Nearly all traffic arrives from the Instagram bio link, and in-app webviews
+// (Instagram, Facebook, iOS Safari) routinely swallow window.open — the tap
+// registers, the chat never opens, and the visitor is simply gone. A plain
+// link is handled by the OS, so wa.me opens the WhatsApp app directly.
+function MiniWALink({ href, onClick }) {
   return (
-    <button onClick={onClick} className="wa-btn-shimmer" style={{
+    <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick}
+      className="wa-btn-shimmer" style={{
       width: '100%', marginTop: 28,
       padding: '17px 20px', borderRadius: 50, border: 'none', cursor: 'pointer',
-      background: C.wa, color: '#fff',
+      background: C.wa, color: '#fff', textDecoration: 'none',
       fontSize: '0.97rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
       boxShadow: '0 4px 20px rgba(37,211,102,0.42)',
       position: 'relative', overflow: 'hidden',
-      minHeight: 56,
+      minHeight: 56, boxSizing: 'border-box',
     }}>
       <WhatsAppIcon />
       Записаться на живой показ
-    </button>
+    </a>
   );
 }
 
@@ -201,9 +207,13 @@ export default function BookingScreen() {
       withEngraving && !isExpired ? '\nХочу получить индивидуальную гравировку в подарок.' : '',
     ].filter(v => v !== false && v !== undefined).join('\n');
   }
-  function openWA(withEngraving = false) {
-    // The visitor leaves for WhatsApp immediately, so track() uses sendBeacon —
-    // the request survives the page going away.
+  function waHref(withEngraving = false) {
+    return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildWA(withEngraving))}`;
+  }
+
+  // Fires on the link's own click, before the browser follows it. track() uses
+  // sendBeacon, so the request survives the page going away.
+  function trackWA(withEngraving = false) {
     track(EVENTS.WA_CLICK, {
       model:      shank,
       cast:       cast,
@@ -213,7 +223,6 @@ export default function BookingScreen() {
       engraving:  !!withEngraving,
       expired:    isExpired,
     });
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildWA(withEngraving))}`, '_blank');
   }
 
   return (
@@ -282,7 +291,7 @@ export default function BookingScreen() {
             </div>
           ))}
         </div>
-        <MiniWAButton onClick={() => openWA(false)} />
+        <MiniWALink href={waHref(false)} onClick={() => trackWA(false)} />
       </section>
 
       <hr style={divider} />
@@ -299,7 +308,7 @@ export default function BookingScreen() {
             <AfterSaleCard key={s.name} {...s} />
           ))}
         </div>
-        <MiniWAButton onClick={() => openWA(false)} />
+        <MiniWALink href={waHref(false)} onClick={() => trackWA(false)} />
       </section>
 
       <hr style={divider} />
@@ -348,7 +357,7 @@ export default function BookingScreen() {
             ))}
           </div>
         </div>
-        <MiniWAButton onClick={() => openWA(false)} />
+        <MiniWALink href={waHref(false)} onClick={() => trackWA(false)} />
       </section>
 
       <hr style={divider} />
@@ -447,18 +456,19 @@ export default function BookingScreen() {
               <strong style={{ color: C.ink800 }}>индивидуальную гравировку на украшение в подарок</strong>
             </p>
 
-            <button onClick={() => openWA(true)} className="wa-btn-shimmer" style={{
+            <a href={waHref(true)} target="_blank" rel="noopener noreferrer"
+              onClick={() => trackWA(true)} className="wa-btn-shimmer" style={{
               width: '100%', padding: '16px 24px',
               borderRadius: 50, border: 'none', cursor: 'pointer',
-              background: C.wa, color: '#fff',
+              background: C.wa, color: '#fff', textDecoration: 'none',
               fontSize: '1rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               marginBottom: 20, boxShadow: '0 4px 22px rgba(37,211,102,0.42)',
-              position: 'relative', overflow: 'hidden',
+              position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
             }}>
               <WhatsAppIcon />
               Написать в WhatsApp
-            </button>
+            </a>
 
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
@@ -478,18 +488,18 @@ export default function BookingScreen() {
             <p style={{ fontSize: '0.88rem', color: C.ink400, margin: '0 0 24px' }}>
               Специальное предложение истекло, но мы будем рады вас видеть.
             </p>
-            <button onClick={() => openWA(false)} className="wa-btn-shimmer" style={{
+            <a href={waHref(false)} target="_blank" rel="noopener noreferrer" onClick={() => trackWA(false)} className="wa-btn-shimmer" style={{
               width: '100%', padding: '16px 24px',
               borderRadius: 50, border: 'none', cursor: 'pointer',
-              background: C.wa, color: '#fff',
+              background: C.wa, color: '#fff', textDecoration: 'none',
               fontSize: '1rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               boxShadow: '0 4px 22px rgba(37,211,102,0.42)',
-              position: 'relative', overflow: 'hidden',
+              position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
             }}>
               <WhatsAppIcon />
               Забронировать живой показ
-            </button>
+            </a>
           </>
         )}
 

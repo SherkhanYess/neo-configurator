@@ -415,8 +415,16 @@ img { display: block; max-width: 100%; }
 .btn-wa:active { transform: scale(0.97); opacity: 0.9; }
 
 /* ── Filter confirm button ──────────────────────── */
+/* Sticky: the button used to sit below all ten shape tiles, so on a phone you
+   had to scroll blind past the whole grid to discover you could continue. */
 .filter-confirm-wrap {
-  padding: 24px 16px 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  padding: 16px;
+  background: rgba(250, 251, 252, 0.97);
+  backdrop-filter: blur(16px);
+  border-top: 1.5px solid var(--border);
 }
 .filter-confirm-btn {
   width: 100%;

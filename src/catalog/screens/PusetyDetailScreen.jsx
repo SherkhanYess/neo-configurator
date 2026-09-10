@@ -5,8 +5,16 @@ import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { usePrices } from '../data/prices.js';
 import { calcPusetyPrice, formatPrice } from '../data/priceCalc.js';
 import { track, EVENTS } from '../lib/track.js';
+import TrustBlock from '../components/TrustBlock.jsx';
+import { useContentReveal } from '../lib/useContentReveal.js';
 
 const CARAT_OPTIONS = [0.5, 1, 1.5, 2, 3];
+
+// The base price already covers a 1 ct stone, so 1 ct starts selected: the
+// figure on the card and the chosen carat now say the same thing, and no lead
+// can reach WhatsApp without a carat for the manager to work from.
+const DEFAULT_CARAT = 1;
+
 
 function DotPicker({ options, chosen, onChoose }) {
   if (!options?.length) return null;
@@ -61,7 +69,7 @@ export default function PusetyDetailScreen({ ijewel }) {
   const cardKey = `${cast}/${shapeParam}`;
 
   const [shape,        setShape]        = useState(shapeParam);
-  const [carat,        setCarat]        = useState(null);
+  const [carat,        setCarat]        = useState(DEFAULT_CARAT);
   const [gem1,         setGem1]         = useState(null);
   const [gem1Label,    setGem1Label]    = useState(null);
   const [metal,        setMetal]        = useState(null);
@@ -71,6 +79,7 @@ export default function PusetyDetailScreen({ ijewel }) {
   const [pendingInit,  setPendingInit]  = useState(null);
 
   const castRef = useRef(cast);
+  const reveal  = useContentReveal(ijewel.isConfigured, cardKey);
   const prices  = usePrices();
 
   useEffect(() => {
@@ -94,7 +103,7 @@ export default function PusetyDetailScreen({ ijewel }) {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
     setShape(shapeParam);
-    setCarat(null);
+    setCarat(DEFAULT_CARAT);
     setPurity('585');
     setShapePicker(false);
     setGem1(null);  setGem1Label(null);
@@ -116,6 +125,8 @@ export default function PusetyDetailScreen({ ijewel }) {
   // ─── Phase 3: Auto-select white defaults ──────────────────────────────────
   useEffect(() => {
     if (!ijewel.isConfigured) return;
+
+    ijewel.applyCarat(DEFAULT_CARAT);
 
     if (!gem1 && ijewel.gem1Options.length) {
       const w = ijewel.gem1Options.find(o => o.label.toLowerCase().includes('бел'));
@@ -154,7 +165,7 @@ export default function PusetyDetailScreen({ ijewel }) {
     <>
       <div
         className="cfg-panel cfg-panel--light"
-        style={{ paddingBottom: 160, flex: 1, opacity: ijewel.isConfigured ? 1 : 0, transition: 'opacity 0.25s ease' }}
+        style={{ paddingBottom: 160, flex: 1, opacity: reveal.visible ? 1 : 0, transition: 'opacity 0.25s ease' }}
       >
         <div className="cfg-step-content" style={{ paddingBottom: 0 }}>
           <div style={{ marginBottom: 16 }}>
@@ -239,6 +250,8 @@ export default function PusetyDetailScreen({ ijewel }) {
               }} />
             </div>
           )}
+
+          <TrustBlock />
 
         </div>
       </div>

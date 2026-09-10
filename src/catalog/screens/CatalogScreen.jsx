@@ -99,7 +99,16 @@ export default function CatalogScreen() {
     .filter(c => activeShapes.includes(c.shape))
     .map(c => ({ type: 'pusety', cast: c.cast, shape: c.shape }));
 
-  const products = [...rings, ...pusety];
+  // Cheapest first. The previous order was not a decision at all — it was the
+  // order VALID_COMBOS happened to be declared in, which put the 550 000 ₸
+  // Sirius fifth, behind four pricier rings. On a phone, where one card fills
+  // the screen, that set the price anchor around a million before anyone saw
+  // the entry price.
+  const priceOf = (p) => p.type === 'ring'
+    ? basePrice(prices, p.shank, p.cast)
+    : (prices?.baseByPusety?.[p.cast] || Number.MAX_SAFE_INTEGER);
+
+  const products = [...rings, ...pusety].sort((a, b) => priceOf(a) - priceOf(b));
 
   const shapeLabels = activeShapes
     .map(id => shapeLabelOf(productCfg, id))

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import FilterScreen       from './screens/FilterScreen.jsx';
 import CatalogScreen      from './screens/CatalogScreen.jsx';
@@ -8,6 +8,7 @@ import AdminScreen        from './screens/AdminScreen.jsx';
 import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
 import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
 import { track, EVENTS } from './lib/track.js';
+import { REVEAL_TIMEOUT_MS } from './lib/useContentReveal.js';
 import './index.css';
 import './configurator.css';
 
@@ -38,6 +39,16 @@ function CatalogMain() {
   const ijewel        = useIjewel(fileId);
   const viewerRef     = useRef(null);
   const viewerInitRef = useRef(false);
+
+  // Tracks the same grace period the product card uses, so a 3D load that
+  // never lands stops promising one.
+  const [viewerStalled, setViewerStalled] = useState(false);
+  useEffect(() => {
+    setViewerStalled(false);
+    if (!showViewer) return;
+    const t = setTimeout(() => setViewerStalled(true), REVEAL_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [location.pathname, showViewer]);
 
   // Top of the funnel: one per tab session, whichever catalog screen was entered first.
   useEffect(() => {
@@ -89,7 +100,11 @@ function CatalogMain() {
         {!ijewel.isConfigured && showViewer && (
           <div className="cfg-viewer-loader">
             <div className="cfg-viewer-loader-inner">
-              <p className="cfg-viewer-loader-text">Загрузка украшения...</p>
+              <p className="cfg-viewer-loader-text">
+                {viewerStalled && !ijewel.isConfigured
+                  ? 'Не удалось загрузить 3D-просмотр. Характеристики и цена — ниже.'
+                  : 'Загрузка украшения...'}
+              </p>
             </div>
           </div>
         )}

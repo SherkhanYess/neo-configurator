@@ -5,8 +5,16 @@ import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { usePrices } from '../data/prices.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { track, EVENTS } from '../lib/track.js';
+import TrustBlock from '../components/TrustBlock.jsx';
+import { useContentReveal } from '../lib/useContentReveal.js';
 
 const CARAT_OPTIONS = [1, 1.5, 2, 3, 4, 5];
+
+// The base price already covers a 1 ct stone, so 1 ct starts selected: the
+// figure on the card and the chosen carat now say the same thing, and no lead
+// can reach WhatsApp without a carat for the manager to work from.
+const DEFAULT_CARAT = 1;
+
 
 function slugToShankId(slug) {
   return SHANKS.find(s => s.id.toLowerCase().replace(/\s+/g, '-') === slug)?.id ?? slug;
@@ -67,7 +75,7 @@ export default function DetailScreen({ ijewel }) {
   const hasVariations = ijewel.shankVariations.length > 0;
 
   const [shape,        setShape]        = useState(shapeParam);
-  const [carat,        setCarat]        = useState(null);
+  const [carat,        setCarat]        = useState(DEFAULT_CARAT);
   const [gem1,         setGem1]         = useState(null);
   const [gem1Label,    setGem1Label]    = useState(null);
   const [gem2,         setGem2]         = useState(null);
@@ -86,6 +94,7 @@ export default function DetailScreen({ ijewel }) {
   const [pendingInit, setPendingInit] = useState(null);
 
   const castRef = useRef(cast);
+  const reveal  = useContentReveal(ijewel.isConfigured, cardKey);
 
   // Which models actually get opened — independent of whether the 3D finished loading.
   useEffect(() => {
@@ -112,7 +121,7 @@ export default function DetailScreen({ ijewel }) {
 
     // Reset all selection UI
     setShape(shapeParam);
-    setCarat(null);
+    setCarat(DEFAULT_CARAT);
     setPurity('585');
     setCombinedGold(false);
     setShapePicker(false);
@@ -145,6 +154,9 @@ export default function DetailScreen({ ijewel }) {
   // are null (reset in Phase 1), so we apply white defaults if available.
   useEffect(() => {
     if (!ijewel.isConfigured) return;
+
+    // Keep the 3D in step with the pre-selected carat.
+    ijewel.applyCarat(DEFAULT_CARAT);
 
     if (!gem1 && ijewel.gem1Options.length) {
       const findWhite = opts => opts.find(o => o.label.toLowerCase().includes('бел'));
@@ -248,7 +260,7 @@ export default function DetailScreen({ ijewel }) {
 
   return (
     <>
-      <div className="cfg-panel cfg-panel--light" style={{ paddingBottom: 160, flex: 1, opacity: ijewel.isConfigured ? 1 : 0, transition: 'opacity 0.25s ease' }}>
+      <div className="cfg-panel cfg-panel--light" style={{ paddingBottom: 160, flex: 1, opacity: reveal.visible ? 1 : 0, transition: 'opacity 0.25s ease' }}>
 
         <div className="cfg-step-content" style={{ paddingBottom: 0 }}>
           <div style={{ marginBottom: 16 }}>
@@ -347,8 +359,12 @@ export default function DetailScreen({ ijewel }) {
             <div className="cfg-section cfg-section--animate">
               <div className="cfg-section-label">Цвет золота каста</div>
               <DotPicker options={ijewel.castMetalOptions} chosen={castMetal} onChoose={handleCastMetal} />
-            </div>
+    
+          <TrustBlock />
+        </div>
           )}
+
+          <TrustBlock />
         </div>
       </div>
 
