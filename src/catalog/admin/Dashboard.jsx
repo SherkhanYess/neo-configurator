@@ -19,7 +19,6 @@ const C = {
 
 const STEP_LABELS = {
   session_start: 'Зашли в каталог',
-  shape_select:  'Выбрали огранку',
   catalog_view:  'Дошли до витрины',
   product_open:  'Открыли карточку',
   booking_open:  'Нажали «Подтвердить»',
@@ -112,16 +111,15 @@ function Funnel({ conversion }) {
   );
 }
 
-function Breakdown({ title, data, labels, unit, empty }) {
+function Breakdown({ title, data, labels, unit, empty, bare }) {
   // Sorted here rather than trusting the order the server sent: JSON objects
   // put integer-like keys first in numeric order, so carats ("1", "2", "1.5")
   // arrive reshuffled no matter how the server ordered them.
   const rows = Object.entries(data ?? {}).sort((a, b) => b[1] - a[1]);
   const max = rows.length ? Math.max(...rows.map(r => r[1])) : 0;
 
-  return (
-    <div style={card}>
-      <div style={eyebrow}>{title}</div>
+  const body = (
+    <>
       {rows.length === 0 ? (
         <p style={{ margin: 0, fontSize: '0.85rem', color: C.ink400 }}>{empty ?? 'Пока нет данных'}</p>
       ) : (
@@ -144,6 +142,14 @@ function Breakdown({ title, data, labels, unit, empty }) {
           ))}
         </div>
       )}
+    </>
+  );
+
+  if (bare) return body;
+  return (
+    <div style={card}>
+      <div style={eyebrow}>{title}</div>
+      {body}
     </div>
   );
 }
@@ -193,6 +199,7 @@ export default function Dashboard({ token }) {
   const total = data?.total;
   const waRate = total?.conversion?.find(c => c.step === 'wa_click')?.ofTotal ?? 0;
   const engagement = total?.engagement?.config_change;
+  const shapePicked = total?.engagement?.shape_select;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -245,21 +252,49 @@ export default function Dashboard({ token }) {
 
           <Funnel conversion={total.conversion ?? []} />
 
-          {engagement && (
-            <div style={card}>
-              <div style={eyebrow}>Вовлечённость</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                <span style={{ fontSize: '0.87rem', color: C.ink600 }}>Меняли конфигурацию украшения</span>
-                <span style={{ ...mono, fontSize: '0.95rem', fontWeight: 700, color: C.ink800 }}>
-                  {engagement.sessions}
-                  <span style={{ color: C.ink400, fontWeight: 400 }}> · {engagement.ofTotal}%</span>
-                </span>
-              </div>
-              <p style={{ margin: '8px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
-                Не ступень воронки — до записи можно дойти, ничего не настраивая.
-              </p>
+          <div style={card}>
+            <div style={eyebrow}>Как смотрят карточки</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
+              <span style={{ fontSize: '0.87rem', color: C.ink600 }}>Карточек за визит, в среднем</span>
+              <span style={{ ...mono, fontSize: '1.15rem', fontWeight: 700, color: C.ink800 }}>
+                {total.avgCardsPerSession ?? 0}
+              </span>
             </div>
-          )}
+            <Breakdown
+              title=""
+              data={total.depth}
+              labels={{ '1': 'Открыли одну и ушли', '2-3': 'Сравнили 2–3', '4+': 'Сравнили 4 и больше' }}
+              unit="сессий"
+              empty="Карточки ещё не открывали"
+              bare
+            />
+            <p style={{ margin: '10px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
+              Отличает «посмотрел одну и ушёл» от «сравнивал несколько». Воронка считает и то и другое
+              одинаково — как один визит без записи.
+            </p>
+          </div>
+
+          <div style={card}>
+            <div style={eyebrow}>Необязательные действия</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                ['Выбирали огранку на первом экране', shapePicked],
+                ['Меняли конфигурацию украшения',      engagement],
+              ].filter(([, v]) => v).map(([label, v]) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+                  <span style={{ fontSize: '0.87rem', color: C.ink600 }}>{label}</span>
+                  <span style={{ ...mono, fontSize: '0.95rem', fontWeight: 700, color: C.ink800 }}>
+                    {v.sessions}
+                    <span style={{ color: C.ink400, fontWeight: 400 }}> · {v.ofTotal}%</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p style={{ margin: '10px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
+              Не ступени воронки: до витрины можно дойти, не выбирая огранку, а до записи —
+              ничего не настраивая. Если считать их ступенями, появляется отвал, которого нет.
+            </p>
+          </div>
 
           <Breakdown title="Города"          data={total.cities} unit="сессий" empty="Город определяется автоматически при заходе" />
           <Breakdown title="Огранки"         data={total.shapes} labels={SHAPE_LABELS} />

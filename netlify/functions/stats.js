@@ -18,13 +18,17 @@ const CORS = {
   'Content-Type': 'application/json',
 };
 
-// The sequential path a visitor walks. config_change is deliberately absent:
-// a visitor can reach the booking screen without touching a single option, so
-// counting it as a stage produced drop-off figures above 100%. It is reported
-// separately below as an engagement signal.
+// The sequential path a visitor walks: every step here is genuinely required
+// to reach the next one.
+//
+// shape_select and config_change are both absent for the same reason — neither
+// gates anything. «Смотреть все украшения» takes you to the grid without
+// picking a shape, and you can reach the booking screen without touching a
+// single option. Counting an optional action as a stage invents a drop-off:
+// the step showed people "leaving" while the step after it had MORE sessions,
+// which a Math.min(100, …) cap then quietly hid. Both are reported separately.
 const FUNNEL = [
   'session_start',
-  'shape_select',
   'catalog_view',
   'product_open',
   'booking_open',
@@ -32,7 +36,7 @@ const FUNNEL = [
 ];
 
 // Measured per session but off to the side of the funnel.
-const ENGAGEMENT = ['config_change'];
+const ENGAGEMENT = ['shape_select', 'config_change'];
 
 const TRACKED = [...FUNNEL, ...ENGAGEMENT];
 
@@ -63,6 +67,7 @@ export function rollUp(day, records) {
   const models        = new Map();
   const categories    = new Map();
   const carats        = new Map();
+  const opensBySession = new Map();   // сколько карточек открыла каждая сессия
 
   const bump = (map, key) => {
     if (key === null || key === undefined || key === '') return;
@@ -85,6 +90,7 @@ export function rollUp(day, records) {
 
     if (r.event === 'shape_select') bump(shapes, r.props?.shape);
     if (r.event === 'product_open') {
+      opensBySession.set(sid, (opensBySession.get(sid) ?? 0) + 1);
       bump(models, r.props?.model);
       bump(categories, r.props?.category);
       bump(shapes, r.props?.shape);
@@ -97,10 +103,24 @@ export function rollUp(day, records) {
     [...m.entries()].map(([k, v]) => [k, v.size]).sort((a, b) => b[1] - a[1])
   );
 
+  // Distinguishes "opened one card and left" from "compared eight" — the funnel
+  // alone counts both as a single session that did not convert.
+  const depth = { '1': 0, '2-3': 0, '4+': 0 };
+  let openEvents = 0;
+  for (const n of opensBySession.values()) {
+    openEvents += n;
+    if (n >= 4) depth['4+']++;
+    else if (n >= 2) depth['2-3']++;
+    else depth['1']++;
+  }
+
   return {
     day,
     events:   records.length,
     sessions: sessions.size,
+    depth,
+    openEvents,
+    openSessions: opensBySession.size,
     funnel:   Object.fromEntries(TRACKED.map(s => [s, stepSessions[s].size])),
     cities:   uniqueMap(citySessions),
     utm:      uniqueMap(utmSessions),
@@ -151,6 +171,9 @@ export function mergeDays(days) {
     events: 0,
     sessions: 0,
     funnel: Object.fromEntries(TRACKED.map(s => [s, 0])),
+    depth: { '1': 0, '2-3': 0, '4+': 0 },
+    openEvents: 0,
+    openSessions: 0,
     cities: {}, utm: {}, shapes: {}, models: {}, categories: {}, carats: {},
   };
   const addInto = (target, src) => {
@@ -158,8 +181,11 @@ export function mergeDays(days) {
   };
 
   for (const d of days) {
-    total.events   += d.events ?? 0;
-    total.sessions += d.sessions ?? 0;
+    total.events       += d.events ?? 0;
+    total.sessions     += d.sessions ?? 0;
+    total.openEvents   += d.openEvents ?? 0;
+    total.openSessions += d.openSessions ?? 0;
+    addInto(total.depth, d.depth);
     addInto(total.funnel, d.funnel);
     addInto(total.cities, d.cities);
     addInto(total.utm, d.utm);
@@ -168,6 +194,12 @@ export function mergeDays(days) {
     addInto(total.categories, d.categories);
     addInto(total.carats, d.carats);
   }
+
+  // Среднее по тем, кто вообще открывал карточки, — иначе его размывают те, кто до них не дошёл.
+  total.avgCardsPerSession = total.openSessions
+    ? +(total.openEvents / total.openSessions).toFixed(1)
+    : 0;
+  total.depth = Object.fromEntries(Object.entries(total.depth).filter(([, v]) => v > 0));
 
   const sortObj = (o) => Object.fromEntries(Object.entries(o).sort((a, b) => b[1] - a[1]));
   total.cities = sortObj(total.cities);
@@ -191,7 +223,7 @@ export function mergeDays(days) {
       ofTotal: top ? +(n / top * 100).toFixed(1) : 0,
       ofPrevious,
     };
-    prev = n || prev;
+    prev = n;
     return row;
   });
 
