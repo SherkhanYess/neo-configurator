@@ -22,6 +22,14 @@ export const EVENTS = {
   CONFIG_CHANGE: 'config_change',
   BOOKING_OPEN:  'booking_open',
   WA_CLICK:      'wa_click',
+
+  // Отдельные точки выхода — чтобы измерять их независимо друг от друга.
+  LEARN_MORE:      'product_learn_more_click',
+  BOOKING_WA:      'booking_whatsapp_click',
+  SHARE_CLICK:     'booking_share_click',
+  SHARE_SUCCESS:   'booking_share_success',
+  OTHER_MODELS:    'booking_other_models_click',
+  FAQ_OPEN:        'faq_open',
 };
 
 function randomId() {

@@ -7,6 +7,7 @@ import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { track, EVENTS } from '../lib/track.js';
 import TrustBlock from '../components/TrustBlock.jsx';
 import { useContentReveal } from '../lib/useContentReveal.js';
+import { bookingPath } from '../lib/bookingUrl.js';
 
 const CARAT_OPTIONS = [1, 1.5, 2, 3, 4, 5];
 
@@ -252,10 +253,11 @@ export default function DetailScreen({ ijewel }) {
   const hasScatter = cast !== 'bezel';
 
   function handleBook() {
-    sessionStorage.setItem('nd_booking', JSON.stringify({
-      shape, shank: shankId, cast, carat, purity, metalLabel, gem1Label, gem2Label, price,
-    }));
-    navigate('/catalog/booking');
+    const cfg = { type: 'ring', shape, shank: shankId, cast, carat, purity, metalLabel, gem1Label, gem2Label };
+    // Still written for the back button and older links; the URL is the source of truth.
+    sessionStorage.setItem('nd_booking', JSON.stringify({ ...cfg, price }));
+    track(EVENTS.LEARN_MORE, { model: shankId, cast, shape, carat: carat ?? null, price: price ?? null });
+    navigate(bookingPath(cfg));
   }
 
   return (
@@ -374,7 +376,7 @@ export default function DetailScreen({ ijewel }) {
           <span className="detail-cta-price">{price ? formatPrice(price) : '—'}</span>
         </div>
         <button className="detail-cta-book" onClick={handleBook}>
-          Подтвердить выбор
+          Узнать подробнее
         </button>
       </div>
 

@@ -7,6 +7,7 @@ import { calcPusetyPrice, formatPrice } from '../data/priceCalc.js';
 import { track, EVENTS } from '../lib/track.js';
 import TrustBlock from '../components/TrustBlock.jsx';
 import { useContentReveal } from '../lib/useContentReveal.js';
+import { bookingPath } from '../lib/bookingUrl.js';
 
 const CARAT_OPTIONS = [0.5, 1, 1.5, 2, 3];
 
@@ -155,10 +156,10 @@ export default function PusetyDetailScreen({ ijewel }) {
   }, [ijewel]);
 
   function handleBook() {
-    sessionStorage.setItem('nd_booking', JSON.stringify({
-      shape, shank: `Пусеты ${castLabel}`, cast, carat, purity, metalLabel, gem1Label, price,
-    }));
-    navigate('/catalog/booking');
+    const cfg = { type: 'pusety', shape, shank: `Пусеты ${castLabel}`, cast, carat, purity, metalLabel, gem1Label };
+    sessionStorage.setItem('nd_booking', JSON.stringify({ ...cfg, price }));
+    track(EVENTS.LEARN_MORE, { model: 'Пусеты', cast, shape, carat: carat ?? null, price: price ?? null });
+    navigate(bookingPath(cfg));
   }
 
   return (
@@ -262,7 +263,7 @@ export default function PusetyDetailScreen({ ijewel }) {
           <span className="detail-cta-price">{price ? formatPrice(price) : 'по запросу'}</span>
         </div>
         <button className="detail-cta-book" onClick={handleBook}>
-          Подтвердить выбор
+          Узнать подробнее
         </button>
       </div>
 

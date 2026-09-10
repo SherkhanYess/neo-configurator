@@ -25,6 +25,12 @@ const ALLOWED_EVENTS = new Set([
   'config_change',
   'booking_open',
   'wa_click',
+  'product_learn_more_click',
+  'booking_whatsapp_click',
+  'booking_share_click',
+  'booking_share_success',
+  'booking_other_models_click',
+  'faq_open',
 ]);
 
 // Keeps a malformed or hostile payload from bloating storage.
