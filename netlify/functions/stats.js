@@ -67,8 +67,8 @@ export function utmKey(utm) {
   return medium ? `${source} / ${medium}` : source;
 }
 
-// Turns one day of raw events into the compact shape the dashboard reads.
-export function rollUp(day, records) {
+// Turns a set of events into the compact shape the dashboard reads.
+function core(records) {
   const sessions      = new Set();
   const stepSessions  = Object.fromEntries(TRACKED.map(s => [s, new Set()]));
   const citySessions  = new Map();
@@ -125,7 +125,6 @@ export function rollUp(day, records) {
   }
 
   return {
-    day,
     events:   records.length,
     sessions: sessions.size,
     depth,
@@ -139,6 +138,26 @@ export function rollUp(day, records) {
     categories: countMap(categories),
     carats:   countMap(carats),
   };
+}
+
+// Every figure is also computed per traffic source, so the dashboard's filter
+// can rescope the whole page — funnel included — without re-reading raw events.
+// Source cardinality is a handful, so this costs little and keeps the daily
+// rollups cacheable.
+export const ROLLUP_VERSION = 2;
+
+export function rollUp(day, records) {
+  const groups = new Map();
+  for (const r of records) {
+    const k = utmKey(r.utm);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+
+  const bySource = {};
+  for (const [k, recs] of groups) bySource[k] = core(recs);
+
+  return { day, v: ROLLUP_VERSION, ...core(records), bySource };
 }
 
 async function readDay(store, day) {
@@ -163,7 +182,9 @@ async function dayStats(store, rollups, day) {
 
   if (!isToday) {
     const cached = await rollups.get(day, { type: 'json' }).catch(() => null);
-    if (cached) return cached;
+    // An older rollup lacks the per-source split — recompute rather than serve
+    // a day the filter cannot scope.
+    if (cached && cached.v === ROLLUP_VERSION) return cached;
   }
 
   const summary = rollUp(day, await readDay(store, day));
@@ -176,7 +197,7 @@ async function dayStats(store, rollups, day) {
 }
 
 // Sums daily summaries into one range-wide view.
-export function mergeDays(days) {
+function mergeCores(days) {
   const total = {
     events: 0,
     sessions: 0,
@@ -245,6 +266,20 @@ export function mergeDays(days) {
   );
 
   return total;
+}
+
+export function mergeDays(days) {
+  const total = mergeCores(days);
+
+  // The same range-wide view, one per source, so the filter swaps the whole
+  // page rather than dimming one row.
+  const keys = new Set(days.flatMap(d => Object.keys(d?.bySource ?? {})));
+  const bySource = {};
+  for (const key of keys) {
+    bySource[key] = mergeCores(days.map(d => d?.bySource?.[key]).filter(Boolean));
+  }
+
+  return { ...total, bySource };
 }
 
 export default async (req, context) => {

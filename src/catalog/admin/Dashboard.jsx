@@ -1,28 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import UtmLinks, { UTM_LABELS } from './UtmLinks.jsx';
+import { SERIES, StatTile, BarList, FunnelChart, TrendChart, TrendTable } from './charts.jsx';
 
-// Funnel and breakdowns for /catalog, read from /api/stats.
+// Desktop dashboard for /catalog. Built for a laptop screen on purpose — it is
+// an internal tool read while working, not something to thumb through on a phone.
 //
-// Every figure counts DISTINCT SESSIONS, not raw events: one visitor opening
-// ten cards is one person, not ten.
+// Every funnel figure counts DISTINCT SESSIONS: one visitor opening ten cards is
+// one person, not ten.
 
 const C = {
-  paper050: '#FAFBFC',
-  paper100: '#F2F5F9',
-  paper200: '#E9EDF3',
-  paper300: '#DBE2EB',
+  surface:  '#FFFFFF',
+  edge:     '#DBE2EB',
   ink800:   '#0B2040',
-  ink600:   '#1E3149',
   ink400:   '#5B81A1',
   champ700: '#7C6035',
-  champ200: '#EFE4D2',
 };
 
 const STEP_LABELS = {
   session_start: 'Зашли в каталог',
   catalog_view:  'Дошли до витрины',
   product_open:  'Открыли карточку',
-  booking_open:  'Нажали «Подтвердить»',
+  booking_open:  'Нажали «Узнать детали»',
   wa_click:      'Перешли в WhatsApp',
 };
 
@@ -32,10 +30,20 @@ const SHAPE_LABELS = {
   emerald: 'Изумруд', asscher: 'Ашер',
 };
 
+const DEPTH_LABELS = {
+  '1': 'Открыли одну и ушли', '2-3': 'Сравнили 2–3', '4+': 'Сравнили 4 и больше',
+};
+
 const RANGES = [
   { id: 'today', label: 'Сегодня', days: 0 },
   { id: '7',     label: '7 дней',  days: 6 },
   { id: '30',    label: '30 дней', days: 29 },
+  { id: '90',    label: '90 дней', days: 89 },
+];
+
+const TREND_SERIES = [
+  { key: 'session_start', title: 'Посетители',         color: SERIES[1] },
+  { key: 'wa_click',      title: 'Перешли в WhatsApp',  color: SERIES[2] },
 ];
 
 function isoDaysAgo(n) {
@@ -45,130 +53,52 @@ function isoDaysAgo(n) {
 }
 
 const card = {
-  background: '#fff',
-  border: `1.5px solid ${C.paper300}`,
-  borderRadius: 20,
-  padding: '20px 22px',
+  background: C.surface, border: `1.5px solid ${C.edge}`,
+  borderRadius: 18, padding: '22px 24px',
+};
+const cardTitle = {
+  fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.13em',
+  textTransform: 'uppercase', color: C.ink400, marginBottom: 16,
 };
 
-const eyebrow = {
-  fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.14em',
-  textTransform: 'uppercase', color: C.ink400, marginBottom: 14,
-};
-
-const mono = { fontFamily: '"JetBrains Mono", "Courier New", monospace', fontVariantNumeric: 'tabular-nums' };
-
-function Funnel({ conversion }) {
-  const top = conversion[0]?.sessions ?? 0;
-
+function Card({ title, children, action, style }) {
   return (
-    <div style={{ ...card }}>
-      <div style={eyebrow}>Воронка</div>
-
-      {top === 0 ? (
-        <p style={{ margin: 0, fontSize: '0.88rem', color: C.ink400, lineHeight: 1.6 }}>
-          За выбранный период данных ещё нет. Сбор запущен — статистика появится, когда в каталог зайдут посетители.
-        </p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {conversion.map((row, i) => {
-            const drop = i > 0 ? 100 - row.ofPrevious : 0;
-            return (
-              <div key={row.step}>
-                <div style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'baseline', gap: 12, marginBottom: 6,
-                }}>
-                  <span style={{ fontSize: '0.87rem', color: C.ink800, fontWeight: 500 }}>
-                    {STEP_LABELS[row.step] ?? row.step}
-                  </span>
-                  <span style={{ ...mono, fontSize: '0.87rem', color: C.ink800, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                    {row.sessions}
-                    <span style={{ color: C.ink400, fontWeight: 400 }}> · {row.ofTotal}%</span>
-                  </span>
-                </div>
-
-                <div style={{ height: 10, borderRadius: 50, background: C.paper200, overflow: 'hidden' }}>
-                  <div style={{
-                    width: `${Math.max(row.ofTotal, row.sessions > 0 ? 2 : 0)}%`,
-                    height: '100%',
-                    borderRadius: 50,
-                    background: i === conversion.length - 1 ? C.champ700 : C.ink800,
-                    transition: 'width 0.4s ease',
-                  }} />
-                </div>
-
-                {i > 0 && drop > 0 && (
-                  <div style={{ ...mono, fontSize: '0.72rem', color: C.ink400, marginTop: 4 }}>
-                    потеряли {drop.toFixed(1)}% от предыдущего шага
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Breakdown({ title, data, labels, unit, empty, bare }) {
-  // Sorted here rather than trusting the order the server sent: JSON objects
-  // put integer-like keys first in numeric order, so carats ("1", "2", "1.5")
-  // arrive reshuffled no matter how the server ordered them.
-  const rows = Object.entries(data ?? {}).sort((a, b) => b[1] - a[1]);
-  const max = rows.length ? Math.max(...rows.map(r => r[1])) : 0;
-
-  const body = (
-    <>
-      {rows.length === 0 ? (
-        <p style={{ margin: 0, fontSize: '0.85rem', color: C.ink400 }}>{empty ?? 'Пока нет данных'}</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {rows.slice(0, 10).map(([key, n]) => (
-            <div key={key}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 4 }}>
-                <span style={{ fontSize: '0.85rem', color: C.ink600 }}>{labels?.[key] ?? key}</span>
-                <span style={{ ...mono, fontSize: '0.85rem', color: C.ink800, fontWeight: 600 }}>
-                  {n}{unit ? ` ${unit}` : ''}
-                </span>
-              </div>
-              <div style={{ height: 6, borderRadius: 50, background: C.paper200, overflow: 'hidden' }}>
-                <div style={{
-                  width: `${max ? (n / max) * 100 : 0}%`,
-                  height: '100%', borderRadius: 50, background: C.champ700,
-                }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
-  );
-
-  if (bare) return body;
-  return (
-    <div style={card}>
-      <div style={eyebrow}>{title}</div>
-      {body}
-    </div>
-  );
-}
-
-function Metric({ label, value, hint }) {
-  return (
-    <div style={{ ...card, padding: '18px 20px' }}>
-      <div style={{ ...eyebrow, marginBottom: 8 }}>{label}</div>
-      <div style={{ ...mono, fontSize: '1.6rem', fontWeight: 700, color: C.ink800, lineHeight: 1.1 }}>
-        {value}
+    <div style={{ ...card, ...style }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
+        <div style={cardTitle}>{title}</div>
+        {action}
       </div>
-      {hint && <div style={{ fontSize: '0.75rem', color: C.ink400, marginTop: 4 }}>{hint}</div>}
+      {children}
     </div>
   );
 }
+
+function Pill({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        padding: '8px 16px', borderRadius: 50, cursor: 'pointer', whiteSpace: 'nowrap',
+        border: `1.5px solid ${active ? C.ink800 : C.edge}`,
+        background: active ? C.ink800 : C.surface,
+        color: active ? '#fff' : C.ink400,
+        fontFamily: 'Manrope, sans-serif', fontSize: '0.82rem',
+        fontWeight: active ? 700 : 500,
+        transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+const ALL = '__all__';
 
 export default function Dashboard({ token }) {
   const [range,   setRange]   = useState('7');
+  const [source,  setSource]  = useState(ALL);
+  const [asTable, setAsTable] = useState(false);
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
@@ -177,11 +107,8 @@ export default function Dashboard({ token }) {
     setLoading(true);
     setError('');
     const cfg = RANGES.find(r => r.id === rangeId) ?? RANGES[1];
-    const to   = isoDaysAgo(0);
-    const from = isoDaysAgo(cfg.days);
-
     try {
-      const res = await fetch(`/api/stats?from=${from}&to=${to}`, {
+      const res = await fetch(`/api/stats?from=${isoDaysAgo(cfg.days)}&to=${isoDaysAgo(0)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 401) throw new Error('Неверный пароль — войдите заново');
@@ -197,120 +124,186 @@ export default function Dashboard({ token }) {
 
   useEffect(() => { load(range); }, [range, load]);
 
-  const total = data?.total;
-  const waRate = total?.conversion?.find(c => c.step === 'wa_click')?.ofTotal ?? 0;
-  const engagement = total?.engagement?.config_change;
-  const shapePicked = total?.engagement?.shape_select;
+  const sources = useMemo(() => {
+    const by = data?.total?.bySource ?? {};
+    return Object.keys(by).sort((a, b) => (by[b]?.sessions ?? 0) - (by[a]?.sessions ?? 0));
+  }, [data]);
+
+  // Filtering swaps the whole page, funnel included — not just one row.
+  const view = source === ALL ? data?.total : data?.total?.bySource?.[source];
+
+  // The trend is scoped to the same slice, so it always agrees with the funnel.
+  const daily = useMemo(() => {
+    if (!data?.daily) return [];
+    return data.daily.map(d => {
+      const src = source === ALL ? d : (d.bySource?.[source] ?? { funnel: {} });
+      return {
+        day: d.day,
+        session_start: src.funnel?.session_start ?? 0,
+        wa_click:      src.funnel?.wa_click ?? 0,
+      };
+    });
+  }, [data, source]);
+
+  const waRate    = view?.conversion?.find(c => c.step === 'wa_click')?.ofTotal ?? 0;
+  const sourceLbl = source === ALL ? 'все источники' : (UTM_LABELS[source] ?? source);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ minWidth: 1080 }}>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        {RANGES.map(r => (
-          <button
-            key={r.id}
-            onClick={() => setRange(r.id)}
-            style={{
-              flex: 1, padding: '10px 0', borderRadius: 50, cursor: 'pointer',
-              border: `1.5px solid ${range === r.id ? C.ink800 : C.paper300}`,
-              background: range === r.id ? C.paper100 : '#fff',
-              color: range === r.id ? C.ink800 : C.ink400,
-              fontFamily: 'Manrope, sans-serif',
-              fontSize: '0.82rem', fontWeight: range === r.id ? 700 : 500,
-            }}
-          >
-            {r.label}
-          </button>
-        ))}
+      {/* One filter row above everything it scopes. */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap',
+        padding: '0 0 20px', marginBottom: 20, borderBottom: `1.5px solid ${C.edge}`,
+      }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {RANGES.map(r => (
+            <Pill key={r.id} active={range === r.id} onClick={() => setRange(r.id)}>{r.label}</Pill>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{
+            fontSize: '0.7rem', letterSpacing: '0.11em', textTransform: 'uppercase',
+            color: C.ink400, fontWeight: 700,
+          }}>
+            Источник
+          </span>
+          <Pill active={source === ALL} onClick={() => setSource(ALL)}>Все</Pill>
+          {sources.map(s => (
+            <Pill key={s} active={source === s} onClick={() => setSource(s)}>
+              {UTM_LABELS[s] ?? s}
+            </Pill>
+          ))}
+        </div>
       </div>
 
-      {loading && (
-        <div style={{ ...card, color: C.ink400, fontSize: '0.88rem' }}>Загружаем статистику...</div>
-      )}
-
       {error && !loading && (
-        <div style={{ ...card, borderColor: '#E3B7B3', background: '#FCF3F2' }}>
-          <div style={{ fontSize: '0.88rem', color: '#A8322B', marginBottom: 10 }}>{error}</div>
-          <button
-            onClick={() => load(range)}
-            style={{
-              padding: '8px 18px', borderRadius: 50, cursor: 'pointer',
-              border: `1.5px solid ${C.paper300}`, background: '#fff',
-              fontFamily: 'Manrope, sans-serif', fontSize: '0.82rem', color: C.ink800,
-            }}
-          >
-            Попробовать снова
-          </button>
+        <div style={{ ...card, borderColor: '#E3B7B3', background: '#FCF3F2', marginBottom: 16 }}>
+          <div style={{ fontSize: '0.88rem', color: '#A8322B', marginBottom: 12 }}>{error}</div>
+          <Pill active={false} onClick={() => load(range)}>Попробовать снова</Pill>
         </div>
       )}
 
-      {!loading && !error && total && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Metric label="Посетителей" value={total.funnel.session_start ?? 0} hint={`${data.from} — ${data.to}`} />
-            <Metric label="Дошли до WhatsApp" value={`${waRate}%`} hint={`${total.funnel.wa_click ?? 0} из ${total.funnel.session_start ?? 0}`} />
-          </div>
+      {view && (
+        // Previous render held at reduced opacity while refetching — no skeleton flash.
+        <div style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
 
-          <Funnel conversion={total.conversion ?? []} />
-
-          <div style={card}>
-            <div style={eyebrow}>Как смотрят карточки</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
-              <span style={{ fontSize: '0.87rem', color: C.ink600 }}>Карточек за визит, в среднем</span>
-              <span style={{ ...mono, fontSize: '1.15rem', fontWeight: 700, color: C.ink800 }}>
-                {total.avgCardsPerSession ?? 0}
-              </span>
-            </div>
-            <Breakdown
-              title=""
-              data={total.depth}
-              labels={{ '1': 'Открыли одну и ушли', '2-3': 'Сравнили 2–3', '4+': 'Сравнили 4 и больше' }}
-              unit="сессий"
-              empty="Карточки ещё не открывали"
-              bare
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 14 }}>
+            <StatTile
+              label="Посетителей"
+              value={(view.funnel.session_start ?? 0).toLocaleString('ru-KZ')}
+              hint={`${data.from} — ${data.to}`}
             />
-            <p style={{ margin: '10px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
-              Отличает «посмотрел одну и ушёл» от «сравнивал несколько». Воронка считает и то и другое
-              одинаково — как один визит без записи.
-            </p>
+            <StatTile
+              label="Дошли до WhatsApp"
+              value={`${waRate}%`}
+              hint={`${view.funnel.wa_click ?? 0} из ${view.funnel.session_start ?? 0}`}
+              accent={C.champ700}
+            />
+            <StatTile
+              label="Открыли карточку"
+              value={(view.funnel.product_open ?? 0).toLocaleString('ru-KZ')}
+              hint={`карточек за визит: ${view.avgCardsPerSession ?? 0}`}
+            />
+            <StatTile
+              label="Выбрали огранку"
+              value={`${view.engagement?.shape_select?.ofTotal ?? 0}%`}
+              hint="необязательный шаг"
+            />
           </div>
 
-          <div style={card}>
-            <div style={eyebrow}>Необязательные действия</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                ['Выбирали огранку на первом экране', shapePicked],
-                ['Меняли конфигурацию украшения',      engagement],
-              ].filter(([, v]) => v).map(([label, v]) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                  <span style={{ fontSize: '0.87rem', color: C.ink600 }}>{label}</span>
-                  <span style={{ ...mono, fontSize: '0.95rem', fontWeight: 700, color: C.ink800 }}>
-                    {v.sessions}
-                    <span style={{ color: C.ink400, fontWeight: 400 }}> · {v.ofTotal}%</span>
-                  </span>
-                </div>
-              ))}
+          <Card
+            title={`Динамика · ${sourceLbl}`}
+            style={{ marginBottom: 14 }}
+            action={
+              <button type="button" onClick={() => setAsTable(v => !v)} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: '0.78rem', color: C.ink400, fontFamily: 'Manrope, sans-serif',
+                textDecoration: 'underline', textUnderlineOffset: 3,
+              }}>
+                {asTable ? 'Показать график' : 'Показать таблицей'}
+              </button>
+            }
+          >
+            {asTable
+              ? <TrendTable daily={daily} series={TREND_SERIES} />
+              : <TrendChart daily={daily} series={TREND_SERIES} />}
+          </Card>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 14, marginBottom: 14 }}>
+            <Card title="Воронка">
+              <FunnelChart conversion={view.conversion ?? []} labels={STEP_LABELS} />
+            </Card>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <Card title="Как смотрят карточки">
+                <BarList rows={Object.entries(view.depth ?? {})} labels={DEPTH_LABELS} unit="сессий"
+                  empty="Карточки ещё не открывали" />
+                <p style={{ margin: '14px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
+                  Отличает «посмотрел одну и ушёл» от «сравнивал несколько». Воронка считает
+                  и то и другое одинаково — как один визит без обращения.
+                </p>
+              </Card>
+
+              <Card title="Необязательные действия">
+                <BarList
+                  rows={[
+                    ['shape_select',  view.engagement?.shape_select?.sessions ?? 0],
+                    ['config_change', view.engagement?.config_change?.sessions ?? 0],
+                  ]}
+                  labels={{ shape_select: 'Выбирали огранку', config_change: 'Меняли конфигурацию' }}
+                  unit="сессий"
+                  max={view.funnel.session_start ?? 0}
+                />
+                <p style={{ margin: '14px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
+                  Не ступени воронки: до витрины можно дойти, не выбирая огранку, а до
+                  обращения — ничего не настраивая.
+                </p>
+              </Card>
             </div>
-            <p style={{ margin: '10px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
-              Не ступени воронки: до витрины можно дойти, не выбирая огранку, а до записи —
-              ничего не настраивая. Если считать их ступенями, появляется отвал, которого нет.
-            </p>
           </div>
 
-          <Breakdown title="Города"          data={total.cities} unit="сессий" empty="Город определяется автоматически при заходе" />
-          <Breakdown title="Огранки"         data={total.shapes} labels={SHAPE_LABELS} />
-          <Breakdown title="Модели"          data={total.models} />
-          <Breakdown title="Категории"       data={total.categories} labels={{ ring: 'Кольца', pusety: 'Пусеты' }} />
-          <Breakdown title="Каратность"      data={total.carats} unit="раз" empty="Никто ещё не менял каратность" />
-          <Breakdown title="Источники"       data={total.utm} labels={UTM_LABELS} unit="сессий" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 14 }}>
+            <Card title="Города">
+              <BarList rows={Object.entries(view.cities ?? {})} unit="сессий"
+                empty="Город определяется автоматически" />
+            </Card>
+            <Card title="Огранки">
+              <BarList rows={Object.entries(view.shapes ?? {})} labels={SHAPE_LABELS} />
+            </Card>
+            <Card title="Модели">
+              <BarList rows={Object.entries(view.models ?? {})} />
+            </Card>
+          </div>
 
-          <UtmLinks eyebrowStyle={eyebrow} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 14 }}>
+            <Card title="Категории">
+              <BarList rows={Object.entries(view.categories ?? {})}
+                labels={{ ring: 'Кольца', pusety: 'Пусеты' }} />
+            </Card>
+            <Card title="Каратность">
+              <BarList rows={Object.entries(view.carats ?? {})} unit="раз"
+                empty="Каратность ещё не меняли" />
+            </Card>
+            <Card title="Источники — весь период">
+              <BarList rows={Object.entries(data.total?.utm ?? {})} labels={UTM_LABELS} unit="сессий" />
+            </Card>
+          </div>
 
-          <p style={{ fontSize: '0.72rem', color: C.ink400, lineHeight: 1.6, margin: '4px 2px 0' }}>
-            Считается только раздел /catalog. Конструктор на главной живёт отдельно и в эту воронку не попадает.
-            Все цифры — уникальные сессии, кроме огранок, моделей и каратности: там считаются действия.
+          <UtmLinks eyebrowStyle={cardTitle} />
+
+          <p style={{ fontSize: '0.74rem', color: C.ink400, lineHeight: 1.65, margin: '18px 2px 0', maxWidth: 780 }}>
+            Считается только раздел /catalog — конструктор на главной живёт отдельно.
+            Воронка и разрезы по городам и источникам — уникальные сессии; огранки,
+            модели и каратность — действия. Карточка «Источники» показывает весь период
+            целиком и не зависит от выбранного фильтра.
           </p>
-        </>
+        </div>
+      )}
+
+      {loading && !view && (
+        <div style={{ ...card, color: C.ink400, fontSize: '0.88rem' }}>Загружаем статистику...</div>
       )}
     </div>
   );

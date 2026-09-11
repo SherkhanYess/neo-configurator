@@ -34,5 +34,25 @@ eq('строк ровно три',          Object.keys(day.utm).length, 3);
 const total = mergeDays([day]);
 eq('после слияния разрезы целы', total.utm['instagram / bio'], 2);
 
+console.log('\nфильтр по источнику видит свою воронку:');
+const day2 = rollUp('2026-09-11', [
+  // instagram/bio: дошёл до WhatsApp
+  ev('A', 'session_start', { utm_source: 'instagram', utm_medium: 'bio' }),
+  ev('A', 'catalog_view',  { utm_source: 'instagram', utm_medium: 'bio' }),
+  ev('A', 'product_open',  { utm_source: 'instagram', utm_medium: 'bio' }),
+  ev('A', 'booking_open',  { utm_source: 'instagram', utm_medium: 'bio' }),
+  ev('A', 'wa_click',      { utm_source: 'instagram', utm_medium: 'bio' }),
+  // instagram/stories: ушёл с витрины
+  ev('B', 'session_start', { utm_source: 'instagram', utm_medium: 'stories' }),
+  ev('B', 'catalog_view',  { utm_source: 'instagram', utm_medium: 'stories' }),
+]);
+const t2 = mergeDays([day2]);
+eq('всего дошли до WhatsApp',            t2.funnel.wa_click, 1);
+eq('у шапки профиля конверсия 100%',     t2.bySource['instagram / bio'].funnel.wa_click, 1);
+eq('у сторис до WhatsApp никто',         t2.bySource['instagram / stories'].funnel.wa_click, 0);
+eq('у сторис своя воронка из 1 сессии',  t2.bySource['instagram / stories'].funnel.session_start, 1);
+eq('источники не перемешались',          Object.keys(t2.bySource).sort(), ['instagram / bio','instagram / stories']);
+eq('в разрезе есть конверсия',           t2.bySource['instagram / bio'].conversion.length > 0, true);
+
 console.log('\nитого: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

@@ -11,6 +11,10 @@ import ProductsTab from '../admin/ProductsTab.jsx';
 // The token is the same ADMIN_TOKEN the price and stats endpoints check. It is
 // held in localStorage so a reload does not log you out; every request carries
 // it and the server is what actually enforces access.
+//
+// Laid out for a laptop, not a phone: this is read while working, and the
+// dashboard needs the width for charts side by side. The editor tabs stay in a
+// readable column — a form 1200px wide is worse than one at 560.
 
 const TOKEN_KEY = 'nd_admin';
 
@@ -19,6 +23,9 @@ const C = {
   ink800: '#0B2040', ink600: '#1E3149', ink400: '#5B81A1',
   champ400: '#DCC29B',
 };
+
+// The dashboard needs room; the editors read better narrow.
+const WIDTH_FOR = (tab) => (tab === 'dashboard' ? 1320 : 560);
 
 const TABS = [
   { id: 'dashboard', label: 'Дашборд' },
@@ -109,7 +116,7 @@ export default function AdminScreen() {
     <div style={{ minHeight: '100dvh', background: C.paper100, fontFamily: 'Manrope, sans-serif' }}>
 
       <div style={{ background: C.ink800, position: 'sticky', top: 0, zIndex: 30 }}>
-        <div style={{ maxWidth: 560, margin: '0 auto', padding: '18px 24px 0' }}>
+        <div style={{ maxWidth: WIDTH_FOR(tab), margin: '0 auto', padding: '18px 28px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div>
               <div style={{
@@ -152,7 +159,7 @@ export default function AdminScreen() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 24px 40px' }}>
+      <div style={{ maxWidth: WIDTH_FOR(tab), margin: '0 auto', padding: '24px 28px 48px' }}>
         {tab === 'dashboard' && <Dashboard token={token} />}
         {tab === 'products'  && <ProductsTab token={token} />}
         {tab === 'prices'    && <PricesTab token={token} />}
