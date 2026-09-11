@@ -262,7 +262,7 @@ export default function BookingScreen() {
               Срок изготовления
             </div>
             <div style={{ fontSize: '0.95rem', fontWeight: 600, color: C.ink800 }}>
-              5–10 рабочих дней
+              5–10 календарных дней
             </div>
           </div>
         </div>
