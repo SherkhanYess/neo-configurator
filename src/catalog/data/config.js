@@ -120,6 +120,15 @@ export function pusetyCardName(castId, shapeLabel) {
 
 export const WA_NUMBER = '77766708505';
 
+// Каждый шоурум отвечает со своего номера. «Другой город» ведёт в Алматы —
+// там головной офис. Те же номера, что и в конструкторе на главной.
+export const WA_BY_CITY = {
+  'Алматы':       '77766708505',
+  'Астана':       '77776908505',
+  'Другой город': '77766708505',
+};
+export const WA_CITIES = ['Алматы', 'Астана', 'Другой город'];
+
 export const SHAPE_IJEWEL = {
   round:    'shape: round',
   princess: 'shape: princess',

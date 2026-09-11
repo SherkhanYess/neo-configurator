@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import UtmLinks, { UTM_LABELS } from './UtmLinks.jsx';
 
 // Funnel and breakdowns for /catalog, read from /api/stats.
 //
@@ -301,7 +302,9 @@ export default function Dashboard({ token }) {
           <Breakdown title="Модели"          data={total.models} />
           <Breakdown title="Категории"       data={total.categories} labels={{ ring: 'Кольца', pusety: 'Пусеты' }} />
           <Breakdown title="Каратность"      data={total.carats} unit="раз" empty="Никто ещё не менял каратность" />
-          <Breakdown title="Источники"       data={total.utm} unit="сессий" />
+          <Breakdown title="Источники"       data={total.utm} labels={UTM_LABELS} unit="сессий" />
+
+          <UtmLinks eyebrowStyle={eyebrow} />
 
           <p style={{ fontSize: '0.72rem', color: C.ink400, lineHeight: 1.6, margin: '4px 2px 0' }}>
             Считается только раздел /catalog. Конструктор на главной живёт отдельно и в эту воронку не попадает.

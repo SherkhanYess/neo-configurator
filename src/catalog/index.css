@@ -106,24 +106,61 @@ img { display: block; max-width: 100%; }
   padding: 0 16px;
 }
 
+/* «Выбрать все» — над сеткой, чтобы не искать её под десятью плитками */
+.filter-selectall-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 16px 10px;
+}
+.filter-selectall {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-400);
+  padding: 6px 2px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+.filter-selectall:hover { color: var(--ink-800); }
+
 .shape-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  /* Рамка всегда 2px: при выборе меняется только цвет, поэтому плитка
+     не «дёргается» и соседние не сдвигаются. */
+  border: 2px solid var(--border);
   border-radius: var(--radius-card);
   padding: 20px 12px 18px;
-  transition: border-color 0.2s, transform 0.15s;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
 }
 .shape-tile:active { transform: scale(0.97); }
+
+/* Брендбук: состояние выбора — контур ink, а не заливка цветом. */
 .shape-tile--active {
   border-color: var(--ink-800);
-  background: var(--paper-100);
+  box-shadow: 0 0 0 1px var(--ink-800);
 }
 .shape-tile:hover:not(.shape-tile--active) {
   border-color: var(--ink-400);
+}
+
+.shape-check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ink-800);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .shape-img-wrap {
