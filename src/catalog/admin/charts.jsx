@@ -60,7 +60,10 @@ export function StatTile({ label, value, hint, accent }) {
 // would encode length twice and say nothing new.
 export function BarList({ rows, labels, unit, empty, max: maxProp }) {
   const [hover, setHover] = useState(null);
-  const data = rows.slice(0, 12);
+  // Sorted here, not trusted from the server: JSON objects put integer-like keys
+  // first in numeric order, so anything keyed by a number — carats, FAQ question
+  // numbers — arrives reordered however the server sorted it.
+  const data = [...rows].sort((a, b) => b[1] - a[1]).slice(0, 12);
   const max = maxProp ?? (data.length ? Math.max(...data.map(r => r[1])) : 0);
 
   if (!data.length) {

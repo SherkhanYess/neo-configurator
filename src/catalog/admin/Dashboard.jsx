@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import UtmLinks, { UTM_LABELS } from './UtmLinks.jsx';
 import { SERIES, StatTile, BarList, FunnelChart, TrendChart, TrendTable } from './charts.jsx';
+import { FAQ_GROUPS } from '../components/Faq.jsx';
 
 // Desktop dashboard for /catalog. Built for a laptop screen on purpose — it is
 // an internal tool read while working, not something to thumb through on a phone.
@@ -28,6 +29,24 @@ const SHAPE_LABELS = {
   round: 'Круглый', princess: 'Принцесса', radiant: 'Радиант', cushion: 'Кушон',
   oval: 'Овал', pear: 'Груша', heart: 'Сердце', marquise: 'Маркиз',
   emerald: 'Изумруд', asscher: 'Ашер',
+};
+
+// Вопросы нумерованы сквозно, как в тексте страницы, — чтобы строку в
+// дашборде можно было сверить с самим вопросом.
+const FAQ_LABELS = (() => {
+  let n = 0;
+  const out = {};
+  for (const g of FAQ_GROUPS) for (const item of g.items) out[String(++n)] = `${n}. ${item.q}`;
+  return out;
+})();
+
+const ACTION_LABELS = {
+  shape_select:               'Выбирали огранку',
+  config_change:              'Меняли конфигурацию',
+  product_learn_more_click:   'Нажали «Узнать детали»',
+  booking_share_click:        'Открыли «Отправить»',
+  booking_share_success:      'Довели отправку до конца',
+  booking_other_models_click: 'Ушли смотреть другие модели',
 };
 
 const DEPTH_LABELS = {
@@ -246,22 +265,48 @@ export default function Dashboard({ token }) {
                 </p>
               </Card>
 
-              <Card title="Необязательные действия">
+              <Card title="Действия помимо воронки">
                 <BarList
-                  rows={[
-                    ['shape_select',  view.engagement?.shape_select?.sessions ?? 0],
-                    ['config_change', view.engagement?.config_change?.sessions ?? 0],
-                  ]}
-                  labels={{ shape_select: 'Выбирали огранку', config_change: 'Меняли конфигурацию' }}
+                  rows={Object.keys(ACTION_LABELS).map(k => [k, view.engagement?.[k]?.sessions ?? 0])}
+                  labels={ACTION_LABELS}
                   unit="сессий"
                   max={view.funnel.session_start ?? 0}
                 />
                 <p style={{ margin: '14px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
-                  Не ступени воронки: до витрины можно дойти, не выбирая огранку, а до
-                  обращения — ничего не настраивая.
+                  Ни одно из них не преграждает путь: до витрины можно дойти, не выбирая
+                  огранку, а до обращения — ничего не настраивая. Поэтому они не ступени,
+                  а отдельные показатели.
                 </p>
               </Card>
             </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14, marginBottom: 14 }}>
+            <Card title="Отправка ссылки">
+              <BarList
+                rows={[
+                  ['booking_share_click',   view.engagement?.booking_share_click?.sessions ?? 0],
+                  ['booking_share_success', view.engagement?.booking_share_success?.sessions ?? 0],
+                ]}
+                labels={{ booking_share_click: 'Нажали «Отправить»', booking_share_success: 'Довели до конца' }}
+                unit="сессий"
+                empty="Ссылку ещё не отправляли"
+                max={view.engagement?.booking_share_click?.sessions || 1}
+              />
+              <p style={{ margin: '14px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
+                Разрыв между строками — те, кто открыл меню отправки и передумал.
+                На десктопе «до конца» означает скопированную ссылку.
+              </p>
+            </Card>
+
+            <Card title="Какие вопросы открывают">
+              <BarList rows={Object.entries(view.faq ?? {})} labels={FAQ_LABELS} unit="раз"
+                empty="Вопросы ещё не раскрывали" />
+              <p style={{ margin: '14px 0 0', fontSize: '0.75rem', color: C.ink400, lineHeight: 1.55 }}>
+                Что именно мешает решиться. Считаются раскрытия, а не сессии — один
+                человек может открыть несколько вопросов.
+              </p>
+            </Card>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 14 }}>

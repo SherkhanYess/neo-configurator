@@ -35,10 +35,23 @@ const FUNNEL = [
   'wa_click',
 ];
 
-// Measured per session but off to the side of the funnel.
-const ENGAGEMENT = ['shape_select', 'config_change'];
+// Measured per session but off to the side of the funnel: none of them gates
+// anything, so counting them as stages would invent a drop-off.
+const ENGAGEMENT = [
+  'shape_select',
+  'config_change',
+  'product_learn_more_click',
+  'booking_share_click',
+  'booking_share_success',
+  'booking_other_models_click',
+];
 
 const TRACKED = [...FUNNEL, ...ENGAGEMENT];
+
+// The booking page was rebuilt and its WhatsApp button started reporting under
+// a new name, which silently emptied the last funnel step. Both names mean the
+// same thing, so the newer one folds into the original and history still adds up.
+const EVENT_ALIAS = { booking_whatsapp_click: 'wa_click' };
 
 const MAX_DAYS = 92;
 const FETCH_CHUNK = 40;
@@ -77,6 +90,7 @@ function core(records) {
   const models        = new Map();
   const categories    = new Map();
   const carats        = new Map();
+  const faq           = new Map();    // какие вопросы раскрывают
   const opensBySession = new Map();   // сколько карточек открыла каждая сессия
 
   const bump = (map, key) => {
@@ -92,20 +106,22 @@ function core(records) {
   for (const r of records) {
     const sid = r.sessionId;
     if (!sid) continue;
+    const event = EVENT_ALIAS[r.event] ?? r.event;
     sessions.add(sid);
-    if (stepSessions[r.event]) stepSessions[r.event].add(sid);
+    if (stepSessions[event]) stepSessions[event].add(sid);
 
     addSession(citySessions, r.city ?? 'Неизвестно', sid);
     addSession(utmSessions, utmKey(r.utm), sid);
 
-    if (r.event === 'shape_select') bump(shapes, r.props?.shape);
-    if (r.event === 'product_open') {
+    if (event === 'shape_select') bump(shapes, r.props?.shape);
+    if (event === 'faq_open')     bump(faq, String(r.props?.question ?? ''));
+    if (event === 'product_open') {
       opensBySession.set(sid, (opensBySession.get(sid) ?? 0) + 1);
       bump(models, r.props?.model);
       bump(categories, r.props?.category);
       bump(shapes, r.props?.shape);
     }
-    if (r.event === 'config_change' && r.props?.field === 'carat') bump(carats, String(r.props.value));
+    if (event === 'config_change' && r.props?.field === 'carat') bump(carats, String(r.props.value));
   }
 
   const countMap  = (m) => Object.fromEntries([...m.entries()].sort((a, b) => b[1] - a[1]));
@@ -137,6 +153,7 @@ function core(records) {
     models:   countMap(models),
     categories: countMap(categories),
     carats:   countMap(carats),
+    faq:      countMap(faq),
   };
 }
 
@@ -205,7 +222,7 @@ function mergeCores(days) {
     depth: { '1': 0, '2-3': 0, '4+': 0 },
     openEvents: 0,
     openSessions: 0,
-    cities: {}, utm: {}, shapes: {}, models: {}, categories: {}, carats: {},
+    cities: {}, utm: {}, shapes: {}, models: {}, categories: {}, carats: {}, faq: {},
   };
   const addInto = (target, src) => {
     for (const [k, v] of Object.entries(src ?? {})) target[k] = (target[k] ?? 0) + v;
@@ -224,6 +241,7 @@ function mergeCores(days) {
     addInto(total.models, d.models);
     addInto(total.categories, d.categories);
     addInto(total.carats, d.carats);
+    addInto(total.faq, d.faq);
   }
 
   // Среднее по тем, кто вообще открывал карточки, — иначе его размывают те, кто до них не дошёл.
@@ -238,6 +256,7 @@ function mergeCores(days) {
   total.shapes = sortObj(total.shapes);
   total.models = sortObj(total.models);
   total.carats = sortObj(total.carats);
+  total.faq = sortObj(total.faq);
 
   // Conversion is measured against the top of the funnel, plus the step-to-step
   // drop that shows where people actually leave.
