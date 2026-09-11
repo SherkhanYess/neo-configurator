@@ -5,7 +5,6 @@ import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { usePrices } from '../data/prices.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { track, EVENTS } from '../lib/track.js';
-import TrustBlock from '../components/TrustBlock.jsx';
 import { useContentReveal } from '../lib/useContentReveal.js';
 import { bookingPath } from '../lib/bookingUrl.js';
 
@@ -362,11 +361,9 @@ export default function DetailScreen({ ijewel }) {
               <div className="cfg-section-label">Цвет золота каста</div>
               <DotPicker options={ijewel.castMetalOptions} chosen={castMetal} onChoose={handleCastMetal} />
     
-          <TrustBlock />
         </div>
           )}
 
-          <TrustBlock />
         </div>
       </div>
 
@@ -376,7 +373,7 @@ export default function DetailScreen({ ijewel }) {
           <span className="detail-cta-price">{price ? formatPrice(price) : '—'}</span>
         </div>
         <button className="detail-cta-book" onClick={handleBook}>
-          Узнать подробнее
+          Узнать детали
         </button>
       </div>
 

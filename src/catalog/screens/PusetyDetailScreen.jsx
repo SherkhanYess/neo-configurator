@@ -5,7 +5,6 @@ import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { usePrices } from '../data/prices.js';
 import { calcPusetyPrice, formatPrice } from '../data/priceCalc.js';
 import { track, EVENTS } from '../lib/track.js';
-import TrustBlock from '../components/TrustBlock.jsx';
 import { useContentReveal } from '../lib/useContentReveal.js';
 import { bookingPath } from '../lib/bookingUrl.js';
 
@@ -252,7 +251,6 @@ export default function PusetyDetailScreen({ ijewel }) {
             </div>
           )}
 
-          <TrustBlock />
 
         </div>
       </div>
@@ -263,7 +261,7 @@ export default function PusetyDetailScreen({ ijewel }) {
           <span className="detail-cta-price">{price ? formatPrice(price) : 'по запросу'}</span>
         </div>
         <button className="detail-cta-book" onClick={handleBook}>
-          Узнать подробнее
+          Узнать детали
         </button>
       </div>
 
