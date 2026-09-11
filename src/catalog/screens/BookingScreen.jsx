@@ -246,6 +246,26 @@ export default function BookingScreen() {
             </div>
           )}
         </div>
+
+        {/* Отдельным блоком — сюда же встанет наличие, когда появится. */}
+        <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 14, marginTop: 24, textAlign: 'left' }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 50, background: C.paper100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.champ700} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink400, marginBottom: 3 }}>
+              Срок изготовления
+            </div>
+            <div style={{ fontSize: '0.95rem', fontWeight: 600, color: C.ink800 }}>
+              5–10 рабочих дней
+            </div>
+          </div>
+        </div>
       </section>
 
       <hr style={divider} />
@@ -267,16 +287,29 @@ export default function BookingScreen() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {AFTER_SALE.map(s => <AfterSaleCard key={s.name} {...s} />)}
         </div>
+
+        <p style={{ margin: '22px 0 0', fontSize: '0.88rem', color: C.ink600, lineHeight: 1.7 }}>
+          Байер из Китая или Дубая привезёт камень и исчезнет. Дальше вы остаётесь с украшением
+          один на один: почистить, восстановить покрытие, подогнать размер — всё за свой счёт
+          и не у того, кто его делал. Мы не экономим на сырье и остаёмся на связи ровно столько,
+          сколько украшение живёт.
+        </p>
       </section>
 
       <hr style={divider} />
 
       {/* ── 5–7. Оффер, CTA и дополнительные действия ────────────────────── */}
       <section style={{ ...section, textAlign: 'center' }}>
-        <p style={{ fontSize: '0.95rem', color: C.ink600, lineHeight: 1.6, margin: '0 0 24px' }}>
-          Напишите нам с сайта и получите{' '}
-          <strong style={{ color: C.ink800 }}>индивидуальную гравировку на украшение в подарок</strong>.
-        </p>
+        {/* Это оффер, а не подпись к кнопке — отсюда и уровень заголовка.
+            h1 на странице уже занят названием украшения. */}
+        <h2 style={{
+          fontFamily: '"Unbounded",sans-serif', fontWeight: 400,
+          fontSize: '1.35rem', letterSpacing: '-0.02em', lineHeight: 1.3,
+          color: C.ink800, margin: '0 0 24px', textWrap: 'balance',
+        }}>
+          Оставьте заявку прямо сейчас и получите{' '}
+          <span style={{ color: C.champ700 }}>индивидуальную гравировку в подарок</span>
+        </h2>
 
         <a
           href={waHref}

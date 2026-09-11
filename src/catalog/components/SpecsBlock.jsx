@@ -1,9 +1,12 @@
-// Block 3 of the booking page: everything the piece is, in one place.
+// Block 3 of the booking page: the grid of specifications, nothing else.
 //
-// Replaces three separate blocks that used to say overlapping things — срок
-// изготовления, в комплекте, преимущества. Six cells instead of four, because
-// gold and setting belong here too; the section is therefore about the piece,
-// not just the stone.
+// Six cells instead of four, because gold and setting belong here too — hence
+// «украшения», not «бриллианта».
+//
+// Everything that used to sit under the grid has moved to where it belongs:
+// lead time is its own block next to the price (it will carry stock status
+// later), and the service promises live in the service block below. Repeating
+// them here only made the page longer.
 
 const C = {
   paper050: '#FAFBFC',
@@ -24,14 +27,6 @@ const SPECS = [
   ['Оправа',     '4 г',      'в среднем на украшение'],
 ];
 
-// Deliberately overlaps with the service block below: this is the one-line fact
-// for anyone who never expands it, that block is the detail.
-const INCLUDED = [
-  'Срок изготовления 5–10 рабочих дней',
-  'Ультразвуковая чистка и родирование — бесплатно, пожизненно',
-  'Сертификат IGI, фирменный футляр и пакет в комплекте',
-];
-
 export default function SpecsBlock({ eyebrowStyle }) {
   return (
     <section>
@@ -40,7 +35,7 @@ export default function SpecsBlock({ eyebrowStyle }) {
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1,
         background: C.paper300, border: `1.5px solid ${C.paper300}`,
-        borderRadius: 20, overflow: 'hidden', marginBottom: 18,
+        borderRadius: 20, overflow: 'hidden',
       }}>
         {SPECS.map(([label, value, note]) => (
           <div key={label} style={{ background: '#fff', padding: '14px 16px' }}>
@@ -64,24 +59,6 @@ export default function SpecsBlock({ eyebrowStyle }) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-        {INCLUDED.map(item => (
-          <div key={item} style={{ display: 'flex', gap: 11, alignItems: 'flex-start' }}>
-            <div style={{
-              width: 5, height: 5, borderRadius: 50, background: C.champ700,
-              flexShrink: 0, marginTop: 8,
-            }} />
-            <span style={{ fontSize: '0.87rem', color: C.ink600, lineHeight: 1.55 }}>
-              {item}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <p style={{ margin: 0, fontSize: '0.87rem', color: C.ink400, lineHeight: 1.65 }}>
-        Не экономим на сырье и остаёмся на связи после покупки — то, чего вы лишаетесь
-        при покупке у байеров из Китая и Дубая.
-      </p>
     </section>
   );
 }
