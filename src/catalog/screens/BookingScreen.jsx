@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { cardName, SHAPES, METAL_LABELS, WA_NUMBER, WA_BY_CITY, WA_CITIES, pusetyCardName } from '../data/config.js';
+import { cardName, SHAPES, METAL_LABELS, WA_NUMBER, WA_BY_CITY, WA_CITIES,
+         SHAPE_IJEWEL, CAST_IJEWEL, pusetyCardName } from '../data/config.js';
 import { calcPrice, calcPusetyPrice, formatPrice } from '../data/priceCalc.js';
 import { usePrices } from '../data/prices.js';
 import { track, EVENTS } from '../lib/track.js';
@@ -174,7 +175,7 @@ const secondaryBtn = {
 };
 
 // ─── main ─────────────────────────────────────────────────────────────────────
-export default function BookingScreen() {
+export default function BookingScreen({ ijewel }) {
   const navigate = useNavigate();
   const location = useLocation();
   const heroRef  = useRef(null);
@@ -212,6 +213,40 @@ export default function BookingScreen() {
       model: cfg.shank, cast: cfg.cast, shape: cfg.shape, carat: cfg.carat ?? null,
     });
   }, [cfg?.shank, cfg?.cast, cfg?.shape]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Build the piece in the viewer when the page is entered directly — a shared
+  // link never passes through a product card, and only those screens used to
+  // call applyInitial. Without this the 3D sat unconfigured and the panel
+  // eventually claimed it had failed to load, when in fact nothing had gone
+  // wrong: it had simply never been told what to show.
+  const applied = useRef(false);
+  useEffect(() => {
+    if (!ijewel || !cfg || applied.current) return;
+    if (ijewel.isConfigured) { applied.current = true; return; }  // came from a card
+    if (!ijewel.isReady) return;
+
+    // Rings need the shank; pusety are a single piece and have none.
+    let shankName = null;
+    if (cfg.type !== 'pusety') {
+      if (!ijewel.shankVariations.length) return;   // ждём, пока подтянутся вариации
+      const sv = ijewel.shankVariations.find(v => v.id === cfg.shank)
+              ?? ijewel.shankVariations.find(v => v.id.toLowerCase() === String(cfg.shank).toLowerCase());
+      if (!sv) return;
+      shankName = sv.id;
+    }
+
+    applied.current = true;
+    ijewel.fitScene();
+    ijewel.applyInitial({
+      shapeTag: SHAPE_IJEWEL[cfg.shape],
+      castTag:  CAST_IJEWEL[cfg.cast],
+      shankName,
+    });
+    if (cfg.carat) ijewel.applyCarat(cfg.carat);
+    // Colours come from the labels the link carries, so the recipient sees the
+    // same piece rather than the model's defaults.
+    ijewel.restoreFromLabels({ gem1Label: cfg.gem1Label, metalLabel: cfg.metalLabel });
+  }, [cfg, ijewel?.isReady, ijewel?.isConfigured, ijewel?.shankVariations.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!heroRef.current) return;

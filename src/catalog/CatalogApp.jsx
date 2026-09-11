@@ -9,6 +9,7 @@ import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
 import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
 import { track, EVENTS } from './lib/track.js';
 import { REVEAL_TIMEOUT_MS } from './lib/useContentReveal.js';
+import { decodeBooking } from './lib/bookingUrl.js';
 import './index.css';
 import './configurator.css';
 
@@ -33,8 +34,12 @@ function CatalogMain() {
 
   const showViewer = onRingProduct || onPusetyProduct || onBooking;
 
-  // Determine which iJewel model to load based on current route
-  const fileId = onPusetyProduct ? PUSETЫ_FILE_ID : RING_FILE_ID;
+  // Which iJewel model to load. On the booking screen the route says nothing
+  // about the category, so the answer comes from the shared configuration —
+  // otherwise a shared pusety link would quietly load the ring model.
+  const bookingCfg = onBooking ? decodeBooking(location.search) : null;
+  const wantsPusety = onPusetyProduct || bookingCfg?.type === 'pusety';
+  const fileId = wantsPusety ? PUSETЫ_FILE_ID : RING_FILE_ID;
 
   const ijewel        = useIjewel(fileId);
   const viewerRef     = useRef(null);
@@ -120,7 +125,7 @@ function CatalogMain() {
         <Route path="/catalog/list"                              element={<CatalogScreen />} />
         <Route path="/catalog/product/:shank/:cast/:shape"       element={<DetailScreen ijewel={ijewel} />} />
         <Route path="/catalog/pusety/product/:cast/:shape"       element={<PusetyDetailScreen ijewel={ijewel} />} />
-        <Route path="/catalog/booking"                           element={<BookingScreen />} />
+        <Route path="/catalog/booking"                           element={<BookingScreen ijewel={ijewel} />} />
         <Route path="/catalog/admin"                             element={<AdminScreen />} />
       </Routes>
     </div>
