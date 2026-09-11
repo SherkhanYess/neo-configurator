@@ -57,6 +57,16 @@ function daysBetween(from, to) {
   return out;
 }
 
+// A placement, not just a platform: utm_source alone would merge the profile
+// link, stories and posts into one «instagram» row, which answers nothing.
+// Medium is optional — a link tagged with source only still gets its own row.
+export function utmKey(utm) {
+  const source = String(utm?.utm_source ?? '').trim();
+  if (!source) return 'Прямой заход';
+  const medium = String(utm?.utm_medium ?? '').trim();
+  return medium ? `${source} / ${medium}` : source;
+}
+
 // Turns one day of raw events into the compact shape the dashboard reads.
 export function rollUp(day, records) {
   const sessions      = new Set();
@@ -86,7 +96,7 @@ export function rollUp(day, records) {
     if (stepSessions[r.event]) stepSessions[r.event].add(sid);
 
     addSession(citySessions, r.city ?? 'Неизвестно', sid);
-    addSession(utmSessions, r.utm?.utm_source ?? 'Прямой заход', sid);
+    addSession(utmSessions, utmKey(r.utm), sid);
 
     if (r.event === 'shape_select') bump(shapes, r.props?.shape);
     if (r.event === 'product_open') {

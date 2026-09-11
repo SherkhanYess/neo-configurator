@@ -7,9 +7,9 @@ import { useState } from 'react';
 // setup. The point of the block is that the tags are written once, correctly:
 // a typo in utm_source silently creates a second source that never reconciles.
 //
-// utm_source carries the full placement (instagram_bio, not instagram) because
-// the dashboard groups by source alone — «шапка профиля» and «сторис» are
-// different questions and should not land in one bucket.
+// Standard tagging: utm_source is the platform, utm_medium is the placement.
+// «Источники» keys on source AND medium together, so instagram/bio and
+// instagram/stories stay separate rows instead of collapsing into «instagram».
 
 const C = {
   paper050: '#FAFBFC', paper100: '#F2F5F9', paper300: '#DBE2EB',
@@ -23,25 +23,25 @@ export const UTM_PRESETS = [
     id: 'instagram_bio',
     title: 'Instagram — шапка профиля',
     note: 'Ссылка в био. Основной источник трафика.',
-    params: { utm_source: 'instagram_bio', utm_medium: 'social', utm_campaign: 'profile_link' },
+    params: { utm_source: 'instagram', utm_medium: 'bio' },
   },
   {
     id: 'instagram_stories',
     title: 'Instagram — сторис',
     note: 'Свайп-ап или стикер-ссылка в сторис.',
-    params: { utm_source: 'instagram_stories', utm_medium: 'social', utm_campaign: 'stories' },
+    params: { utm_source: 'instagram', utm_medium: 'stories' },
   },
   {
     id: 'instagram_post',
     title: 'Instagram — пост или Reels',
     note: 'Ссылка из описания публикации.',
-    params: { utm_source: 'instagram_post', utm_medium: 'social', utm_campaign: 'post' },
+    params: { utm_source: 'instagram', utm_medium: 'post' },
   },
   {
     id: 'whatsapp',
     title: 'WhatsApp — рассылка',
     note: 'Когда менеджер отправляет каталог в чате.',
-    params: { utm_source: 'whatsapp', utm_medium: 'messenger', utm_campaign: 'manager' },
+    params: { utm_source: 'whatsapp', utm_medium: 'manager' },
   },
 ];
 
@@ -50,10 +50,10 @@ export function buildUtmUrl(params) {
   return `${BASE}?${q.toString()}`;
 }
 
-// Friendly names for the «Источники» breakdown, so the admin reads placements
-// rather than raw tag values.
+// Friendly names for the «Источники» breakdown, keyed the same way the server
+// keys them: «source / medium».
 export const UTM_LABELS = Object.fromEntries(
-  UTM_PRESETS.map(p => [p.params.utm_source, p.title])
+  UTM_PRESETS.map(p => [`${p.params.utm_source} / ${p.params.utm_medium}`, p.title])
 );
 
 function LinkRow({ preset }) {
