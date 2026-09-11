@@ -366,7 +366,11 @@ export default function BookingScreen() {
 
       {/* ── 8. Вопросы и ответы ──────────────────────────────────────────── */}
       <div style={{ ...section, paddingBottom: 72 }}>
-        <Faq eyebrowStyle={eyebrow} />
+        <Faq
+          eyebrowStyle={eyebrow}
+          waHref={waHref}
+          onWaClick={(question) => track(EVENTS.BOOKING_WA, { ...eventProps, source: 'faq', question })}
+        />
       </div>
     </div>
   );

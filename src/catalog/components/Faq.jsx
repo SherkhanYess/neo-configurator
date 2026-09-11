@@ -121,7 +121,36 @@ export const FAQ_GROUPS = [
   },
 ];
 
-function Item({ question, answer, open, onToggle }) {
+// Answers mention WhatsApp repeatedly, and each mention is a live exit — the
+// person is already reading the reason they would write. Rendered as a real
+// <a href>, like the main CTA: in-app browsers swallow scripted opens.
+//
+// The link carries the same configured message, so the manager sees the piece
+// being asked about rather than a bare "здравствуйте".
+function withWhatsAppLinks(text, href, onClick) {
+  const parts = text.split('WhatsApp');
+  if (parts.length === 1) return text;
+
+  return parts.flatMap((part, i) =>
+    i === 0
+      ? [part]
+      : [
+          <a
+            key={i}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClick}
+            style={{ color: C.ink800, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 2 }}
+          >
+            WhatsApp
+          </a>,
+          part,
+        ]
+  );
+}
+
+function Item({ question, answer, open, onToggle, waHref, onWaClick }) {
   return (
     <div style={{
       background: '#fff', border: `1.5px solid ${C.paper300}`,
@@ -157,7 +186,7 @@ function Item({ question, answer, open, onToggle }) {
         <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {answer.map((para, i) => (
             <p key={i} style={{ margin: 0, fontSize: '0.86rem', lineHeight: 1.65, color: C.ink600 }}>
-              {para}
+              {waHref ? withWhatsAppLinks(para, waHref, onWaClick) : para}
             </p>
           ))}
         </div>
@@ -176,7 +205,7 @@ const NUMBERED = (() => {
   }));
 })();
 
-export default function Faq({ eyebrowStyle }) {
+export default function Faq({ eyebrowStyle, waHref, onWaClick }) {
   const [openKey, setOpenKey] = useState(null);
 
   function toggle(key, number) {
@@ -206,6 +235,8 @@ export default function Faq({ eyebrowStyle }) {
                   answer={item.a}
                   open={openKey === item.key}
                   onToggle={() => toggle(item.key, item.n)}
+                  waHref={waHref}
+                  onWaClick={() => onWaClick?.(item.n)}
                 />
               ))}
             </div>
