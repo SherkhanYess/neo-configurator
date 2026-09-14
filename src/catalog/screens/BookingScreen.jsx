@@ -387,7 +387,9 @@ export default function BookingScreen({ ijewel }) {
         </div>
 
         {/* Парная плашка. Главный довод против покупки украшения по фотографии —
-            что его можно подержать в руках до заказа, и что ехать недалеко. */}
+            что его можно подержать в руках, и что ехать недалеко. Без «прежде
+            чем заказывать»: оборот считал заказ уже решённым и превращал
+            приглашение в шаг воронки. */}
         <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 14, marginTop: 10, textAlign: 'left' }}>
           <div style={{
             width: 40, height: 40, borderRadius: 50, background: C.paper100,
@@ -406,8 +408,7 @@ export default function BookingScreen({ ijewel }) {
               Шоурумы в Алматы и Астане
             </div>
             <div style={{ fontSize: '0.8rem', color: C.ink400, lineHeight: 1.5 }}>
-              Образцы в наличии — посмотрите формы и каратности на своей руке,
-              прежде чем заказывать
+              Образцы в наличии — посмотрите формы и каратности на своей руке
             </div>
           </div>
         </div>
