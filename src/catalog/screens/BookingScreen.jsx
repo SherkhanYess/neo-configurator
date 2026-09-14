@@ -385,6 +385,32 @@ export default function BookingScreen({ ijewel }) {
             </div>
           </div>
         </div>
+
+        {/* Парная плашка. Главный довод против покупки украшения по фотографии —
+            что его можно подержать в руках до заказа, и что ехать недалеко. */}
+        <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 14, marginTop: 10, textAlign: 'left' }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 50, background: C.paper100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.champ700} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.ink400, marginBottom: 3 }}>
+              Можно примерить вживую
+            </div>
+            <div style={{ fontSize: '0.95rem', fontWeight: 600, color: C.ink800, marginBottom: 3 }}>
+              Шоурумы в Алматы и Астане
+            </div>
+            <div style={{ fontSize: '0.8rem', color: C.ink400, lineHeight: 1.5 }}>
+              Образцы в наличии — посмотрите формы и каратности на своей руке,
+              прежде чем заказывать
+            </div>
+          </div>
+        </div>
       </section>
 
       <hr style={divider} />
