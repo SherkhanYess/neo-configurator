@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node tests/stats.test.mjs && node tests/funnel-skip.test.mjs && node tests/utm-key.test.mjs && node tests/events-coverage.test.mjs && node tests/pusety-price.test.mjs && node tests/booking-url.test.mjs"
