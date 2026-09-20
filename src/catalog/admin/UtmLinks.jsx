@@ -16,7 +16,10 @@ const C = {
   ink800: '#0B2040', ink600: '#1E3149', ink400: '#5B81A1', champ700: '#7C6035',
 };
 
-const BASE = 'https://con.neodiamond.kz/catalog';
+// Каталог теперь живёт на основном домене. Ссылки для рекламы должны вести
+// именно туда: поддомен для поисковика — отдельный сайт, и переходы по старому
+// адресу пойдут мимо основного домена.
+const BASE = 'https://neodiamond.kz/catalog';
 
 export const UTM_PRESETS = [
   {

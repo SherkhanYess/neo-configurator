@@ -224,12 +224,14 @@ async function main() {
   // Sitemap and robots — both currently return the SPA shell, so crawlers get
   // no map of the site at all.
   const today = new Date().toISOString().slice(0, 10);
-  const urls = ['/catalog', '/catalog/list', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
+  // Карта сайта описывает весь домен, а не только каталог: главная страница
+  // отдаётся с другого сайта Netlify, но для поисковика это один адрес.
+  const urls = ['/', '/catalog', '/catalog/list', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
   writeFileSync(join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     [...new Set(urls)].map(u =>
       `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq>` +
-      `<priority>${u === '/catalog' ? '1.0' : u === '/catalog/list' ? '0.9' : '0.7'}</priority></url>`
+      `<priority>${u === '/' ? '1.0' : u === '/catalog' ? '0.9' : u === '/catalog/list' ? '0.9' : '0.7'}</priority></url>`
     ).join('\n') + `\n</urlset>\n`);
 
   writeFileSync(join(DIST, 'robots.txt'),
