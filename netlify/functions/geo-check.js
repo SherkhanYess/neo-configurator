@@ -19,3 +19,5 @@ export default async (req, context) => {
     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   });
 };
+
+export const config = { path: '/api/geo-check' };
