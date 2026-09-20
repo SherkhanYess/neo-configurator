@@ -433,7 +433,10 @@ async function main() {
     const withContacts = {
       ...p,
       bodyHtml: p.bodyHtml + FOOTER_HTML,
-      jsonLd: p.jsonLd === organization ? organization : [organization, p.jsonLd],
+      // Разметка организации идёт на каждую страницу, а поверх неё — то, что
+      // есть только здесь. Плоский список: вложенный массив читается как один
+      // безымянный объект и теряет типы.
+      jsonLd: [organization, ...[p.jsonLd].flat().filter(x => x && x !== organization)],
     };
     writeFileSync(join(dir, 'index.html'), page(shell, withContacts));
   }
