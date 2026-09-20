@@ -16,6 +16,9 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Адреса, телефоны и условия берутся из того же файла, что и видимый футер, —
+// чтобы текст на странице и разметка для машин не разошлись.
+import { ORG, SHOWROOMS, HOURS_NOTE, FACTS, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -45,11 +48,6 @@ const PRICE_FALLBACK = {
   baseByShank: { 'Neo':800000,'Neo Luxe':900000,'Sirius':550000,'Sirius Luxe':650000,'Bezel':550000 },
   casts: { halo:150000, bezel:100000 },
 };
-
-const SHOWROOMS = [
-  { city: 'Алматы', address: 'ЖК Esentai City' },
-  { city: 'Астана', address: 'ЖК Atlant' },
-];
 
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
 const slug = (s) => s.toLowerCase().replace(/\s+/g, '-');
@@ -94,19 +92,23 @@ function page(shell, { path, title, description, bodyHtml, jsonLd }) {
     .replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`);
 }
 
-const organization = {
-  '@context': 'https://schema.org',
-  '@type': 'JewelryStore',
-  name: 'Neo Diamond',
-  url: SITE,
-  description: 'Ювелирная студия: помолвочные кольца и украшения с лабораторными бриллиантами, сертификат IGI, изготовление 5–10 календарных дней.',
-  areaServed: { '@type': 'Country', name: 'Казахстан' },
-  location: SHOWROOMS.map(s => ({
-    '@type': 'JewelryStore',
-    name: `Neo Diamond — ${s.city}`,
-    address: { '@type': 'PostalAddress', addressLocality: s.city, streetAddress: s.address, addressCountry: 'KZ' },
-  })),
-};
+const organization = organizationJsonLd(SITE);
+
+// Тот же футер, что видит человек, — только разметкой без стилей. Адреса и
+// телефоны попадают на каждую страницу обычным текстом: ассистенты читают его
+// охотнее, чем разметку, а совпадение одного с другим повышает доверие к обоим.
+const FOOTER_HTML = `
+      <hr />
+      <h2>Контакты</h2>
+      <p>${esc(ORG.name)} — ${esc(ORG.tagline)}.</p>
+      <ul>
+        ${SHOWROOMS.map(s => `<li>${esc(showroomLine(s))} — <a href="tel:${esc(s.phone.replace(/[^+\d]/g, ''))}">${esc(s.phone)}</a></li>`).join('\n        ')}
+      </ul>
+      <p>${esc(HOURS_NOTE)}.</p>
+      <h2>Условия</h2>
+      <ul>
+        ${FACTS.map(([t, v]) => `<li>${esc(t)}: ${esc(v)}</li>`).join('\n        ')}
+      </ul>`;
 
 function productJsonLd({ name, price, shapeLabel, path }) {
   return {
@@ -205,10 +207,18 @@ async function main() {
       <p><a href="/catalog/list">Смотреть каталог с ценами</a></p>`,
   });
 
+  // Контакты идут на каждую страницу — и текстом, и разметкой. На карточке
+  // товара к описанию организации добавляется описание самого товара: ассистент,
+  // попавший сразу на карточку, должен узнать и цену, и куда за ней приходить.
   for (const p of pages) {
     const dir = join(DIST, p.path);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'index.html'), page(shell, p));
+    const withContacts = {
+      ...p,
+      bodyHtml: p.bodyHtml + FOOTER_HTML,
+      jsonLd: p.jsonLd === organization ? organization : [organization, p.jsonLd],
+    };
+    writeFileSync(join(dir, 'index.html'), page(shell, withContacts));
   }
 
   // Sitemap and robots — both currently return the SPA shell, so crawlers get

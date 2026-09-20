@@ -6,6 +6,7 @@ import DetailScreen       from './screens/DetailScreen.jsx';
 import BookingScreen      from './screens/BookingScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
 import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
+import SiteFooter         from './components/SiteFooter.jsx';
 import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
 import { track, EVENTS } from './lib/track.js';
 import { REVEAL_TIMEOUT_MS } from './lib/useContentReveal.js';
@@ -31,6 +32,8 @@ function CatalogMain() {
   const onRingProduct  = subPath.startsWith('/product');
   const onPusetyProduct = subPath.startsWith('/pusety/product');
   const onBooking      = subPath.startsWith('/booking');
+  // В админке футер не нужен: это внутренний экран, а не витрина.
+  const onAdmin        = subPath.startsWith('/admin');
 
   const showViewer = onRingProduct || onPusetyProduct || onBooking;
 
@@ -128,6 +131,8 @@ function CatalogMain() {
         <Route path="/catalog/booking"                           element={<BookingScreen ijewel={ijewel} />} />
         <Route path="/catalog/admin"                             element={<AdminScreen />} />
       </Routes>
+
+      {!onAdmin && <SiteFooter />}
     </div>
   );
 }
