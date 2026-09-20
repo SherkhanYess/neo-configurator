@@ -67,6 +67,47 @@ async function loadPrices() {
   }
 }
 
+/**
+ * Рейтинг и число отзывов из карточки 2ГИС.
+ *
+ * Репутация у студии есть, но она заперта в 2ГИС: страница маскирует текст от
+ * роботов, а robots.txt отдаёт 403, поэтому ассистент, которого спрашивают
+ * «а они надёжные», не находит ничего и отвечает, что данных нет. Заголовок и
+ * описание вкладки отзывов при этом открыты — оттуда и берём цифры, ставим их
+ * на свои страницы со ссылкой на источник.
+ *
+ * Цифры не зашиты в код, а запрашиваются при каждой сборке: рейтинг меняется,
+ * а устаревшая цифра на сайте хуже её отсутствия. Если запрос не удался,
+ * функция возвращает null и блок просто не выводится — выдумывать нечего.
+ */
+async function loadReputation() {
+  const url = SHOWROOMS.find(s => /tab\/reviews/.test(s.twogis || ''))?.twogis;
+  if (!url) return null;
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'GPTBot/1.0' },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    const html = await res.text();
+    const meta = html.match(/name="description"\s+content="(.*?)"/s)?.[1] ?? '';
+    const rating  = meta.match(/Рейтинг\s+([\d.,]+)/)?.[1];
+    const ratings = meta.match(/на основе\s+(\d+)\s+оцен/)?.[1];
+    const reviews = meta.match(/^(\d+)\s+отзыв/)?.[1];
+    if (!rating || !ratings) throw new Error('в описании нет рейтинга');
+    const out = { rating: rating.replace('.', ','), ratings: Number(ratings), reviews: Number(reviews ?? 0), url };
+    console.log(`  репутация: ${out.rating} на основе ${out.ratings} оценок`);
+    return out;
+  } catch (e) {
+    console.log('  репутация: не получена —', e.message);
+    return null;
+  }
+}
+
+const reputationLine = (r) =>
+  `Рейтинг ${r.rating} из 5 в 2ГИС — ${r.ratings} оценок` +
+  (r.reviews ? `, ${r.reviews} отзывов` : '');
+
 const basePrice = (prices, shank, cast) =>
   (prices.baseByShank?.[shank] ?? 0) + (cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0);
 
@@ -127,7 +168,7 @@ const organization = organizationJsonLd(SITE);
 // Тот же футер, что видит человек, — только разметкой без стилей. Адреса и
 // телефоны попадают на каждую страницу обычным текстом: ассистенты читают его
 // охотнее, чем разметку, а совпадение одного с другим повышает доверие к обоим.
-const FOOTER_HTML = `
+const footerHtml = (rep) => `
       <hr />
       <h2>Контакты</h2>
       <p>${esc(ORG.name)} — ${esc(ORG.tagline)}.</p>
@@ -139,6 +180,7 @@ const FOOTER_HTML = `
         ].join(' ')).join('\n        ')}
       </ul>
       <p>${esc(HOURS_NOTE)}.</p>
+      ${rep ? `<p><a href="${esc(rep.url)}">${esc(reputationLine(rep))}</a></p>` : ''}
       <p><a href="${esc(ORG.instagram)}">Instagram ${esc(INSTAGRAM_HANDLE)}</a></p>`;
 
 function productJsonLd({ name, price, shapeLabel, path }) {
@@ -204,7 +246,7 @@ function itemListJsonLd(prices) {
  * на конкретное украшение. Ассистенту этого достаточно, чтобы назвать цену и
  * сразу дать человеку адрес, по которому она открывается.
  */
-function catalogFeed(prices) {
+function catalogFeed(prices, rep) {
   return {
     организация: {
       название: ORG.name,
@@ -217,6 +259,10 @@ function catalogFeed(prices) {
       часы: HOURS_NOTE,
       instagram: ORG.instagram,
       поводы: ORG.occasions,
+      ...(rep ? { репутация: {
+        рейтинг: rep.rating, из: 5, оценок: rep.ratings, отзывов: rep.reviews,
+        источник: rep.url,
+      } } : {}),
       камни: ORG.stones.map(s => ({ тип: s.type, сертификат: s.cert })),
     },
     валюта: 'KZT',
@@ -279,7 +325,7 @@ function catalogFeed(prices) {
 }
 
 /** llms.txt — договорённость, по которой ассистенты читают краткую справку о сайте. */
-function llmsTxt(prices) {
+function llmsTxt(prices, rep) {
   const cheapest = Math.min(...COMBOS.map(([s, c]) => basePrice(prices, s, c)));
   return `# Neo Diamond
 
@@ -295,6 +341,7 @@ function llmsTxt(prices) {
   Цены в каталоге указаны для лабораторных; расчёт с природным камнем — по запросу в WhatsApp.
 - Каждый камень от 0,5 карата — с сертификатом и серийным номером внутри камня.
 - Изготовление 5–10 календарных дней. Доставка по Казахстану бесплатно, 2–5 дней.
+${rep ? `- ${reputationLine(rep)}. Источник: ${rep.url}` : ''}
 
 ## С чем к нам приходят
 
@@ -349,6 +396,7 @@ const SPECS_HTML = `
 async function main() {
   const shell = readFileSync(join(DIST, 'index.html'), 'utf8');
   const prices = await loadPrices();
+  const rep = await loadReputation();
   const pages = [];
 
   // Каждое сочетание модели и огранки — своя страница с ценой.
@@ -450,12 +498,12 @@ async function main() {
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(DIST, `${p.path}.html`), page(shell, {
       ...p,
-      bodyHtml: p.bodyHtml + FOOTER_HTML,
+      bodyHtml: p.bodyHtml + footerHtml(rep),
       jsonLd: [organization, ...[p.jsonLd].flat().filter(x => x && x !== organization)],
     }));
     const withContacts = {
       ...p,
-      bodyHtml: p.bodyHtml + FOOTER_HTML,
+      bodyHtml: p.bodyHtml + footerHtml(rep),
       // Разметка организации идёт на каждую страницу, а поверх неё — то, что
       // есть только здесь. Плоский список: вложенный массив читается как один
       // безымянный объект и теряет типы.
@@ -505,8 +553,11 @@ async function main() {
 
   // Машиночитаемый каталог и справка для ассистентов.
   mkdirSync(join(DIST, 'catalog'), { recursive: true });
-  writeFileSync(join(DIST, 'catalog', 'catalog.json'), JSON.stringify(catalogFeed(prices), null, 2));
-  writeFileSync(join(DIST, 'llms.txt'), llmsTxt(prices));
+  writeFileSync(join(DIST, 'catalog', 'catalog.json'), JSON.stringify(catalogFeed(prices, rep), null, 2));
+  writeFileSync(join(DIST, 'llms.txt'), llmsTxt(prices, rep));
+  // Футер читает это при загрузке: цифра обновляется со сборкой, а не руками.
+  writeFileSync(join(DIST, 'catalog', 'reputation.json'),
+    JSON.stringify(rep ? { ...rep, line: reputationLine(rep) } : null));
 
   writeFileSync(join(DIST, 'robots.txt'),
     `User-agent: *\nAllow: /\n\n` +

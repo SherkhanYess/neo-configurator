@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { ORG, SHOWROOMS, INSTAGRAM_HANDLE } from '../data/org.js';
 
 // Футер решает две задачи сразу.
@@ -111,6 +112,54 @@ function Showroom({ s }) {
   );
 }
 
+function StarIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={C.champ400} aria-hidden="true">
+      <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.4-5.8-3-5.8 3 1.1-6.4L2.6 9.4l6.5-.9z" />
+    </svg>
+  );
+}
+
+/**
+ * Рейтинг из 2ГИС.
+ *
+ * Цифру собирает scripts/prerender.mjs при сборке и кладёт рядом файлом: она
+ * меняется, а вшитая в код цифра однажды разойдётся с действительностью. Если
+ * файла нет или запрос к 2ГИС не удался, строка просто не появляется.
+ */
+function Reputation() {
+  const [rep, setRep] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/catalog/reputation.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (alive && d?.line) setRep(d); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  if (!rep) return null;
+
+  return (
+    <a
+      href={rep.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 7,
+        color: C.paper300, textDecoration: 'none', fontSize: '0.8rem',
+      }}
+    >
+      <StarIcon />
+      <span>
+        <span style={{ color: C.paper050, fontWeight: 600 }}>{rep.rating}</span> из 5 в 2ГИС —{' '}
+        {rep.ratings} оценок{rep.reviews ? `, ${rep.reviews} отзывов` : ''}
+      </span>
+    </a>
+  );
+}
+
 export default function SiteFooter() {
   return (
     <footer
@@ -133,6 +182,7 @@ export default function SiteFooter() {
             {ORG.name}
           </div>
           <div style={{ color: C.ink200, marginTop: 4, fontSize: '0.84rem' }}>{ORG.tagline}</div>
+          <div style={{ marginTop: 10 }}><Reputation /></div>
         </div>
 
         <div style={{
