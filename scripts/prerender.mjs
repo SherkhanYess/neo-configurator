@@ -18,7 +18,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // Адреса, телефоны и условия берутся из того же файла, что и видимый футер, —
 // чтобы текст на странице и разметка для машин не разошлись.
-import { ORG, SHOWROOMS, HOURS_NOTE, FACTS, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
+import { ORG, SHOWROOMS, HOURS_NOTE, INSTAGRAM_HANDLE, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -102,13 +102,14 @@ const FOOTER_HTML = `
       <h2>Контакты</h2>
       <p>${esc(ORG.name)} — ${esc(ORG.tagline)}.</p>
       <ul>
-        ${SHOWROOMS.map(s => `<li>${esc(showroomLine(s))} — <a href="tel:${esc(s.phone.replace(/[^+\d]/g, ''))}">${esc(s.phone)}</a></li>`).join('\n        ')}
+        ${SHOWROOMS.map(s => [
+          `<li>${esc(showroomLine(s))}`,
+          `— <a href="tel:${esc(s.phone.replace(/[^+\d]/g, ''))}">${esc(s.phone)}</a>`,
+          `(<a href="${esc(s.twogis)}">2ГИС</a>)</li>`,
+        ].join(' ')).join('\n        ')}
       </ul>
       <p>${esc(HOURS_NOTE)}.</p>
-      <h2>Условия</h2>
-      <ul>
-        ${FACTS.map(([t, v]) => `<li>${esc(t)}: ${esc(v)}</li>`).join('\n        ')}
-      </ul>`;
+      <p><a href="${esc(ORG.instagram)}">Instagram ${esc(INSTAGRAM_HANDLE)}</a></p>`;
 
 function productJsonLd({ name, price, shapeLabel, path }) {
   return {
