@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { SHAPES, pusetyCardName, ringImage } from '../data/config.js';
 import { useProducts, enabledRings, enabledPusety, enabledShapes, ringName, shapeLabel as shapeLabelOf } from '../data/products.js';
 import { usePrices } from '../data/prices.js';
+import { resolveVariant, showPrices } from '../lib/variant.js';
 import { track, EVENTS } from '../lib/track.js';
 
 function basePrice(prices, shankId, castId) {
@@ -38,7 +39,9 @@ function RingCard({ shape, shank, cast, prices, products, onClick }) {
       </div>
       <div className="product-card__body">
         <div className="product-card__name">{name}</div>
-        <div className="product-card__price">{formatPrice(price)}</div>
+        <div className="product-card__price">
+          {showPrices(resolveVariant()) ? formatPrice(price) : 'Посмотреть'}
+        </div>
       </div>
     </button>
   );
@@ -65,7 +68,9 @@ function PusetyCard({ shape, cast, products, prices, onClick }) {
       </div>
       <div className="product-card__body">
         <div className="product-card__name">{name}</div>
-        {price ? (
+        {!showPrices(resolveVariant()) ? (
+          <div className="product-card__price">Посмотреть</div>
+        ) : price ? (
           <div className="product-card__price">{formatPrice(price)}</div>
         ) : (
           <div className="product-card__price" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>

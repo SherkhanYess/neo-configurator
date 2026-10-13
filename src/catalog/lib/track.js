@@ -11,6 +11,8 @@
 // identifying is collected here; the city is derived server-side from the
 // request and never a precise location.
 
+import { currentVariant } from './variant.js';
+
 const SESSION_KEY = 'nd_sid';
 const UTM_KEY     = 'nd_utm';
 
@@ -74,7 +76,9 @@ export function track(event, props = {}, { once = false } = {}) {
   const payload = JSON.stringify({
     sessionId: getSessionId(),
     event,
-    props,
+    // Вариант воронки идёт в каждом событии: без него две посадочные страницы
+    // складываются в одну цифру и сравнивать становится нечего.
+    props: { ...props, variant: currentVariant() },
     path: window.location.pathname,
     utm: getUtm(),
     ts: Date.now(),

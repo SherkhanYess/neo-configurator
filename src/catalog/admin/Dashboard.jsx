@@ -114,9 +114,17 @@ function Pill({ active, onClick, children }) {
 
 const ALL = '__all__';
 
+// Варианты воронки, которые сравнивает песочница.
+const VARIANT_LABELS = {
+  price:   'С ценами',
+  noprice: 'Без цен',
+  'не задан': 'Без метки',
+};
+
 export default function Dashboard({ token }) {
   const [range,   setRange]   = useState('7');
   const [source,  setSource]  = useState(ALL);
+  const [variant, setVariant] = useState(ALL);
   const [asTable, setAsTable] = useState(false);
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,24 +156,40 @@ export default function Dashboard({ token }) {
     return Object.keys(by).sort((a, b) => (by[b]?.sessions ?? 0) - (by[a]?.sessions ?? 0));
   }, [data]);
 
+  const variants = useMemo(() => {
+    const by = data?.total?.byVariant ?? {};
+    return Object.keys(by).sort((a, b) => (by[b]?.sessions ?? 0) - (by[a]?.sessions ?? 0));
+  }, [data]);
+
+  // Фильтры независимы: источник и вариант воронки считаются по отдельности,
+  // поэтому выбрать можно только один из них. Пересечение двух разрезов
+  // потребовало бы хранить их парами, а это уже другой объём данных.
+  const slice = (node) => {
+    if (variant !== ALL) return node?.byVariant?.[variant];
+    if (source  !== ALL) return node?.bySource?.[source];
+    return node;
+  };
+
   // Filtering swaps the whole page, funnel included — not just one row.
-  const view = source === ALL ? data?.total : data?.total?.bySource?.[source];
+  const view = slice(data?.total);
 
   // The trend is scoped to the same slice, so it always agrees with the funnel.
   const daily = useMemo(() => {
     if (!data?.daily) return [];
     return data.daily.map(d => {
-      const src = source === ALL ? d : (d.bySource?.[source] ?? { funnel: {} });
+      const src = slice(d) ?? { funnel: {} };
       return {
         day: d.day,
         session_start: src.funnel?.session_start ?? 0,
         wa_click:      src.funnel?.wa_click ?? 0,
       };
     });
-  }, [data, source]);
+  }, [data, source, variant]);
 
   const waRate    = view?.conversion?.find(c => c.step === 'wa_click')?.ofTotal ?? 0;
-  const sourceLbl = source === ALL ? 'все источники' : (UTM_LABELS[source] ?? source);
+  const sourceLbl = variant !== ALL
+    ? (VARIANT_LABELS[variant] ?? variant)
+    : source === ALL ? 'все источники' : (UTM_LABELS[source] ?? source);
 
   return (
     <div style={{ minWidth: 1080 }}>
@@ -190,11 +214,28 @@ export default function Dashboard({ token }) {
           </span>
           <Pill active={source === ALL} onClick={() => setSource(ALL)}>Все</Pill>
           {sources.map(s => (
-            <Pill key={s} active={source === s} onClick={() => setSource(s)}>
+            <Pill key={s} active={source === s} onClick={() => { setSource(s); setVariant(ALL); }}>
               {UTM_LABELS[s] ?? s}
             </Pill>
           ))}
         </div>
+
+        {variants.length > 1 && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: '0.7rem', letterSpacing: '0.11em', textTransform: 'uppercase',
+              color: C.ink400, fontWeight: 700,
+            }}>
+              Вариант
+            </span>
+            <Pill active={variant === ALL} onClick={() => setVariant(ALL)}>Все</Pill>
+            {variants.map(v => (
+              <Pill key={v} active={variant === v} onClick={() => { setVariant(v); setSource(ALL); }}>
+                {VARIANT_LABELS[v] ?? v}
+              </Pill>
+            ))}
+          </div>
+        )}
       </div>
 
       {error && !loading && (

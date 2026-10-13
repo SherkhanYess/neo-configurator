@@ -27,6 +27,11 @@ const DIST = join(ROOT, 'dist');
 // main domain — it drives canonical links, Open Graph and the sitemap.
 const SITE = (process.env.SITE_URL || 'https://con.neodiamond.kz').replace(/\/$/, '');
 
+// Песочница: отдельный сайт для проверки воронок. Её нельзя пускать в поиск —
+// это дословная копия каталога, и в индексе она конкурировала бы с основным
+// сайтом за те же запросы, а ассистент мог бы процитировать её вместо него.
+const SANDBOX = process.env.IS_SANDBOX === '1';
+
 // ─── data (mirrors src/catalog/data/config.js) ───────────────────────────────
 const SHAPES = [
   ['round','Круглый'], ['princess','Принцесса'], ['radiant','Радиант'], ['cushion','Кушон'],
@@ -53,13 +58,18 @@ const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','
 const slug = (s) => s.toLowerCase().replace(/\s+/g, '-');
 const money = (n) => `${n.toLocaleString('ru-KZ')} ₸`;
 
+// Откуда брать цены на этапе сборки. SITE — это канонический адрес, который
+// на песочнице может ещё не отвечать (домен не делегирован), поэтому сначала
+// пробуем собственный адрес развёртывания: его Netlify подставляет всегда.
+const PRICES_ORIGIN = (process.env.PRICES_ORIGIN || process.env.URL || SITE).replace(/\/$/, '');
+
 async function loadPrices() {
   try {
-    const res = await fetch(`${SITE}/api/get-prices`, { signal: AbortSignal.timeout(10000) });
+    const res = await fetch(`${PRICES_ORIGIN}/api/get-prices`, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error(String(res.status));
     const p = await res.json();
     if (!p?.baseByShank) throw new Error('пустой ответ');
-    console.log('  цены: получены с', SITE);
+    console.log('  цены: получены с', PRICES_ORIGIN);
     return { ...PRICE_FALLBACK, ...p };
   } catch (e) {
     console.log('  цены: взяты из кода —', e.message);
@@ -154,6 +164,7 @@ function page(shell, { path, title, description, bodyHtml, jsonLd }) {
     `<meta property="og:description" content="${esc(description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
     `<meta property="og:locale" content="ru_KZ" />`,
+    SANDBOX ? `<meta name="robots" content="noindex, nofollow" />` : '',
     jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : '',
   ].filter(Boolean).join('\n    ');
 
@@ -512,19 +523,6 @@ async function main() {
     writeFileSync(join(dir, 'index.html'), page(shell, withContacts));
   }
 
-  // Sitemap and robots — both currently return the SPA shell, so crawlers get
-  // no map of the site at all.
-  const today = new Date().toISOString().slice(0, 10);
-  // Карта сайта описывает весь домен, а не только каталог: главная страница
-  // отдаётся с другого сайта Netlify, но для поисковика это один адрес.
-  const urls = ['/', '/catalog', '/catalog/list', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
-  writeFileSync(join(DIST, 'sitemap.xml'),
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    [...new Set(urls)].map(u =>
-      `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq>` +
-      `<priority>${u === '/' ? '1.0' : u === '/catalog' ? '0.9' : u === '/catalog/list' ? '0.9' : '0.7'}</priority></url>`
-    ).join('\n') + `\n</urlset>\n`);
-
   // Правила маршрутизации. Пишутся здесь, а не лежат статикой, потому что
   // зависят от набора страниц.
   //
@@ -535,9 +533,6 @@ async function main() {
   // браузер, запомнивший прежнее, начинает ходить по кругу. Именно это и
   // случилось: «Load cannot follow more than 20 redirections».
   //
-  // Правило со статусом 200 на каждую форму адреса убирает редиректы совсем.
-  // Ходить по кругу становится нечему, и поисковик получает страницу с первого
-  // запроса, без лишнего шага.
   // Обе формы задаются явно: со слэшем и без. Встроенная канонизация адресов
   // Netlify (pretty URLs) отключена в netlify.toml — иначе она успевает
   // развернуть одну форму в другую редиректом раньше любых правил.
@@ -551,13 +546,36 @@ async function main() {
     `# Всё остальное — одностраничное приложение.\n` +
     `/*    /index.html    200\n`);
 
-  // Машиночитаемый каталог и справка для ассистентов.
   mkdirSync(join(DIST, 'catalog'), { recursive: true });
-  writeFileSync(join(DIST, 'catalog', 'catalog.json'), JSON.stringify(catalogFeed(prices, rep), null, 2));
-  writeFileSync(join(DIST, 'llms.txt'), llmsTxt(prices, rep));
   // Футер читает это при загрузке: цифра обновляется со сборкой, а не руками.
   writeFileSync(join(DIST, 'catalog', 'reputation.json'),
     JSON.stringify(rep ? { ...rep, line: reputationLine(rep) } : null));
+
+  // Песочница заканчивается здесь. Карта сайта, справка для ассистентов и
+  // машиночитаемый каталог описывают основной сайт и ссылаются на страницы,
+  // которых в песочнице нет; в поиске ей и так делать нечего.
+  if (SANDBOX) {
+    writeFileSync(join(DIST, 'robots.txt'),
+      `# Песочница для проверки воронок. В поиске ей делать нечего.\n` +
+      `User-agent: *\nDisallow: /\n`);
+    console.log(`  страниц: ${pages.length}, песочница: индексация закрыта`);
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  // Карта сайта описывает весь домен, а не только каталог: главная страница
+  // отдаётся с другого сайта Netlify, но для поисковика это один адрес.
+  const urls = ['/', '/catalog', '/catalog/list', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
+  writeFileSync(join(DIST, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    [...new Set(urls)].map(u =>
+      `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq>` +
+      `<priority>${u === '/' ? '1.0' : u === '/catalog' ? '0.9' : u === '/catalog/list' ? '0.9' : '0.7'}</priority></url>`
+    ).join('\n') + `\n</urlset>\n`);
+
+  // Машиночитаемый каталог и справка для ассистентов.
+  writeFileSync(join(DIST, 'catalog', 'catalog.json'), JSON.stringify(catalogFeed(prices, rep), null, 2));
+  writeFileSync(join(DIST, 'llms.txt'), llmsTxt(prices, rep));
 
   writeFileSync(join(DIST, 'robots.txt'),
     `User-agent: *\nAllow: /\n\n` +

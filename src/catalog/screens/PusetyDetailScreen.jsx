@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { SHAPES, PUSETЫ_SHAPES_BY_CAST, PUSETЫ_CASTS, SHAPE_IJEWEL, CAST_IJEWEL, pusetyCardName } from '../data/config.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { usePrices } from '../data/prices.js';
 import { calcPusetyPrice, formatPrice } from '../data/priceCalc.js';
 import { track, EVENTS } from '../lib/track.js';
 import { useContentReveal } from '../lib/useContentReveal.js';
-import { bookingPath } from '../lib/bookingUrl.js';
+import { resolveVariant, showPrices } from '../lib/variant.js';
+import WhatsAppCta from '../components/WhatsAppCta.jsx';
+import ProductInfo from '../components/ProductInfo.jsx';
 
-const CARAT_OPTIONS = [0.5, 1, 1.5, 2, 3];
 
 // The base price already covers a 1 ct stone, so 1 ct starts selected: the
 // figure on the card and the chosen carat now say the same thing, and no lead
@@ -39,32 +40,8 @@ function DotPicker({ options, chosen, onChoose }) {
   );
 }
 
-function ShapeMiniPicker({ cast, activeShape, onSelect, onClose }) {
-  const available = SHAPES.filter(s => PUSETЫ_SHAPES_BY_CAST[cast]?.includes(s.id));
-  return (
-    <div className="shape-mini-overlay" onClick={onClose}>
-      <div className="shape-mini-popup" onClick={e => e.stopPropagation()}>
-        <div className="shape-mini-grid">
-          {available.map(s => (
-            <button
-              key={s.id}
-              className={`shape-mini-btn${activeShape === s.id ? ' shape-mini-btn--active' : ''}`}
-              onClick={() => { onSelect(s.id); onClose(); }}
-              title={s.label}
-            >
-              <img src={`/assets/shapes/${s.file}`} alt={s.label} className="shape-mini-img" />
-              <span className="shape-mini-label">{s.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function PusetyDetailScreen({ ijewel }) {
   const { cast, shape: shapeParam } = useParams();
-  const navigate = useNavigate();
 
   const cardKey = `${cast}/${shapeParam}`;
 
@@ -75,7 +52,6 @@ export default function PusetyDetailScreen({ ijewel }) {
   const [metal,        setMetal]        = useState(null);
   const [metalLabel,   setMetalLabel]   = useState(null);
   const [purity,       setPurity]       = useState('585');
-  const [shapePicker,  setShapePicker]  = useState(false);
   const [pendingInit,  setPendingInit]  = useState(null);
 
   const castRef = useRef(cast);
@@ -146,19 +122,24 @@ export default function PusetyDetailScreen({ ijewel }) {
     return () => clearTimeout(t);
   }, [ijewel.isConfigured]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Shape change ─────────────────────────────────────────────────────────
-  const handleShapeChange = useCallback((newShape) => {
-    setShape(newShape);
-    setShapePicker(false);
-    track(EVENTS.CONFIG_CHANGE, { field: 'shape', value: newShape });
-    ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
-  }, [ijewel]);
+  const variant   = resolveVariant();
+  const withPrice = showPrices(variant);
 
-  function handleBook() {
-    const cfg = { type: 'pusety', shape, shank: `Пусеты ${castLabel}`, cast, carat, purity, metalLabel, gem1Label };
-    sessionStorage.setItem('nd_booking', JSON.stringify({ ...cfg, price }));
-    track(EVENTS.LEARN_MORE, { model: 'Пусеты', cast, shape, carat: carat ?? null, price: price ?? null });
-    navigate(bookingPath(cfg));
+  function waMessage(city) {
+    return [
+      'Здравствуйте! Пишу с сайта.',
+      `Интересуют ${productName}.`,
+      metalLabel ? `Цвет золота: ${metalLabel}.` : null,
+      withPrice ? null : 'Подскажите, пожалуйста, стоимость.',
+      `Шоурум: ${city}.`,
+    ].filter(Boolean).join(' ');
+  }
+
+  function handleHandover(city) {
+    track(EVENTS.WA_CLICK, {
+      model: 'Пусеты', cast, shape, city,
+      price: withPrice ? (price ?? null) : null,
+    });
   }
 
   return (
@@ -168,111 +149,47 @@ export default function PusetyDetailScreen({ ijewel }) {
         style={{ paddingBottom: 160, flex: 1, opacity: reveal.visible ? 1 : 0, transition: 'opacity 0.25s ease' }}
       >
         <div className="cfg-step-content" style={{ paddingBottom: 0 }}>
-          <div style={{ marginBottom: 16 }}>
-            <h2 style={{
-              fontFamily: 'var(--font-body, Manrope, sans-serif)',
-              fontWeight: 600, fontSize: '1.05rem',
-              color: 'var(--cfg-ink, #0b2040)', marginBottom: 4,
-              letterSpacing: '-0.01em',
-            }}>
-              {productName}
-            </h2>
-            <button
-              onClick={() => setShapePicker(true)}
-              style={{
-                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                fontSize: '0.78rem', color: 'var(--cfg-ink-muted, #5b81a1)',
-                textDecoration: 'underline', textUnderlineOffset: 3,
-                fontFamily: 'var(--font-body, Manrope, sans-serif)',
-              }}
-            >
-              Поменять форму бриллианта
-            </button>
-          </div>
+          <h2 style={{
+            fontFamily: 'var(--font-body, Manrope, sans-serif)',
+            fontWeight: 600, fontSize: '1.05rem',
+            color: 'var(--cfg-ink, #0b2040)', margin: '0 0 4px',
+            letterSpacing: '-0.01em',
+          }}>
+            {productName}
+          </h2>
+          {withPrice && price > 0 && (
+            <div style={{ fontSize: '0.82rem', color: '#5b81a1' }}>
+              от <span style={{ fontWeight: 600, color: '#0b2040' }}>{formatPrice(price)}</span>
+              {' '}— за пару с бриллиантами 1 карат, золото 585 пробы
+            </div>
+          )}
         </div>
 
         <div className="cfg-step-content" style={{ paddingTop: 0 }}>
-
-          <div className="cfg-section">
-            <div className="cfg-section-label">Каратность бриллианта</div>
-            <div className="carat-row">
-              {CARAT_OPTIONS.map(c => (
-                <button key={c} type="button"
-                  className={`carat-btn${carat === c ? ' carat-btn--active' : ''}`}
-                  onClick={() => {
-                    setCarat(c);
-                    track(EVENTS.CONFIG_CHANGE, { field: 'carat', value: c });
-                    ijewel.applyCarat(c);
-                  }}
-                >
-                  {c} ct
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {ijewel.gem1Options?.length > 0 && (
-            <div className="cfg-section">
-              <div className="cfg-section-label">Цвет бриллианта</div>
-              <DotPicker options={ijewel.gem1Options} chosen={gem1} onChoose={(uuid, label) => {
-                setGem1(uuid); setGem1Label(label);
-                track(EVENTS.CONFIG_CHANGE, { field: 'gem1', value: label });
-                ijewel.applyGem('gem1', uuid);
-              }} />
-            </div>
-          )}
-
-          <div className="cfg-section">
-            <div className="cfg-section-label">Проба золота</div>
-            <div className="cfg-purity-row">
-              {[{ value: '585' }, { value: '750' }].map(p => (
-                <button key={p.value} type="button"
-                  className={`cfg-purity-btn${purity === p.value ? ' is-selected' : ''}`}
-                  onClick={() => {
-                    setPurity(p.value);
-                    track(EVENTS.CONFIG_CHANGE, { field: 'purity', value: p.value });
-                  }}
-                >
-                  <span className="cfg-purity-value">{p.value}</span>
-                  <span className="cfg-opt-price">{p.value === '585' ? 'включено' : '+20 000 ₸'}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {ijewel.shankMetalOptions?.length > 0 && (
             <div className="cfg-section">
               <div className="cfg-section-label">Цвет золота</div>
-              <DotPicker options={ijewel.shankMetalOptions} chosen={metal} onChoose={(uuid, label) => {
-                setMetal(uuid); setMetalLabel(label);
-                track(EVENTS.CONFIG_CHANGE, { field: 'metal', value: label });
-                ijewel.applyShankMetal(uuid);
-              }} />
+              <DotPicker options={ijewel.shankMetalOptions} chosen={metal} onChoose={handleShankMetal} />
             </div>
           )}
 
-
+          <ProductInfo />
         </div>
       </div>
 
       <div className="detail-cta-bar">
-        <div className="detail-cta-price-row">
-          <span className="detail-cta-label">Стоимость</span>
-          <span className="detail-cta-price">{price ? formatPrice(price) : 'по запросу'}</span>
-        </div>
-        <button className="detail-cta-book" onClick={handleBook}>
-          Узнать детали
-        </button>
-      </div>
-
-      {shapePicker && (
-        <ShapeMiniPicker
-          cast={cast}
-          activeShape={shape}
-          onSelect={handleShapeChange}
-          onClose={() => setShapePicker(false)}
+        {withPrice && price > 0 && (
+          <div className="detail-cta-price-row">
+            <span className="detail-cta-label">Стоимость</span>
+            <span className="detail-cta-price">от {formatPrice(price)}</span>
+          </div>
+        )}
+        <WhatsAppCta
+          label={withPrice ? 'Написать в WhatsApp' : 'Узнать цены'}
+          message={waMessage}
+          onHandover={handleHandover}
         />
-      )}
+      </div>
     </>
   );
 }

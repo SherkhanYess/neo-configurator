@@ -161,20 +161,35 @@ function core(records) {
 // can rescope the whole page — funnel included — without re-reading raw events.
 // Source cardinality is a handful, so this costs little and keeps the daily
 // rollups cacheable.
-export const ROLLUP_VERSION = 2;
+// v3 добавил разрез по варианту воронки: песочница показывает две версии
+// каталога, и без этого разреза их цифры складываются в одну и сравнивать
+// нечего.
+export const ROLLUP_VERSION = 3;
 
-export function rollUp(day, records) {
+/** Вариант воронки из события. Старые записи его не несут — это «не задан». */
+export function variantKey(r) {
+  return r?.props?.variant ?? 'не задан';
+}
+
+function groupBy(records, keyOf) {
   const groups = new Map();
   for (const r of records) {
-    const k = utmKey(r.utm);
+    const k = keyOf(r);
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k).push(r);
   }
+  const out = {};
+  for (const [k, recs] of groups) out[k] = core(recs);
+  return out;
+}
 
-  const bySource = {};
-  for (const [k, recs] of groups) bySource[k] = core(recs);
-
-  return { day, v: ROLLUP_VERSION, ...core(records), bySource };
+export function rollUp(day, records) {
+  return {
+    day, v: ROLLUP_VERSION,
+    ...core(records),
+    bySource:  groupBy(records, r => utmKey(r.utm)),
+    byVariant: groupBy(records, variantKey),
+  };
 }
 
 async function readDay(store, day) {
@@ -292,13 +307,20 @@ export function mergeDays(days) {
 
   // The same range-wide view, one per source, so the filter swaps the whole
   // page rather than dimming one row.
-  const keys = new Set(days.flatMap(d => Object.keys(d?.bySource ?? {})));
-  const bySource = {};
-  for (const key of keys) {
-    bySource[key] = mergeCores(days.map(d => d?.bySource?.[key]).filter(Boolean));
-  }
+  const mergeBreakdown = (field) => {
+    const keys = new Set(days.flatMap(d => Object.keys(d?.[field] ?? {})));
+    const out = {};
+    for (const key of keys) {
+      out[key] = mergeCores(days.map(d => d?.[field]?.[key]).filter(Boolean));
+    }
+    return out;
+  };
 
-  return { ...total, bySource };
+  return {
+    ...total,
+    bySource:  mergeBreakdown('bySource'),
+    byVariant: mergeBreakdown('byVariant'),
+  };
 }
 
 export default async (req, context) => {
