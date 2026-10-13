@@ -418,12 +418,18 @@ async function main() {
       const path = `/catalog/product/${slug(shank)}/${cast}/${shapeId}`;
       pages.push({
         path,
-        title: `${name} — помолвочное кольцо с бриллиантом ${money(price)} | Neo Diamond`,
-        description: `${name}: кольцо с лабораторным бриллиантом огранки «${shapeLabel}», от ${money(price)}. Чистота VVS2/VS1, цвет D/E, сертификат IGI. Примерка в Алматы и Астане.`,
+        // В песочнице цена не попадает ни в заголовок вкладки, ни в описание:
+        // половина теста идёт без цен, а заголовок видно всегда.
+        title: SANDBOX
+          ? `${name} — помолвочное кольцо с бриллиантом | Neo Diamond`
+          : `${name} — помолвочное кольцо с бриллиантом ${money(price)} | Neo Diamond`,
+        description: SANDBOX
+          ? `${name}: кольцо с лабораторным бриллиантом огранки «${shapeLabel}». Чистота VVS2/VS1, цвет D/E, сертификат IGI. Примерка в Алматы и Астане.`
+          : `${name}: кольцо с лабораторным бриллиантом огранки «${shapeLabel}», от ${money(price)}. Чистота VVS2/VS1, цвет D/E, сертификат IGI. Примерка в Алматы и Астане.`,
         jsonLd: productJsonLd({ name, price, shapeLabel, path }),
         bodyHtml: `
       <h1>${esc(name)}</h1>
-      <p><strong>Цена: от ${esc(money(price))}</strong> — за кольцо с бриллиантом 1 карат, золото 585 пробы.</p>
+      ${SANDBOX ? '' : `<p><strong>Цена: от ${esc(money(price))}</strong> — за кольцо с бриллиантом 1 карат, золото 585 пробы.</p>`}
       <p>Помолвочное кольцо ${esc(model)} с лабораторным бриллиантом огранки «${esc(shapeLabel)}».</p>
       ${SPECS_HTML}`,
       });
@@ -442,7 +448,9 @@ async function main() {
 
   pages.push({
     path: '/catalog/list',
-    title: 'Каталог помолвочных колец с ценами | Neo Diamond, Алматы и Астана',
+    title: SANDBOX
+      ? 'Каталог помолвочных колец | Neo Diamond, Алматы и Астана'
+      : 'Каталог помолвочных колец с ценами | Neo Diamond, Алматы и Астана',
     description: `Каталог колец с лабораторными бриллиантами: ${COMBOS.length} моделей, ${SHAPES.length} огранок, цены от ${money(Math.min(...COMBOS.map(([s, c]) => basePrice(prices, s, c))))}. Сертификат IGI, примерка в Алматы и Астане.`,
     jsonLd: [organization, itemListJsonLd(prices)],
     bodyHtml: `
