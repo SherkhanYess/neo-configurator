@@ -102,7 +102,6 @@ export default function DetailScreen({ ijewel }) {
     setCarat(DEFAULT_CARAT);
     setPurity('585');
     setCombinedGold(false);
-    setShapePicker(false);
     setGem1(null);    setGem1Label(null);
     setGem2(null);    setGem2Label(null);
     setMetal(null);   setMetalLabel(null);

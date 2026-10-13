@@ -81,7 +81,6 @@ export default function PusetyDetailScreen({ ijewel }) {
     setShape(shapeParam);
     setCarat(DEFAULT_CARAT);
     setPurity('585');
-    setShapePicker(false);
     setGem1(null);  setGem1Label(null);
     setMetal(null); setMetalLabel(null);
     castRef.current = cast;
