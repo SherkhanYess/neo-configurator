@@ -14,6 +14,7 @@
 // what the admin last set, falling back to the defaults compiled into the app.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { generateOgCards } from './og-cards.mjs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // Адреса, телефоны и условия берутся из того же файла, что и видимый футер, —
@@ -142,8 +143,16 @@ function configuredUrl({ shank, cast, shape, carat, purity = '585', color = 'whi
 }
 
 // ─── page assembly ───────────────────────────────────────────────────────────
-function page(shell, { path, title, description, bodyHtml, jsonLd }) {
+function page(shell, { path, title, description, bodyHtml, jsonLd, image }) {
   const url = `${SITE}${path}`;
+  const imageTags = image ? [
+    `<meta property="og:image" content="${esc(image)}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
+    `<meta property="og:image:type" content="image/jpeg" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:image" content="${esc(image)}" />`,
+  ] : [];
   const head = [
     `<title>${esc(title)}</title>`,
     `<meta name="description" content="${esc(description)}" />`,
@@ -154,6 +163,7 @@ function page(shell, { path, title, description, bodyHtml, jsonLd }) {
     `<meta property="og:description" content="${esc(description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
     `<meta property="og:locale" content="ru_KZ" />`,
+    ...imageTags,
     jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : '',
   ].filter(Boolean).join('\n    ');
 
@@ -397,6 +407,21 @@ async function main() {
   const shell = readFileSync(join(DIST, 'index.html'), 'utf8');
   const prices = await loadPrices();
   const rep = await loadReputation();
+
+  // Composite OG preview cards for shareable links. Wrapped so a sharp/font
+  // failure degrades to "no og:image" instead of breaking the build.
+  let ogDone = new Set();
+  try {
+    ogDone = await generateOgCards({
+      dist: DIST, combos: COMBOS, shapes: SHAPES, modelSlug: MODEL_SLUG,
+      priceFor: (shank, cast) => basePrice(prices, shank, cast),
+      money,
+    });
+  } catch (e) {
+    console.warn('og-карточки пропущены:', e.message);
+  }
+  const ogImage = (key) => (ogDone.has(key) ? `${SITE}/assets/og/${key}.jpg` : undefined);
+
   const pages = [];
 
   // Каждое сочетание модели и огранки — своя страница с ценой.
@@ -410,6 +435,7 @@ async function main() {
         title: `${name} — помолвочное кольцо с бриллиантом ${money(price)} | Neo Diamond`,
         description: `${name}: кольцо с лабораторным бриллиантом огранки «${shapeLabel}», от ${money(price)}. Чистота VVS2/VS1, цвет D/E, сертификат IGI. Примерка в Алматы и Астане.`,
         jsonLd: productJsonLd({ name, price, shapeLabel, path }),
+        image: ogImage(`${MODEL_SLUG[model]}-${shapeId}`),
         bodyHtml: `
       <h1>${esc(name)}</h1>
       <p><strong>Цена: от ${esc(money(price))}</strong> — за кольцо с бриллиантом 1 карат, золото 585 пробы.</p>
@@ -434,6 +460,7 @@ async function main() {
     title: 'Каталог помолвочных колец с ценами | Neo Diamond, Алматы и Астана',
     description: `Каталог колец с лабораторными бриллиантами: ${COMBOS.length} моделей, ${SHAPES.length} огранок, цены от ${money(Math.min(...COMBOS.map(([s, c]) => basePrice(prices, s, c))))}. Сертификат IGI, примерка в Алматы и Астане.`,
     jsonLd: [organization, itemListJsonLd(prices)],
+    image: ogImage('default'),
     bodyHtml: `
       <h1>Каталог помолвочных колец с ценами</h1>
       <p>Neo Diamond — ювелирная студия в Алматы и Астане. Кольца с лабораторными
@@ -471,6 +498,7 @@ async function main() {
     title: 'Neo Diamond — кольца с лабораторными бриллиантами в Алматы и Астане',
     description: 'Помолвочные кольца и украшения с лабораторными бриллиантами. Сертификат IGI, 10 огранок, золото 585/750. Примерка в шоурумах Алматы и Астаны, изготовление 5–10 дней.',
     jsonLd: organization,
+    image: ogImage('default'),
     bodyHtml: `
       <h1>Кольца с лабораторными бриллиантами — Neo Diamond</h1>
       <p>Ювелирная студия в Алматы и Астане. Каждый камень от 0,5 карат — с сертификатом IGI.</p>
