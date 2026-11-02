@@ -45,24 +45,23 @@ function DotPicker({ options, chosen, onChoose }) {
   );
 }
 
-function ShapeMiniPicker({ activeShape, onSelect, onClose }) {
+/** Форма камня — первый выбор, в одном ряду с остальными. Нажатие сразу меняет 3D. */
+function ShapePicker({ value, onChoose }) {
   return (
-    <div className="shape-mini-overlay" onClick={onClose}>
-      <div className="shape-mini-popup" onClick={e => e.stopPropagation()}>
-        <div className="shape-mini-grid">
-          {SHAPES.map(s => (
-            <button
-              key={s.id}
-              className={`shape-mini-btn${activeShape === s.id ? ' shape-mini-btn--active' : ''}`}
-              onClick={() => { onSelect(s.id); onClose(); }}
-              title={s.label}
-            >
-              <img src={`/assets/shapes/${s.file}`} alt={s.label} className="shape-mini-img" />
-              <span className="shape-mini-label">{s.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="shape-pick" role="radiogroup" aria-label="Форма бриллианта">
+      {SHAPES.map(s => (
+        <button
+          key={s.id}
+          type="button"
+          role="radio"
+          aria-checked={value === s.id}
+          className={`shape-pick__btn${value === s.id ? ' is-active' : ''}`}
+          onClick={() => value !== s.id && onChoose(s.id)}
+        >
+          <img src={`/assets/shapes/${s.file}`} alt="" className="shape-pick__img" />
+          <span className="shape-pick__label">{s.label}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -87,7 +86,6 @@ export default function DetailScreen({ ijewel }) {
   const [metalLabel,   setMetalLabel]   = useState(null);
   const [castMetal,    setCastMetal]    = useState(null);
   const [combinedGold, setCombinedGold] = useState(false);
-  const [shapePicker,  setShapePicker]  = useState(false);
   const prices                          = usePrices();
 
   // Stores the 3D config to apply — set in Phase 1, consumed in Phase 2.
@@ -126,7 +124,6 @@ export default function DetailScreen({ ijewel }) {
     setCarat(DEFAULT_CARAT);
     setPurity('585');
     setCombinedGold(false);
-    setShapePicker(false);
     setGem1(null);    setGem1Label(null);
     setGem2(null);    setGem2Label(null);
     setMetal(null);   setMetalLabel(null);
@@ -197,7 +194,6 @@ export default function DetailScreen({ ijewel }) {
 
   const handleShapeChange = useCallback((newShape) => {
     setShape(newShape);
-    setShapePicker(false);
     track(EVENTS.CONFIG_CHANGE, { field: 'shape', value: newShape });
     ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
   }, [ijewel]);
@@ -275,21 +271,15 @@ export default function DetailScreen({ ijewel }) {
             }}>
               {productName}
             </h2>
-            <button
-              onClick={() => setShapePicker(true)}
-              style={{
-                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                fontSize: '0.78rem', color: 'var(--cfg-ink-muted, #5b81a1)',
-                textDecoration: 'underline', textUnderlineOffset: 3,
-                fontFamily: 'var(--font-body, Manrope, sans-serif)',
-              }}
-            >
-              Поменять форму бриллианта
-            </button>
           </div>
         </div>
 
         <div className="cfg-step-content" style={{ paddingTop: 0 }}>
+          <div className="cfg-section">
+            <div className="cfg-section-label">Форма бриллианта</div>
+            <ShapePicker value={shape} onChoose={handleShapeChange} />
+          </div>
+
           <div className="cfg-section">
             <div className="cfg-section-label">Каратность центрального бриллианта</div>
             <div className="carat-row">
@@ -367,13 +357,6 @@ export default function DetailScreen({ ijewel }) {
         </button>
       </div>
 
-      {shapePicker && (
-        <ShapeMiniPicker
-          activeShape={shape}
-          onSelect={handleShapeChange}
-          onClose={() => setShapePicker(false)}
-        />
-      )}
     </>
   );
 }

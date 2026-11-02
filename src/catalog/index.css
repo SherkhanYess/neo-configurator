@@ -644,6 +644,38 @@ img { display: block; max-width: 100%; }
   box-shadow: 0 1px 5px rgba(0,0,0,0.18);
 }
 
+/* ── Форма камня в карточке модели: сетка 5 × 2, без всплывающего окна ── */
+.shape-pick {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.shape-pick__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0 7px;
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+  background: var(--paper-100);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s;
+}
+.shape-pick__btn:hover { border-color: var(--ink-400); }
+.shape-pick__btn.is-active { border-color: var(--ink-800); background: var(--paper-200); }
+.shape-pick__btn:focus-visible { outline: 2px solid var(--ink-800); outline-offset: 2px; }
+.shape-pick__img { width: 38px; height: 38px; object-fit: contain; }
+.shape-pick__label {
+  font-family: var(--font-body);
+  font-size: 9px;
+  color: var(--ink-400);
+  white-space: nowrap;
+}
+.shape-pick__btn.is-active .shape-pick__label { color: var(--ink-800); font-weight: 600; }
+
+/* Всплывающий выбор формы — остался только у пусет. */
 /* ── Mini shape picker popup ────────────────────── */
 .shape-mini-overlay {
   position: fixed;
@@ -743,8 +775,8 @@ img { display: block; max-width: 100%; }
 .shape-grid--modal { gap: 10px; }
 
 /* ─── Лента моделей ─────────────────────────────────────────────────────────
-   Одна колонка, карточка на модель. Галерея занимает больше половины экрана:
-   человек пришёл смотреть кольца, а не читать про них.                      */
+   Обложки линеек в одну колонку. Текст стоит на самом фото, на тоне, который
+   считается из фото (npm run feed:tones). Все размеры — DESIGN.md, «Лента». */
 
 .feed {
   min-height: 100dvh;
@@ -754,252 +786,207 @@ img { display: block; max-width: 100%; }
 }
 
 .feed-head {
-  padding: 28px 20px 18px;
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-}
-.feed-logo { height: 26px; width: auto; display: block; margin-bottom: 26px; }
-
-.feed-title {
-  font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(1.75rem, 7vw, 2.4rem);
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  color: var(--ink-800, #0B2040);
-  margin: 0 0 12px;
-  text-wrap: balance;
-}
-.feed-sub {
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  line-height: 1.55;
-  color: var(--ink-600, #1E3149);
-  margin: 0 0 14px;
-  max-width: 34ch;
-}
-.feed-trust {
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  letter-spacing: 0.01em;
-  color: var(--ink-400, #5B81A1);
-  margin: 0;
-}
-
-/* Чипсы стилей липнут к верху: в длинной ленте это единственная навигация. */
-.feed-styles {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  height: 56px;
+  flex-shrink: 0;
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 12px 20px;
-  background: color-mix(in srgb, var(--paper-050, #FAFBFC) 92%, transparent);
-  backdrop-filter: blur(12px);
+  align-items: center;
+  justify-content: center;
   border-bottom: 1px solid var(--paper-200, #E9EDF3);
 }
-.feed-styles::-webkit-scrollbar { display: none; }
+.feed-logo { height: 26px; width: auto; display: block; }
 
-.feed-chip {
-  flex: 0 0 auto;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--ink-600, #1E3149);
-  background: #fff;
-  border: 1.5px solid var(--paper-300, #DBE2EB);
-  border-radius: 50px;
-  padding: 9px 16px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 0.18s ease, color 0.18s ease;
+.feed-intro {
+  padding: 24px 24px 20px;
+  text-align: center;
 }
-/* Выбранное состояние — контур, а не заливка цветом. */
-.feed-chip.is-active {
-  border-color: var(--ink-800, #0B2040);
-  border-width: 2px;
+.feed-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   color: var(--ink-800, #0B2040);
-  font-weight: 600;
-  padding: 8px 15px;
+}
+.feed-sub {
+  margin: 8px 0 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-400, #5B81A1);
+  text-wrap: balance;
 }
 
 .feed-list {
-  max-width: 680px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 12px 40px;
   width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
   box-sizing: border-box;
-  padding: 8px 0 40px;
 }
+.feed-slot { display: flex; flex-direction: column; gap: 20px; }
 
+/* Карточка — одна ссылка целиком. */
 .feed-card {
-  background: #fff;
-  border-top: 1px solid var(--paper-200, #E9EDF3);
-  border-bottom: 1px solid var(--paper-200, #E9EDF3);
-  margin-bottom: 14px;
+  display: block;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--tone);
+  color: #FFFFFF;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
 }
-@media (min-width: 560px) {
-  .feed-card { border: 1px solid var(--paper-200, #E9EDF3); border-radius: 24px; overflow: hidden; }
+.feed-card:focus-visible { outline: 2px solid var(--ink-800, #0B2040); outline-offset: 3px; }
+
+.feed-card__photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+}
+.feed-card__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Низ фото растворяется в тоне карточки. */
+.feed-card__photo::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 140px;
+  background: linear-gradient(180deg, transparent 0%, var(--tone) 100%);
 }
 
-/* ── Галерея ── */
-.feed-gallery { position: relative; background: var(--paper-100, #F2F5F9); }
-
-.feed-gallery__track {
+.feed-card__body {
+  position: relative;
+  margin-top: -36px;
+  padding: 0 20px 24px;
   display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
-.feed-gallery__track::-webkit-scrollbar { display: none; }
 
-.feed-gallery__slide {
-  flex: 0 0 100%;
-  scroll-snap-align: center;
+.feed-card__row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  height: 58dvh;
-  max-height: 460px;
-}
-.feed-gallery__slide img {
-  width: 78%;
-  height: 78%;
-  object-fit: contain;
-  user-select: none;
-}
-
-.feed-gallery__dots {
-  display: flex;
-  gap: 6px;
-  /* Десять форм в один ряд на телефон не влезают, а перенос на вторую строку
-     ломал ритм карточки. Полоса прокручивается, как сама галерея. */
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 10px 16px 14px;
-  background: var(--paper-100, #F2F5F9);
-  scroll-snap-type: x proximity;
-}
-.feed-gallery__dots::-webkit-scrollbar { display: none; }
-/* На широком экране ряд помещается целиком — тогда центрируем. */
-@media (min-width: 440px) {
-  .feed-gallery__dots { justify-content: center; }
-}
-.feed-dot {
-  flex: 0 0 auto;
-  scroll-snap-align: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1.5px solid transparent;
-  background: #fff;
-  padding: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.55;
-  transition: opacity 0.18s ease, border-color 0.18s ease;
-}
-.feed-dot img { width: 100%; height: 100%; object-fit: contain; }
-.feed-dot.is-active { opacity: 1; border-color: var(--ink-800, #0B2040); }
-
-/* ── Текст карточки ── */
-.feed-card__body { padding: 18px 20px 22px; }
-
-.feed-card__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 6px;
+  column-gap: 14px;
+  row-gap: 8px;
 }
 .feed-card__name {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1.3rem;
-  letter-spacing: -0.02em;
-  color: var(--ink-800, #0B2040);
   margin: 0;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--champagne-400, #DCC29B);
+  white-space: nowrap;
 }
+.feed-card__divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(220, 194, 155, 0.45);
+}
+.feed-card__divider[hidden] { display: none; }
 .feed-card__price {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.9rem;
-  color: var(--champagne-700, #7C6035);
+  padding-top: 2px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1;
+  color: #FFFFFF;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
-.feed-card__facts {
-  font-family: var(--font-body);
-  font-size: 0.78rem;
-  color: var(--ink-400, #5B81A1);
-  margin: 0 0 14px;
-}
+/* Ровно две строки: все карточки одной высоты. */
 .feed-card__text {
+  margin: 14px auto 0;
+  max-width: 36ch;
+  min-height: 44px;
   font-family: var(--font-body);
-  font-size: 0.92rem;
-  line-height: 1.6;
-  color: var(--ink-600, #1E3149);
-  margin: 0;
-  max-width: 62ch;
-}
-.feed-card__text--more { margin-top: 12px; color: var(--ink-400, #5B81A1); }
-
-.feed-card__more {
-  background: none;
-  border: none;
-  padding: 10px 0 0;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  color: var(--ink-400, #5B81A1);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.8);
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .feed-card__cta {
   margin-top: 20px;
-  width: 100%;
-  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 22px;
   border-radius: 50px;
-  border: 1.5px solid var(--ink-800, #0B2040);
-  background: var(--ink-800, #0B2040);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #FFFFFF;
   font-family: var(--font-body);
-  font-size: 0.95rem;
   font-weight: 600;
-  cursor: pointer;
-}
-
-/* ── Плашка помощи ── */
-.feed-help {
-  display: block;
-  margin: 0 0 14px;
-  padding: 20px;
-  background: #fff;
-  border: 1px solid var(--paper-300, #DBE2EB);
+  font-size: 14px;
   text-decoration: none;
+  transition: background 0.15s;
 }
-@media (min-width: 560px) { .feed-help { border-radius: 24px; } }
+.feed-card:active .feed-card__cta,
+.feed-card__cta:active { background: rgba(255, 255, 255, 0.24); }
 
-.feed-help__title {
-  display: block;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1.05rem;
-  letter-spacing: -0.02em;
-  color: var(--ink-800, #0B2040);
-  margin-bottom: 6px;
+/* Пауза «на руке». */
+.feed-break {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--tone);
 }
-.feed-help__text {
-  display: block;
-  font-family: var(--font-body);
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: var(--ink-600, #1E3149);
+.feed-break img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+.feed-break::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 50%;
+  background: linear-gradient(180deg, transparent 0%, var(--tone) 100%);
+  opacity: 0.9;
+}
+.feed-break__body {
+  position: absolute;
+  z-index: 1;
+  left: 20px; right: 20px; bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.feed-break__title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 30px;
+  line-height: 1.15;
+  color: #FFFFFF;
+  text-wrap: balance;
+}
+.feed-break .feed-card__cta { margin-top: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-card__cta { transition: none; }
 }

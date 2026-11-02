@@ -122,9 +122,10 @@ function core(records) {
     addSession(citySessions, r.city ?? 'Неизвестно', sid);
     addSession(utmSessions, utmKey(r.utm), sid);
 
-    // Форму теперь называет листание галереи в ленте: отдельного экрана
-    // выбора огранки больше нет.
+    // Форму выбирают на странице модели (config_change). Листание галереи в
+    // ленте учитываем для старых данных — в новой ленте галереи нет.
     if (event === 'feed_gallery_swipe') bump(shapes, r.props?.shape);
+    if (event === 'config_change' && r.props?.field === 'shape') bump(shapes, r.props?.value);
     if (event === 'faq_open')     bump(faq, String(r.props?.question ?? ''));
     if (event === 'product_open') {
       opensBySession.set(sid, (opensBySession.get(sid) ?? 0) + 1);
