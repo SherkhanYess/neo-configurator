@@ -213,10 +213,9 @@ export default function BookingScreen({ ijewel }) {
     catch (_) { return {}; }
   })();
 
-  const waCtx = {
-    model: productName, shape: shapeLabel, carat,
-    metalLabel, purity, city,
-  };
+  // Огранка отдельным полем не идёт: productName её уже содержит
+  // («Sirius Круглый»), и вторым аргументом она задваивалась в сообщении.
+  const waCtx = { model: productName, carat, metalLabel, purity, city };
   const waHref = `https://wa.me/${waNumber(city)}?text=${encodeURIComponent(waMessage('price', waCtx, utm))}`;
 
   const eventProps = { model: shank, cast, shape, carat: carat ?? null, price: price ?? null };
