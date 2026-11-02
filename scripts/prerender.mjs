@@ -28,6 +28,11 @@ const DIST = join(ROOT, 'dist');
 // main domain — it drives canonical links, Open Graph and the sitemap.
 const SITE = (process.env.SITE_URL || 'https://con.neodiamond.kz').replace(/\/$/, '');
 
+// Песочница: отдельный сайт для разработки новой витрины. В поиске ей делать
+// нечего — это копия каталога, и в индексе она конкурировала бы с основным
+// сайтом за те же запросы, а ассистент мог бы процитировать её вместо него.
+const SANDBOX = process.env.IS_SANDBOX === '1';
+
 // ─── data (mirrors src/catalog/data/config.js) ───────────────────────────────
 const SHAPES = [
   ['round','Круглый'], ['princess','Принцесса'], ['radiant','Радиант'], ['cushion','Кушон'],
@@ -163,6 +168,7 @@ function page(shell, { path, title, description, bodyHtml, jsonLd, image }) {
     `<meta property="og:description" content="${esc(description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
     `<meta property="og:locale" content="ru_KZ" />`,
+    SANDBOX ? `<meta name="robots" content="noindex, nofollow" />` : '',
     ...imageTags,
     jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : '',
   ].filter(Boolean).join('\n    ');
@@ -546,7 +552,7 @@ async function main() {
   // Карта сайта описывает весь домен, а не только каталог: главная страница
   // отдаётся с другого сайта Netlify, но для поисковика это один адрес.
   const urls = ['/', '/catalog', '/catalog/list', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
-  writeFileSync(join(DIST, 'sitemap.xml'),
+  if (!SANDBOX) writeFileSync(join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     [...new Set(urls)].map(u =>
       `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq>` +
@@ -579,13 +585,24 @@ async function main() {
     `# Всё остальное — одностраничное приложение.\n` +
     `/*    /index.html    200\n`);
 
-  // Машиночитаемый каталог и справка для ассистентов.
+  // Машиночитаемый каталог и справка для ассистентов. В песочнице их нет: они
+  // описывают основной сайт и ссылаются на его адреса.
   mkdirSync(join(DIST, 'catalog'), { recursive: true });
-  writeFileSync(join(DIST, 'catalog', 'catalog.json'), JSON.stringify(catalogFeed(prices, rep), null, 2));
-  writeFileSync(join(DIST, 'llms.txt'), llmsTxt(prices, rep));
+  if (!SANDBOX) {
+    writeFileSync(join(DIST, 'catalog', 'catalog.json'), JSON.stringify(catalogFeed(prices, rep), null, 2));
+    writeFileSync(join(DIST, 'llms.txt'), llmsTxt(prices, rep));
+  }
   // Футер читает это при загрузке: цифра обновляется со сборкой, а не руками.
   writeFileSync(join(DIST, 'catalog', 'reputation.json'),
     JSON.stringify(rep ? { ...rep, line: reputationLine(rep) } : null));
+
+  if (SANDBOX) {
+    writeFileSync(join(DIST, 'robots.txt'),
+      `# Песочница: здесь собирается новая витрина. В поиске ей делать нечего.\n` +
+      `User-agent: *\nDisallow: /\n`);
+    console.log(`  страниц: ${pages.length}, песочница: индексация закрыта`);
+    return;
+  }
 
   writeFileSync(join(DIST, 'robots.txt'),
     `User-agent: *\nAllow: /\n\n` +
