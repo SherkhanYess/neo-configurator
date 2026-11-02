@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import FilterScreen       from './screens/FilterScreen.jsx';
 import CatalogScreen      from './screens/CatalogScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
 import BookingScreen      from './screens/BookingScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
-import PusetyDetailScreen from './screens/PusetyDetailScreen.jsx';
 import SiteFooter         from './components/SiteFooter.jsx';
-import { useIjewel, RING_FILE_ID, PUSETЫ_FILE_ID } from './hooks/useIjewel.js';
+import { useIjewel, RING_FILE_ID } from './hooks/useIjewel.js';
 import { track, EVENTS } from './lib/track.js';
 import { REVEAL_TIMEOUT_MS } from './lib/useContentReveal.js';
 import { decodeBooking } from './lib/bookingUrl.js';
@@ -30,19 +29,17 @@ function CatalogMain() {
 
   const subPath      = location.pathname.replace(/^\/catalog/, '') || '/';
   const onRingProduct  = subPath.startsWith('/product');
-  const onPusetyProduct = subPath.startsWith('/pusety/product');
+
   const onBooking      = subPath.startsWith('/booking');
   // В админке футер не нужен: это внутренний экран, а не витрина.
   const onAdmin        = subPath.startsWith('/admin');
 
-  const showViewer = onRingProduct || onPusetyProduct || onBooking;
+  const showViewer = onRingProduct || onBooking;
 
   // Which iJewel model to load. On the booking screen the route says nothing
   // about the category, so the answer comes from the shared configuration —
-  // otherwise a shared pusety link would quietly load the ring model.
-  const bookingCfg = onBooking ? decodeBooking(location.search) : null;
-  const wantsPusety = onPusetyProduct || bookingCfg?.type === 'pusety';
-  const fileId = wantsPusety ? PUSETЫ_FILE_ID : RING_FILE_ID;
+  // Категория одна — кольца, поэтому выбирать файл модели больше не из чего.
+  const fileId = RING_FILE_ID;
 
   const ijewel        = useIjewel(fileId);
   const viewerRef     = useRef(null);
@@ -65,7 +62,7 @@ function CatalogMain() {
 
   // Reset isConfigured synchronously before paint when entering a product page
   useLayoutEffect(() => {
-    if (onRingProduct || onPusetyProduct) ijewel.resetConfigured();
+    if (onRingProduct) ijewel.resetConfigured();
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When fileId changes (category switch), force re-init on next showViewer
@@ -127,7 +124,9 @@ function CatalogMain() {
         <Route path="/catalog/filter"                            element={<FilterScreen />} />
         <Route path="/catalog/list"                              element={<CatalogScreen />} />
         <Route path="/catalog/product/:shank/:cast/:shape"       element={<DetailScreen ijewel={ijewel} />} />
-        <Route path="/catalog/pusety/product/:cast/:shape"       element={<PusetyDetailScreen ijewel={ijewel} />} />
+        {/* Пусет на витрине больше нет, но разосланные ссылки не должны
+            упираться в пустую страницу — уводим в каталог. */}
+        <Route path="/catalog/pusety/*"                          element={<Navigate to="/catalog" replace />} />
         <Route path="/catalog/booking"                           element={<BookingScreen ijewel={ijewel} />} />
         <Route path="/catalog/admin"                             element={<AdminScreen />} />
       </Routes>

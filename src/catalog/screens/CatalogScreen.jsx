@@ -95,9 +95,10 @@ export default function CatalogScreen() {
     }
   }
 
-  const pusety = enabledPusety(productCfg)
-    .filter(c => activeShapes.includes(c.shape))
-    .map(c => ({ type: 'pusety', cast: c.cast, shape: c.shape }));
+  // Пусеты сняты с витрины: сайт теперь только про помолвочные кольца. Данные
+  // и экран остались в коде, чтобы вернуть их без переписывания, но в
+  // интерфейсе их нет.
+  const pusety = [];
 
   // Cheapest first. The previous order was not a decision at all — it was the
   // order VALID_COMBOS happened to be declared in, which put the 550 000 ₸

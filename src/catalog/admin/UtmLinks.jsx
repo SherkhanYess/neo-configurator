@@ -22,6 +22,33 @@ const C = {
 const BASE = 'https://neodiamond.kz/catalog';
 
 export const UTM_PRESETS = [
+  // Реклама Meta. Кампания подставляется в ссылку объявления перформанс-
+  // менеджером и приезжает в код источника внутри сообщения WhatsApp, поэтому
+  // её имя должно быть коротким словом: obraz, vitrina, vybor.
+  {
+    id: 'meta_obraz',
+    title: 'Реклама Meta — «Образ»',
+    note: 'Основной трафик. Ведёт в ленту, можно добавить &style=halo.',
+    params: { utm_source: 'meta', utm_medium: 'paid', utm_campaign: 'obraz' },
+  },
+  {
+    id: 'meta_vitrina',
+    title: 'Реклама Meta — «Витрина»',
+    note: 'Тест. Ведёт сразу на страницу модели: /catalog/product/sirius/halo/oval.',
+    params: { utm_source: 'meta', utm_medium: 'paid', utm_campaign: 'vitrina' },
+  },
+  {
+    id: 'meta_vybor',
+    title: 'Реклама Meta — «Выбор»',
+    note: 'Кампания vybor.',
+    params: { utm_source: 'meta', utm_medium: 'paid', utm_campaign: 'vybor' },
+  },
+  {
+    id: 'guide',
+    title: 'Страница-гайд',
+    note: 'Кнопка «Посмотреть модели» на гайде.',
+    params: { utm_source: 'guide', utm_medium: 'page' },
+  },
   {
     id: 'instagram_bio',
     title: 'Instagram — шапка профиля',

@@ -8,7 +8,9 @@ import { track, EVENTS } from '../lib/track.js';
 import { useContentReveal } from '../lib/useContentReveal.js';
 import { bookingPath } from '../lib/bookingUrl.js';
 
-const CARAT_OPTIONS = [1, 1.5, 2, 3, 4, 5];
+// 4 и 5 ct убраны из интерфейса: такие камни обсуждаются в переписке, а в
+// списке они только растягивали строку и уводили от ходовых каратностей.
+const CARAT_OPTIONS = [1, 1.5, 2, 3];
 
 // The base price already covers a 1 ct stone, so 1 ct starts selected: the
 // figure on the card and the chosen carat now say the same thing, and no lead
@@ -306,19 +308,7 @@ export default function DetailScreen({ ijewel }) {
             </div>
           </div>
 
-          {ijewel.gem1Options?.length > 0 && (
-            <div className="cfg-section">
-              <div className="cfg-section-label">Цвет центрального бриллианта</div>
-              <DotPicker options={ijewel.gem1Options} chosen={gem1} onChoose={handleGem1} />
-            </div>
-          )}
 
-          {hasScatter && ijewel.gem2Options?.length > 0 && (
-            <div className="cfg-section">
-              <div className="cfg-section-label">Цвет россыпных бриллиантов</div>
-              <DotPicker options={ijewel.gem2Options} chosen={gem2} onChoose={handleGem2} />
-            </div>
-          )}
 
           <div className="cfg-section">
             <div className="cfg-section-label">Проба золота</div>

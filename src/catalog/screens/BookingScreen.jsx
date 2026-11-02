@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { cardName, SHAPES, METAL_LABELS, WA_NUMBER, WA_BY_CITY, WA_CITIES,
+import { cardName, SHAPES, METAL_LABELS,
          SHAPE_IJEWEL, CAST_IJEWEL, pusetyCardName } from '../data/config.js';
 import { calcPrice, calcPusetyPrice, formatPrice } from '../data/priceCalc.js';
 import { usePrices } from '../data/prices.js';
@@ -8,6 +8,9 @@ import { track, EVENTS } from '../lib/track.js';
 import { decodeBooking, encodeBooking } from '../lib/bookingUrl.js';
 import SpecsBlock from '../components/SpecsBlock.jsx';
 import Faq from '../components/Faq.jsx';
+import { waMessage } from '../lib/waMessage.js';
+import { leadCode } from '../lib/leadCode.js';
+import { CITIES, currentCity, rememberCity, waNumber } from '../lib/city.js';
 
 // ─── tokens ──────────────────────────────────────────────────────────────────
 const C = {
@@ -88,81 +91,6 @@ function WhatsAppIcon() {
 // The options are <a href>, not buttons calling open(): the tap that actually
 // leaves the page must be a plain link, or the Instagram webview swallows it —
 // the same failure the main CTA was fixed for.
-function CityModal({ hrefFor, onPick, onClose }) {
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Выберите город"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 400,
-        background: 'rgba(11,32,64,0.42)', backdropFilter: 'blur(4px)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      }}
-    >
-      <div style={{
-        background: C.paper050, borderRadius: '28px 28px 0 0',
-        width: '100%', maxWidth: 480,
-        padding: '28px 24px calc(24px + env(safe-area-inset-bottom))',
-        fontFamily: 'Manrope, sans-serif', textAlign: 'left',
-      }}>
-        <div style={{ ...eyebrow, marginBottom: 8 }}>Ваш город</div>
-        <h3 style={{
-          fontFamily: '"Unbounded",sans-serif', fontWeight: 300,
-          fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1.3,
-          margin: '0 0 6px', color: C.ink800,
-        }}>
-          Куда написать?
-        </h3>
-        <p style={{ margin: '0 0 20px', fontSize: '0.85rem', color: C.ink400, lineHeight: 1.55 }}>
-          Ответит тот шоурум, который вам ближе.
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {WA_CITIES.map(city => (
-            <a
-              key={city}
-              href={hrefFor(city)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => onPick(city)}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                minHeight: 56, padding: '14px 20px', borderRadius: 50,
-                border: `1.5px solid ${C.paper300}`, background: '#fff',
-                color: C.ink800, textDecoration: 'none',
-                fontSize: '0.95rem', fontWeight: 600, boxSizing: 'border-box',
-              }}
-            >
-              {city}
-              <span style={{ color: C.wa, display: 'flex' }}><WhatsAppIcon /></span>
-            </a>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: '0.85rem', color: C.ink400, fontFamily: 'Manrope, sans-serif',
-            padding: '14px 0 4px',
-          }}
-        >
-          Назад
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // Outlined on purpose. A second green button would compete with the main CTA
 // and pull taps away from it.
 const secondaryBtn = {
@@ -181,7 +109,7 @@ export default function BookingScreen({ ijewel }) {
   const heroRef  = useRef(null);
   const prices   = usePrices();
   const [toast, setToast] = useState('');
-  const [cityOpen, setCityOpen] = useState(false);
+  const [city, setCity] = useState(currentCity());
 
   // The address wins over sessionStorage, so a shared link opens what the
   // sender saw rather than whatever this browser last configured.
@@ -278,17 +206,18 @@ export default function BookingScreen({ ijewel }) {
 
   const shareUrl = `${window.location.origin}/catalog/booking?${encodeBooking(cfg)}`;
 
-  function buildWA() {
-    return [
-      'Здравствуйте! Хочу узнать подробнее об украшении:',
-      `— ${productName}`,
-      ...specLine.split('\n').map(l => `— ${l}`),
-      '\nХочу получить индивидуальную гравировку в подарок.',
-    ].join('\n');
-  }
-  const waHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(buildWA())}`;
-  const waHrefFor = (city) =>
-    `https://wa.me/${WA_BY_CITY[city] ?? WA_NUMBER}?text=${encodeURIComponent(buildWA())}`;
+  // Метки входа сохраняются в main.jsx при первом заходе; отсюда берётся код
+  // источника, который менеджер переносит в amoCRM.
+  const utm = (() => {
+    try { return JSON.parse(sessionStorage.getItem('nd_utm') ?? '{}') ?? {}; }
+    catch (_) { return {}; }
+  })();
+
+  const waCtx = {
+    model: productName, shape: shapeLabel, carat,
+    metalLabel, purity, city,
+  };
+  const waHref = `https://wa.me/${waNumber(city)}?text=${encodeURIComponent(waMessage('price', waCtx, utm))}`;
 
   const eventProps = { model: shank, cast, shape, carat: carat ?? null, price: price ?? null };
 
@@ -451,9 +380,37 @@ export default function BookingScreen({ ijewel }) {
           <span style={{ color: C.champ700 }}>индивидуальную гравировку в подарок</span>
         </h2>
 
-        <button
-          type="button"
-          onClick={() => setCityOpen(true)}
+        {/* Город выбирается заранее, а не в момент перехода: раньше здесь
+            всплывало окно и добавляло лишний клик на самом дорогом шаге. */}
+        <div style={{
+          display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 14,
+        }}>
+          {CITIES.map(c => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => { setCity(c); rememberCity(c); }}
+              style={{
+                flex: '0 1 160px', minHeight: 42, borderRadius: 50, cursor: 'pointer',
+                fontFamily: 'Manrope, sans-serif', fontSize: '0.88rem',
+                fontWeight: city === c ? 600 : 500,
+                color: C.ink800,
+                background: city === c ? C.paper100 : '#fff',
+                border: `${city === c ? 2 : 1.5}px solid ${city === c ? C.ink800 : C.paper300}`,
+              }}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+
+        <a
+          href={waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => track(EVENTS.WA_CLICK, {
+            ...eventProps, type: 'price', city, code: leadCode('price', utm),
+          })}
           className="wa-btn-shimmer"
           style={{
             width: '100%', minHeight: 56, padding: '16px 24px',
@@ -467,7 +424,7 @@ export default function BookingScreen({ ijewel }) {
         >
           <WhatsAppIcon />
           Написать в WhatsApp
-        </button>
+        </a>
 
         <p style={{ fontSize: '0.75rem', color: C.ink400, margin: '14px 0 24px', lineHeight: 1.5 }}>
           Нажимая кнопку, вы перейдёте в WhatsApp — мы ответим в течение нескольких минут
@@ -506,16 +463,6 @@ export default function BookingScreen({ ijewel }) {
         )}
       </section>
 
-      {cityOpen && (
-        <CityModal
-          hrefFor={waHrefFor}
-          onClose={() => setCityOpen(false)}
-          onPick={(city) => {
-            track(EVENTS.BOOKING_WA, { ...eventProps, city });
-            setCityOpen(false);
-          }}
-        />
-      )}
 
       <hr style={divider} />
 
