@@ -27,18 +27,27 @@ const CORS = {
 // single option. Counting an optional action as a stage invents a drop-off:
 // the step showed people "leaving" while the step after it had MORE sessions,
 // which a Math.min(100, …) cap then quietly hid. Both are reported separately.
+// Воронка ленты: зашёл → долистал до карточки → открыл модель → ушёл в WhatsApp.
+//
+// Прежние шаги ушли вместе с экранами: выбора формы на входе больше нет
+// (`catalog_view`, `shape_select`), промежуточной страницы «Ваш выбор» — тоже
+// (`booking_open`). Оставлять их в воронке значило бы считать переходы, которых
+// в пути больше не существует.
 const FUNNEL = [
-  'session_start',
-  'catalog_view',
+  'feed_view',
+  'feed_card_view',
   'product_open',
-  'booking_open',
   'wa_click',
 ];
 
 // Measured per session but off to the side of the funnel: none of them gates
 // anything, so counting them as stages would invent a drop-off.
 const ENGAGEMENT = [
-  'shape_select',
+  'feed_gallery_swipe',
+  'feed_style_click',
+  'feed_help_click',
+  'session_start',
+  'booking_open',
   'config_change',
   'product_learn_more_click',
   'booking_share_click',
@@ -113,7 +122,9 @@ function core(records) {
     addSession(citySessions, r.city ?? 'Неизвестно', sid);
     addSession(utmSessions, utmKey(r.utm), sid);
 
-    if (event === 'shape_select') bump(shapes, r.props?.shape);
+    // Форму теперь называет листание галереи в ленте: отдельного экрана
+    // выбора огранки больше нет.
+    if (event === 'feed_gallery_swipe') bump(shapes, r.props?.shape);
     if (event === 'faq_open')     bump(faq, String(r.props?.question ?? ''));
     if (event === 'product_open') {
       opensBySession.set(sid, (opensBySession.get(sid) ?? 0) + 1);

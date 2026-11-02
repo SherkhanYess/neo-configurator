@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import FilterScreen       from './screens/FilterScreen.jsx';
-import CatalogScreen      from './screens/CatalogScreen.jsx';
+import FeedScreen         from './screens/FeedScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
 import BookingScreen      from './screens/BookingScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
@@ -120,9 +119,11 @@ function CatalogMain() {
       </div>
 
       <Routes>
-        <Route path="/catalog"                                   element={<FilterScreen />} />
-        <Route path="/catalog/filter"                            element={<FilterScreen />} />
-        <Route path="/catalog/list"                              element={<CatalogScreen />} />
+        <Route path="/catalog"                                   element={<FeedScreen />} />
+        {/* Выбор формы на входе и список из девяноста карточек заменены лентой.
+            Адреса остаются рабочими: они разосланы в рекламе и в сторис. */}
+        <Route path="/catalog/filter"                            element={<Navigate to="/catalog" replace />} />
+        <Route path="/catalog/list"                              element={<Navigate to="/catalog" replace />} />
         <Route path="/catalog/product/:shank/:cast/:shape"       element={<DetailScreen ijewel={ijewel} />} />
         {/* Пусет на витрине больше нет, но разосланные ссылки не должны
             упираться в пустую страницу — уводим в каталог. */}

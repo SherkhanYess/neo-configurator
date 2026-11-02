@@ -16,8 +16,6 @@ const UTM_KEY     = 'nd_utm';
 
 export const EVENTS = {
   SESSION_START: 'session_start',
-  SHAPE_SELECT:  'shape_select',
-  CATALOG_VIEW:  'catalog_view',
   PRODUCT_OPEN:  'product_open',
   CONFIG_CHANGE: 'config_change',
   BOOKING_OPEN:  'booking_open',
@@ -30,6 +28,14 @@ export const EVENTS = {
   SHARE_SUCCESS:   'booking_share_success',
   OTHER_MODELS:    'booking_other_models_click',
   FAQ_OPEN:        'faq_open',
+
+  // Лента: вход в неё, просмотр карточки, листание галереи, навигация по
+  // стилям и обращение за помощью с выбором.
+  FEED_VIEW:         'feed_view',
+  FEED_CARD_VIEW:    'feed_card_view',
+  FEED_GALLERY_SWIPE:'feed_gallery_swipe',
+  FEED_STYLE_CLICK:  'feed_style_click',
+  FEED_HELP_CLICK:   'feed_help_click',
 };
 
 function randomId() {

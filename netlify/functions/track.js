@@ -19,8 +19,6 @@ const CORS = {
 
 const ALLOWED_EVENTS = new Set([
   'session_start',
-  'shape_select',
-  'catalog_view',
   'product_open',
   'config_change',
   'booking_open',
@@ -31,6 +29,13 @@ const ALLOWED_EVENTS = new Set([
   'booking_share_success',
   'booking_other_models_click',
   'faq_open',
+
+  // Лента моделей.
+  'feed_view',
+  'feed_card_view',
+  'feed_gallery_swipe',
+  'feed_style_click',
+  'feed_help_click',
 ]);
 
 // Keeps a malformed or hostile payload from bloating storage.

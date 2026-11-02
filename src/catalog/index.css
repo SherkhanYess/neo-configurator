@@ -741,3 +741,265 @@ img { display: block; max-width: 100%; }
   color: var(--text-secondary);
 }
 .shape-grid--modal { gap: 10px; }
+
+/* ─── Лента моделей ─────────────────────────────────────────────────────────
+   Одна колонка, карточка на модель. Галерея занимает больше половины экрана:
+   человек пришёл смотреть кольца, а не читать про них.                      */
+
+.feed {
+  min-height: 100dvh;
+  background: var(--paper-050, #FAFBFC);
+  display: flex;
+  flex-direction: column;
+}
+
+.feed-head {
+  padding: 28px 20px 18px;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+.feed-logo { height: 26px; width: auto; display: block; margin-bottom: 26px; }
+
+.feed-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.75rem, 7vw, 2.4rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ink-800, #0B2040);
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.feed-sub {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-600, #1E3149);
+  margin: 0 0 14px;
+  max-width: 34ch;
+}
+.feed-trust {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-400, #5B81A1);
+  margin: 0;
+}
+
+/* Чипсы стилей липнут к верху: в длинной ленте это единственная навигация. */
+.feed-styles {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 12px 20px;
+  background: color-mix(in srgb, var(--paper-050, #FAFBFC) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--paper-200, #E9EDF3);
+}
+.feed-styles::-webkit-scrollbar { display: none; }
+
+.feed-chip {
+  flex: 0 0 auto;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-600, #1E3149);
+  background: #fff;
+  border: 1.5px solid var(--paper-300, #DBE2EB);
+  border-radius: 50px;
+  padding: 9px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+/* Выбранное состояние — контур, а не заливка цветом. */
+.feed-chip.is-active {
+  border-color: var(--ink-800, #0B2040);
+  border-width: 2px;
+  color: var(--ink-800, #0B2040);
+  font-weight: 600;
+  padding: 8px 15px;
+}
+
+.feed-list {
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 0 40px;
+}
+
+.feed-card {
+  background: #fff;
+  border-top: 1px solid var(--paper-200, #E9EDF3);
+  border-bottom: 1px solid var(--paper-200, #E9EDF3);
+  margin-bottom: 14px;
+}
+@media (min-width: 560px) {
+  .feed-card { border: 1px solid var(--paper-200, #E9EDF3); border-radius: 24px; overflow: hidden; }
+}
+
+/* ── Галерея ── */
+.feed-gallery { position: relative; background: var(--paper-100, #F2F5F9); }
+
+.feed-gallery__track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  cursor: pointer;
+}
+.feed-gallery__track::-webkit-scrollbar { display: none; }
+
+.feed-gallery__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 58dvh;
+  max-height: 460px;
+}
+.feed-gallery__slide img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.feed-gallery__dots {
+  display: flex;
+  gap: 6px;
+  /* Десять форм в один ряд на телефон не влезают, а перенос на вторую строку
+     ломал ритм карточки. Полоса прокручивается, как сама галерея. */
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 10px 16px 14px;
+  background: var(--paper-100, #F2F5F9);
+  scroll-snap-type: x proximity;
+}
+.feed-gallery__dots::-webkit-scrollbar { display: none; }
+/* На широком экране ряд помещается целиком — тогда центрируем. */
+@media (min-width: 440px) {
+  .feed-gallery__dots { justify-content: center; }
+}
+.feed-dot {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  background: #fff;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  transition: opacity 0.18s ease, border-color 0.18s ease;
+}
+.feed-dot img { width: 100%; height: 100%; object-fit: contain; }
+.feed-dot.is-active { opacity: 1; border-color: var(--ink-800, #0B2040); }
+
+/* ── Текст карточки ── */
+.feed-card__body { padding: 18px 20px 22px; }
+
+.feed-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+.feed-card__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  color: var(--ink-800, #0B2040);
+  margin: 0;
+}
+.feed-card__price {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.9rem;
+  color: var(--champagne-700, #7C6035);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.feed-card__facts {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--ink-400, #5B81A1);
+  margin: 0 0 14px;
+}
+.feed-card__text {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink-600, #1E3149);
+  margin: 0;
+  max-width: 62ch;
+}
+.feed-card__text--more { margin-top: 12px; color: var(--ink-400, #5B81A1); }
+
+.feed-card__more {
+  background: none;
+  border: none;
+  padding: 10px 0 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--ink-400, #5B81A1);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.feed-card__cta {
+  margin-top: 20px;
+  width: 100%;
+  min-height: 50px;
+  border-radius: 50px;
+  border: 1.5px solid var(--ink-800, #0B2040);
+  background: var(--ink-800, #0B2040);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Плашка помощи ── */
+.feed-help {
+  display: block;
+  margin: 0 0 14px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--paper-300, #DBE2EB);
+  text-decoration: none;
+}
+@media (min-width: 560px) { .feed-help { border-radius: 24px; } }
+
+.feed-help__title {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  color: var(--ink-800, #0B2040);
+  margin-bottom: 6px;
+}
+.feed-help__text {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink-600, #1E3149);
+}
