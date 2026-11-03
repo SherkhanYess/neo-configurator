@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { api, checkPassword, clearToken, getToken, setToken, UNAUTHORIZED } from './api.js';
 import { Svg, ToastProvider } from './ui.jsx';
+import { STAFF_KEY } from '../catalog/lib/track.js';
 import FeedEditor from './sections/FeedEditor.jsx';
 import HintsView from './sections/HintsView.jsx';
 import ReviewsEditor from './sections/ReviewsEditor.jsx';
@@ -142,8 +143,16 @@ function Shell({ onLogout }) {
   );
 }
 
+// Кто входил в админку — свой: его заходы на сайт не попадают в статистику
+// и в рекламу. Метка остаётся и после выхода — менеджер не перестаёт быть
+// своим. Снять её можно в «Аналитике».
+function markStaff() {
+  try { localStorage.setItem(STAFF_KEY, '1'); } catch { /* приватный режим */ }
+}
+
 export default function StudioApp() {
   const [authed, setAuthed] = useState(() => Boolean(getToken()));
+  useEffect(() => { if (authed) markStaff(); }, [authed]);
 
   useEffect(() => {
     document.title = 'Админка — Neo Diamond';

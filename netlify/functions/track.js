@@ -87,9 +87,15 @@ export default async (req, context) => {
   const geo = context?.geo ?? {};
   const now = new Date();
 
+  // Номер браузера — для счёта людей, а не визитов. У старых клиентов его нет:
+  // тогда человек = визит, как и считалось раньше.
+  const visitorId = /^[a-z0-9]{4,24}$/.test(String(body?.visitorId ?? '')) ? body.visitorId : null;
+
   const record = {
     event,
     sessionId,
+    visitorId,
+    firstVisit: body?.firstVisit === true,
     ts:      Number.isFinite(body?.ts) ? body.ts : now.getTime(),
     path:    String(body?.path ?? '').slice(0, MAX_STR),
     props:   cleanObject(body?.props),

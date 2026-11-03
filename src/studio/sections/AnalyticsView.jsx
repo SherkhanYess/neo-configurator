@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
-import { Card, ErrorNote, Loading, PageHead } from '../ui.jsx';
+import { Card, ErrorNote, Loading, PageHead, Toggle } from '../ui.jsx';
+import { STAFF_KEY } from '../../catalog/lib/track.js';
 import { SERIES, BarList, FunnelChart, TrendChart, TrendTable } from '../charts.jsx';
 import { UTM_LABELS } from '../utm.js';
 import { FAQ_GROUPS } from '../../catalog/components/Faq.jsx';
@@ -51,12 +52,45 @@ const RANGES = [
   { id: '90',    label: '90 дней', days: 89 },
 ];
 
-const TREND = [
-  { key: 'visits',   title: 'Визиты',   color: SERIES[1] },
+const TREND = (unit) => [
+  { key: 'visits',   title: unit === 'people' ? 'Люди' : 'Визиты', color: SERIES[1] },
   { key: 'contacts', title: 'Обращения (WhatsApp и намёки)', color: SERIES[2] },
 ];
 
 const ALL = '__all__';
+
+const UNITS = [
+  { id: 'people', label: 'Люди',   hint: 'Один человек за период — один раз, сколько бы раз он ни заходил' },
+  { id: 'visits', label: 'Визиты', hint: 'Каждый заход отдельно: вечером и утром — два визита' },
+];
+
+function readStaff() {
+  try { return localStorage.getItem(STAFF_KEY) === '1'; } catch { return false; }
+}
+
+/** Свой браузер не попадает в статистику — переключатель для этого браузера. */
+function StaffSwitch() {
+  const [on, setOn] = useState(readStaff);
+  const set = (v) => {
+    try { if (v) localStorage.setItem(STAFF_KEY, '1'); else localStorage.removeItem(STAFF_KEY); } catch { /* приватный режим */ }
+    setOn(v);
+  };
+  return (
+    <Card>
+      <div className="st-switchrow">
+        <div>
+          <b>Не учитывать этот браузер</b>
+          <small>
+            Включается само при входе в админку. Менеджерам — один раз войти в админку с рабочего телефона
+            и компьютера по адресу сайта. Заходы из встроенного браузера Instagram всё равно посчитаются:
+            у него своя память.
+          </small>
+        </div>
+        <Toggle on={on} onChange={set} label="Не учитывать этот браузер" />
+      </div>
+    </Card>
+  );
+}
 const isoDaysAgo = (n) => { const d = new Date(); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0, 10); };
 const pct = (a, b) => (b ? `${Math.round((a / b) * 1000) / 10}%`.replace('.', ',') : '—');
 const fmt = (n) => Number(n ?? 0).toLocaleString('ru-KZ');
@@ -107,6 +141,7 @@ function ModelTable({ perModel, products }) {
 
 export default function AnalyticsView() {
   const [range, setRange] = useState('7');
+  const [unit, setUnit] = useState('people');
   const [source, setSource] = useState(ALL);
   const [asTable, setAsTable] = useState(false);
   const [result, setResult] = useState({ range: null, data: null, error: '' });
@@ -138,24 +173,35 @@ export default function AnalyticsView() {
     const src = source === ALL ? d : (d.bySource?.[source] ?? { funnel: {} });
     return {
       day: d.day,
-      visits: src.funnel?.session_start ?? 0,
+      visits: unit === 'people' ? (src.people?.visitors ?? 0) : (src.funnel?.session_start ?? 0),
       contacts: (src.funnel?.wa_click ?? 0) + (src.funnel?.hint_submit ?? 0),
     };
-  }), [data, source]);
+  }), [data, source, unit]);
 
-  const visits = view?.funnel?.session_start ?? 0;
-  const wa = view?.funnel?.wa_click ?? 0;
-  const hints = view?.funnel?.hint_submit ?? 0;
-  const opened = view?.funnel?.product_open ?? 0;
+  // Люди или визиты — меняет все цифры воронки сразу.
+  const people = unit === 'people' ? view?.people : null;
+  const f = people?.funnel ?? view?.funnel ?? {};
+  const conversion = people?.conversion ?? view?.conversion ?? [];
+  const sessions = view?.funnel?.session_start ?? 0;
+  const visits = people ? (people.funnel.session_start || people.visitors) : sessions;
+  const wa = f.wa_click ?? 0;
+  const hints = f.hint_submit ?? 0;
+  const opened = f.product_open ?? 0;
+  const unitWord = people ? 'людей' : 'визитов';
 
   return (
     <div className="st-stats">
-      <PageHead title="Аналитика" sub="Путь покупателя по витрине: от ленты до обращения. Считаются уникальные визиты." />
+      <PageHead title="Аналитика" sub="Путь покупателя по витрине: от ленты до обращения. «Люди» — каждый человек один раз за период, «Визиты» — каждый заход." />
 
       <div className="st-filters">
         <div className="st-chips">
           {RANGES.map(r => (
             <button key={r.id} type="button" className={`st-chip${range === r.id ? ' is-on' : ''}`} onClick={() => setRange(r.id)}>{r.label}</button>
+          ))}
+        </div>
+        <div className="st-chips" role="group" aria-label="Что считать">
+          {UNITS.map(u => (
+            <button key={u.id} type="button" title={u.hint} className={`st-chip${unit === u.id ? ' is-on' : ''}`} onClick={() => setUnit(u.id)}>{u.label}</button>
           ))}
         </div>
         <label className="st-filters__src">
@@ -173,21 +219,26 @@ export default function AnalyticsView() {
       {view && (
         <div className={`st-stats__body${loading ? ' is-loading' : ''}`}>
           <div className="st-kpis">
-            <div className="st-kpi"><span>Визиты</span><b>{fmt(visits)}</b><small>{data.from === data.to ? data.from : `${data.from} — ${data.to}`}</small></div>
-            <div className="st-kpi"><span>Открыли модель</span><b>{fmt(opened)}</b><small>{pct(opened, visits)} визитов · в среднем {String(view.avgCardsPerSession ?? 0).replace('.', ',')} на визит</small></div>
-            <div className="st-kpi is-accent"><span>Написали в WhatsApp</span><b>{fmt(wa)}</b><small>{pct(wa, visits)} визитов</small></div>
-            <div className="st-kpi is-accent"><span>Намёки</span><b>{fmt(hints)}</b><small>открыли форму: {fmt(view.funnel?.hint_open ?? 0)}</small></div>
+            {people ? (
+              <div className="st-kpi"><span>Люди</span><b>{fmt(visits)}</b>
+                <small>визитов: {fmt(sessions)} · новых {fmt(people.new)}, вернулись {fmt(people.returning)}</small></div>
+            ) : (
+              <div className="st-kpi"><span>Визиты</span><b>{fmt(visits)}</b><small>{data.from === data.to ? data.from : `${data.from} — ${data.to}`}</small></div>
+            )}
+            <div className="st-kpi"><span>Открыли модель</span><b>{fmt(opened)}</b><small>{pct(opened, visits)} {unitWord} · в среднем {String(view.avgCardsPerSession ?? 0).replace('.', ',')} модели за визит</small></div>
+            <div className="st-kpi is-accent"><span>Написали в WhatsApp</span><b>{fmt(wa)}</b><small>{pct(wa, visits)} {unitWord}</small></div>
+            <div className="st-kpi is-accent"><span>Намёки</span><b>{fmt(hints)}</b><small>открыли форму: {fmt(f.hint_open ?? 0)}</small></div>
           </div>
 
           <Card title="Динамика" aside={
             <button type="button" className="st-textbtn" onClick={() => setAsTable(v => !v)}>{asTable ? 'Графиком' : 'Таблицей'}</button>
           }>
-            {asTable ? <TrendTable daily={daily} series={TREND} /> : <TrendChart daily={daily} series={TREND} />}
+            {asTable ? <TrendTable daily={daily} series={TREND(unit)} /> : <TrendChart daily={daily} series={TREND(unit)} />}
           </Card>
 
           <div className="st-grid st-grid--2">
             <Card title="Воронка">
-              <FunnelChart conversion={view.conversion ?? []} labels={STEP_LABELS} />
+              <FunnelChart conversion={conversion} labels={STEP_LABELS} />
               <p className="st-note">
                 Намёк — отдельная ветка от «Открыли модель»: {fmt(hints)} {hints === 1 ? 'намёк' : 'намёков'},
                 это {pct(hints, opened)} от открывших модель.
@@ -216,8 +267,12 @@ export default function AnalyticsView() {
             <Card title="Города"><BarList rows={Object.entries(view.cities ?? {})} unit="виз." empty="Город определяется автоматически" /></Card>
           </div>
 
+          <StaffSwitch />
+
           <p className="st-note st-note--foot">
-            Считается только витрина /catalog — конструктор живёт отдельно. «Источники» всегда показывают весь период целиком и не зависят от фильтра.
+            Считается только витрина /catalog — конструктор живёт отдельно. «Люди» — анонимный номер браузера: с телефона и компьютера
+            один человек посчитается дважды, а люди до сегодняшнего обновления — по визитам. Таблица моделей, источники и города — по визитам.
+            «Источники» всегда показывают весь период целиком и не зависят от фильтра.
             Те же переходы в WhatsApp и намёки уходят в Meta как события «Contact» и «Lead» — только с боевого сайта.
           </p>
         </div>

@@ -59,6 +59,11 @@ const ENGAGEMENT = [
 
 const TRACKED = [...FUNNEL, ...ENGAGEMENT];
 
+// Те же шаги, но по людям, а не по визитам: человек — анонимный номер
+// браузера (visitorId). Вернулся на следующий день — тот же человек.
+// У событий от старых клиентов номера нет: тогда человек = визит.
+const PEOPLE_STEPS = ['session_start', ...FUNNEL, 'hint_open', 'hint_submit'];
+
 // The booking page was rebuilt and its WhatsApp button started reporting under
 // a new name, which silently emptied the last funnel step. Both names mean the
 // same thing, so the newer one folds into the original and history still adds up.
@@ -104,6 +109,10 @@ function core(records) {
   const faq           = new Map();    // какие вопросы раскрывают
   const waTypes       = new Map();    // с какой кнопки ушли в WhatsApp
   const perModel      = new Map();    // модель → кто открыл, написал, намекнул
+  const people        = Object.fromEntries(PEOPLE_STEPS.map(s => [s, new Set()]));
+  const allPeople     = new Set();
+  const knownPeople   = new Set();    // с номером браузера — для «новые / вернувшиеся»
+  const newPeople     = new Set();
   const opensBySession = new Map();   // сколько карточек открыла каждая сессия
 
   const bump = (map, key) => {
@@ -122,6 +131,12 @@ function core(records) {
     const event = EVENT_ALIAS[r.event] ?? r.event;
     sessions.add(sid);
     if (stepSessions[event]) stepSessions[event].add(sid);
+
+    const person = r.visitorId ?? `s:${sid}`;
+    allPeople.add(person);
+    if (people[event]) people[event].add(person);
+    if (r.visitorId) knownPeople.add(person);
+    if (r.firstVisit) newPeople.add(person);
 
     addSession(citySessions, r.city ?? 'Неизвестно', sid);
     addSession(utmSessions, utmKey(r.utm), sid);
@@ -180,6 +195,14 @@ function core(records) {
     carats:   countMap(carats),
     faq:      countMap(faq),
     waTypes:  countMap(waTypes),
+    // Номера, а не числа: людей за неделю нельзя получить сложением дней —
+    // кто заходил в понедельник и в среду, посчитался бы дважды.
+    peopleIds: {
+      all: [...allPeople],
+      known: [...knownPeople],
+      new: [...newPeople],
+      steps: Object.fromEntries(PEOPLE_STEPS.map(s => [s, [...people[s]]])),
+    },
     perModel: Object.fromEntries([...perModel.entries()].map(([k, v]) => [k, {
       seen: v.seen.size, open: v.open.size, wa: v.wa.size, hint: v.hint.size,
     }])),
@@ -190,7 +213,7 @@ function core(records) {
 // can rescope the whole page — funnel included — without re-reading raw events.
 // Source cardinality is a handful, so this costs little and keeps the daily
 // rollups cacheable.
-export const ROLLUP_VERSION = 3;
+export const ROLLUP_VERSION = 4;
 
 export function rollUp(day, records) {
   const groups = new Map();
@@ -313,6 +336,8 @@ function mergeCores(days) {
     return row;
   });
 
+  total.people = mergePeople(days);
+
   total.engagement = Object.fromEntries(
     ENGAGEMENT.map(s => [s, {
       sessions: total.funnel[s] ?? 0,
@@ -321,6 +346,57 @@ function mergeCores(days) {
   );
 
   return total;
+}
+
+function mergePeople(days) {
+  const union = (pick) => {
+    const set = new Set();
+    for (const d of days) for (const id of pick(d?.peopleIds) ?? []) set.add(id);
+    return set;
+  };
+  const all = union(p => p?.all);
+  const known = union(p => p?.known);
+  const fresh = union(p => p?.new);
+  const funnel = Object.fromEntries(PEOPLE_STEPS.map(s => [s, union(p => p?.steps?.[s]).size]));
+
+  const top = funnel.session_start || all.size;
+  let prev = top;
+  const conversion = FUNNEL.map(step => {
+    const n = funnel[step] ?? 0;
+    const row = {
+      step,
+      sessions: n,
+      ofTotal: top ? +(n / top * 100).toFixed(1) : 0,
+      ofPrevious: prev ? Math.min(100, +(n / prev * 100).toFixed(1)) : 0,
+    };
+    prev = n;
+    return row;
+  });
+
+  return {
+    visitors: all.size,
+    new: fresh.size,
+    // Вернувшиеся — только среди тех, у кого есть номер браузера: про
+    // старые события неизвестно, первый это был заход или нет.
+    returning: [...known].filter(id => !fresh.has(id)).length,
+    funnel,
+    conversion,
+  };
+}
+
+/** Ответ для админки: без списков номеров, с числом людей за каждый день. */
+export function publicDay(d) {
+  const { peopleIds, bySource, ...rest } = d;
+  const strip = (x) => {
+    if (!x) return x;
+    const { peopleIds: ids, ...r } = x;
+    return { ...r, people: { visitors: ids?.all?.length ?? 0 } };
+  };
+  return {
+    ...rest,
+    people: { visitors: peopleIds?.all?.length ?? 0 },
+    bySource: Object.fromEntries(Object.entries(bySource ?? {}).map(([k, v]) => [k, strip(v)])),
+  };
 }
 
 export function mergeDays(days) {
@@ -366,7 +442,7 @@ export default async (req, context) => {
 
     return new Response(JSON.stringify({
       from, to,
-      daily,
+      daily: daily.map(publicDay),
       total: mergeDays(daily),
     }), { status: 200, headers: CORS });
   } catch (err) {

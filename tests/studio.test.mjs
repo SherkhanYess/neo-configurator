@@ -57,5 +57,26 @@ eq('с какой кнопки', day.waTypes, { price: 1, fitting: 1 });
 const total = mergeDays([day, day]);
 eq('дни складываются', total.perModel['Sirius|halo'].open, 4);
 
+console.log('люди, а не визиты:');
+const pv = (sessionId, visitorId, event, firstVisit = false) => ({ sessionId, visitorId, firstVisit, event, props: {}, utm: {} });
+const mon = rollUp('2026-11-02', [
+  pv('s1', 'anna', 'session_start', true), pv('s1', 'anna', 'feed_view', true),
+  pv('s2', 'bek', 'session_start', true),
+]);
+const wed = rollUp('2026-11-04', [
+  pv('s3', 'anna', 'session_start'), pv('s3', 'anna', 'feed_view'), pv('s3', 'anna', 'product_open'), pv('s3', 'anna', 'wa_click'),
+  pv('s4', 'anna', 'session_start'),
+  { sessionId: 'old', event: 'session_start', props: {}, utm: {} },
+]);
+const week = mergeDays([mon, wed]);
+eq('визитов 5', week.funnel.session_start, 5);
+eq('людей 3: Анна дважды за неделю — один человек, старое событие без номера — отдельно', week.people.visitors, 3);
+eq('новые — по первому заходу', week.people.new, 2);
+eq('вернувшихся нет: Анна и Бек впервые на этой неделе', week.people.returning, 0);
+eq('написали в WhatsApp — 1 человек из 3', week.people.conversion.find(c => c.step === 'wa_click').ofTotal, 33.3);
+const back = mergeDays([wed]);
+eq('в среду Анна — вернувшаяся', back.people.returning, 1);
+eq('номера не уходят в ответ', 'peopleIds' in week, false);
+
 console.log(`\nитого: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

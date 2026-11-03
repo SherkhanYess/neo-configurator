@@ -64,6 +64,33 @@ function getSessionId() {
   }
 }
 
+// Анонимный номер браузера — чтобы отличать людей от визитов: тот, кто
+// смотрел вечером и вернулся утром, — один человек и два визита. Случайное
+// значение без связи с личностью; живёт в localStorage этого браузера.
+const VISITOR_KEY = 'nd_vid';
+const FIRST_VISIT_KEY = 'nd_first';
+
+function getVisitor() {
+  try {
+    let id = localStorage.getItem(VISITOR_KEY);
+    if (!id) {
+      id = Math.random().toString(36).slice(2, 12);
+      localStorage.setItem(VISITOR_KEY, id);
+      sessionStorage.setItem(FIRST_VISIT_KEY, '1');   // первый визит этого браузера
+    }
+    return { visitorId: id, firstVisit: sessionStorage.getItem(FIRST_VISIT_KEY) === '1' };
+  } catch (_) {
+    return { visitorId: null, firstVisit: false };
+  }
+}
+
+// Браузер, в котором входили в админку, — свой: менеджер, владелец,
+// разработчик. Его заходы не попадают ни в статистику, ни в рекламу.
+export const STAFF_KEY = 'nd_staff';
+function isStaff() {
+  try { return localStorage.getItem(STAFF_KEY) === '1'; } catch (_) { return false; }
+}
+
 function getUtm() {
   try { return JSON.parse(sessionStorage.getItem(UTM_KEY) ?? '{}') ?? {}; }
   catch (_) { return {}; }
@@ -76,6 +103,7 @@ const sentOnce = new Set();
 export function track(event, props = {}, { once = false } = {}) {
   if (typeof window === 'undefined') return;
   if (!window.location.pathname.startsWith('/catalog')) return;
+  if (isStaff()) return;
 
   if (once) {
     const key = `${event}:${JSON.stringify(props)}`;
@@ -87,6 +115,7 @@ export function track(event, props = {}, { once = false } = {}) {
 
   const payload = JSON.stringify({
     sessionId: getSessionId(),
+    ...getVisitor(),
     event,
     props,
     path: window.location.pathname,
