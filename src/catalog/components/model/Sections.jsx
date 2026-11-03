@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FAQ_GROUPS } from '../Faq.jsx';
 import { SHOWROOMS } from '../../data/org.js';
 import { REVIEWS } from '../../data/reviews.js';
+import { useContent } from '../../data/content.js';
 import { feedModels } from '../../data/feed.js';
 import { formatPrice } from '../../data/priceCalc.js';
 import { track, EVENTS } from '../../lib/track.js';
@@ -105,6 +106,9 @@ function useReputation() {
 /** «Нас выбирают»: рейтинг, отзывы и коротко про сертификат, уход и сервис. */
 export function Proof() {
   const rep = useReputation();
+  // Цитаты из админки; пока их там нет — из кода.
+  const { data: saved } = useContent('reviews');
+  const reviews = saved ? saved.items.filter(r => !r.hidden) : REVIEWS;
   return (
     <>
       <div className="mp-sec">
@@ -117,9 +121,9 @@ export function Proof() {
           </a>
         )}
       </div>
-      {REVIEWS.length > 0 && (
+      {reviews.length > 0 && (
         <div className="mp-reviews">
-          {REVIEWS.map((r, i) => (
+          {reviews.map((r, i) => (
             <div key={i} className="mp-review">
               <div style={{ display: 'flex', gap: 2 }}>{STAR}{STAR}{STAR}{STAR}{STAR}</div>
               <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: '#1E3149' }}>{r.text}</p>
@@ -152,7 +156,8 @@ function basePrice(prices, shank, cast) {
 
 /** Возврат к ленте: кому это кольцо не подошло, тот листает дальше, а не уходит. */
 export function Others({ shank, cast, prices, products }) {
-  const items = feedModels(products).filter(m => !(m.shank === shank && m.cast === cast));
+  const { data: feed } = useContent('feed');
+  const items = feedModels(products, feed).filter(m => !(m.shank === shank && m.cast === cast));
   return (
     <>
       <div className="mp-others-h">
@@ -165,7 +170,7 @@ export function Others({ shank, cast, prices, products }) {
           return (
             <Link key={m.model} className="mp-mini" style={{ '--tone': m.tone }}
                   to={`/catalog/product/${m.shank.toLowerCase().replace(/\s+/g, '-')}/${m.cast}/round`}>
-              <div className="mp-mini__p"><img src={m.src} alt={`Кольцо ${m.model}`} loading="lazy" decoding="async" /></div>
+              <div className="mp-mini__p"><img src={m.src} alt={`Кольцо ${m.model}`} loading="lazy" decoding="async" style={{ objectPosition: m.position }} /></div>
               <div className="mp-mini__b"><b>{m.model}</b>{price ? <small>от {formatPrice(price)}</small> : null}</div>
             </Link>
           );

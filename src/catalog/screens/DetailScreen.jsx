@@ -393,6 +393,7 @@ export default function DetailScreen({ ijewel }) {
           link={hintLink}
           code={leadCode('hint', { utm_medium: 'hint', utm_source: sourceLatin(utm) })}
           city={currentCity()}
+          trackProps={props}
           onClose={() => setHintOpen(false)}
         />
       )}

@@ -1,15 +1,15 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
-import { feedModels, feedBreaks } from '../data/feed.js';
+import { feedModels, feedBreaks, defaultSub, DEFAULT_TITLE } from '../data/feed.js';
+import { useContent } from '../data/content.js';
 import { usePrices } from '../data/prices.js';
-import { formatPrice } from '../data/priceCalc.js';
 import { enabledShapes, useProducts } from '../data/products.js';
 import { track, EVENTS } from '../lib/track.js';
 import { waMessage } from '../lib/waMessage.js';
 import { currentCity, waNumber } from '../lib/city.js';
 import SiteFooter from '../components/SiteFooter.jsx';
-import { useQuoteFont } from '../lib/useQuoteFont.js';
+import { FeedCard, FeedBreak, FeedCardSkeleton } from '../components/FeedCard.jsx';
 
 // Лента моделей — вход в каталог.
 //
@@ -21,6 +21,7 @@ import { useQuoteFont } from '../lib/useQuoteFont.js';
 // Живого 3D здесь нет сознательно: девять сцен iJewel на одной странице кладут
 // телефон. 3D — на странице модели.
 //
+// Фото, тексты, порядок и цвета — из админки (раздел «Лента»).
 // Размеры и цвета — в DESIGN.md, раздел «Лента».
 
 function basePrice(prices, shank, cast) {
@@ -30,91 +31,13 @@ function basePrice(prices, shank, cast) {
   return base + add;
 }
 
-/**
- * Имя и цена в одну строку через черту. Длинному имени («Neo Halo Luxe» на
- * узком телефоне) цена уступает строку и встаёт под него; черта тогда прячется,
- * иначе она повисает в конце строки.
- */
-function NameRow({ name, price }) {
-  const rowRef = useRef(null);
-
-  useLayoutEffect(() => {
-    const row = rowRef.current;
-    if (!row) return;
-    const [nameEl, divider, priceEl] = row.children;
-    const fit = () => {
-      if (!priceEl) return;
-      divider.hidden = false;
-      divider.hidden = priceEl.offsetTop >= nameEl.offsetTop + nameEl.offsetHeight;
-    };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(row);
-    document.fonts?.ready.then(fit);
-    return () => ro.disconnect();
-  }, [name, price]);
-
-  return (
-    <div className="feed-card__row" ref={rowRef}>
-      <h2 className="feed-card__name">{name}</h2>
-      <span className="feed-card__divider" aria-hidden="true" />
-      {price && <span className="feed-card__price">от {formatPrice(price)}</span>}
-    </div>
-  );
-}
-
-function ModelCard({ item, price, href, priority }) {
-  return (
-    <Link
-      to={href}
-      className="feed-card"
-      style={{ '--tone': item.tone }}
-    >
-      <div className="feed-card__photo">
-        <img
-          src={item.src}
-          alt={`Кольцо ${item.model}`}
-          loading={priority ? 'eager' : 'lazy'}
-          fetchPriority={priority ? 'high' : undefined}
-          decoding="async"
-        />
-      </div>
-      <div className="feed-card__body">
-        <NameRow name={item.model} price={price} />
-        <p className="feed-card__text">{item.text}</p>
-        <span className="feed-card__cta">Смотреть модель</span>
-      </div>
-    </Link>
-  );
-}
-
-function HandBreak({ item, href }) {
-  useQuoteFont();
-  return (
-    <div className="feed-break" style={{ '--tone': item.tone }}>
-      <img src={item.src} alt="Кольца на руке" loading="lazy" decoding="async" />
-      <div className="feed-break__body">
-        <p className="feed-break__title">{item.title}</p>
-        <a
-          className="feed-card__cta"
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => track(EVENTS.FEED_HELP_CLICK, { kind: 'fitting' })}
-        >
-          Записаться на примерку
-        </a>
-      </div>
-    </div>
-  );
-}
-
 export default function FeedScreen() {
   const prices = usePrices();
 
   const productCfg = useProducts();
-  const models = useMemo(() => feedModels(productCfg), [productCfg]);
-  const breaks = useMemo(() => feedBreaks(), []);
+  const { data: content, ready } = useContent('feed');
+  const models = useMemo(() => feedModels(productCfg, content), [productCfg, content]);
+  const breaks = useMemo(() => feedBreaks(content), [content]);
 
   // Страница модели открывается с первой формой, включённой в админке.
   const firstShape = useMemo(() => {
@@ -141,7 +64,7 @@ export default function FeedScreen() {
         if (e.isIntersecting && !seen.current.has(order)) {
           timers.set(order, setTimeout(() => {
             seen.current.add(order);
-            track(EVENTS.FEED_CARD_VIEW, { model: item.model, position: order + 1 });
+            track(EVENTS.FEED_CARD_VIEW, { model: item.shank, cast: item.cast, name: item.model, position: order + 1 });
           }, 1000));
         } else if (!e.isIntersecting) {
           clearTimeout(timers.get(order));
@@ -150,9 +73,9 @@ export default function FeedScreen() {
       }
     }, { threshold: [0.5] });
 
-    for (const el of cardRefs.current.values()) if (el) io.observe(el);
+    for (const el of cardRefs.current.values()) if (el?.isConnected) io.observe(el);
     return () => { io.disconnect(); timers.forEach(clearTimeout); };
-  }, [models]);
+  }, [models, ready]);
 
   const modelHref = (item) => {
     const slug = item.shank.toLowerCase().replace(/\s+/g, '-');
@@ -172,24 +95,33 @@ export default function FeedScreen() {
       </header>
 
       <div className="feed-intro">
-        <h1 className="feed-title">Помолвочные кольца</h1>
-        <p className="feed-sub">Девять оправ, камень любой формы в каждой</p>
+        <h1 className="feed-title">{content?.intro?.title || DEFAULT_TITLE}</h1>
+        <p className="feed-sub">{content?.intro?.sub || defaultSub(models.length)}</p>
       </div>
 
       <div className="feed-list">
-        {models.map((item, i) => {
+        {!ready && [0, 1].map(i => <FeedCardSkeleton key={i} />)}
+        {ready && models.map((item, i) => {
           const pause = breaks.find(b => b.after === i + 1);
           return (
-            <div key={item.model} className="feed-slot">
+            <div key={item.key} className="feed-slot">
               <div data-order={item.order} ref={(el) => { if (el) cardRefs.current.set(item.order, el); }}>
-                <ModelCard
+                <FeedCard
+                  as={Link}
+                  to={modelHref(item)}
                   item={item}
                   price={basePrice(prices, item.shank, item.cast)}
-                  href={modelHref(item)}
                   priority={i === 0}
                 />
               </div>
-              {pause && <HandBreak item={pause} href={fittingHref} />}
+              {pause && (
+                <FeedBreak item={pause} cta={
+                  <a className="feed-card__cta" href={fittingHref} target="_blank" rel="noopener noreferrer"
+                     onClick={() => track(EVENTS.FEED_HELP_CLICK, { kind: 'fitting' })}>
+                    Записаться на примерку
+                  </a>
+                } />
+              )}
             </div>
           );
         })}

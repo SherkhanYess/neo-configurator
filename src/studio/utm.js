@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 // Ready-made tagged links for the places traffic actually comes from.
 //
 // The catalog already reads utm_* on load and attaches the source to every
@@ -11,15 +9,10 @@ import { useState } from 'react';
 // «Источники» keys on source AND medium together, so instagram/bio and
 // instagram/stories stay separate rows instead of collapsing into «instagram».
 
-const C = {
-  paper050: '#FAFBFC', paper100: '#F2F5F9', paper300: '#DBE2EB',
-  ink800: '#0B2040', ink600: '#1E3149', ink400: '#5B81A1', champ700: '#7C6035',
-};
-
 // Каталог теперь живёт на основном домене. Ссылки для рекламы должны вести
 // именно туда: поддомен для поисковика — отдельный сайт, и переходы по старому
 // адресу пойдут мимо основного домена.
-const BASE = 'https://neodiamond.kz/catalog';
+export const BASE = 'https://neodiamond.kz/catalog';
 
 export const UTM_PRESETS = [
   // Реклама Meta. Кампания подставляется в ссылку объявления перформанс-
@@ -75,91 +68,20 @@ export const UTM_PRESETS = [
   },
 ];
 
-export function buildUtmUrl(params) {
-  const q = new URLSearchParams(params);
-  return `${BASE}?${q.toString()}`;
+export function buildUtmUrl(params, path = '') {
+  const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => String(v ?? '').trim()));
+  const q = new URLSearchParams(clean);
+  return `${BASE}${path}${q.toString() ? `?${q}` : ''}`;
 }
 
-// Friendly names for the «Источники» breakdown, keyed the same way the server
-// keys them: «source / medium».
-export const UTM_LABELS = Object.fromEntries(
-  UTM_PRESETS.map(p => [`${p.params.utm_source} / ${p.params.utm_medium}`, p.title])
-);
-
-function LinkRow({ preset }) {
-  const [copied, setCopied] = useState(false);
-  const url = buildUtmUrl(preset.params);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (_) {
-      setCopied(false);
-    }
+// Подписи для разбивки «Источники» — по тому же ключу, что и сервер:
+// «источник / размещение». У трёх кампаний Meta ключ общий (meta / paid),
+// поэтому для него — общее название без имени кампании.
+export const UTM_LABELS = (() => {
+  const out = {};
+  for (const p of UTM_PRESETS) {
+    const key = `${p.params.utm_source} / ${p.params.utm_medium}`;
+    out[key] = key in out ? p.title.split(' — ')[0] : p.title;
   }
-
-  return (
-    <div style={{
-      background: '#fff', border: `1.5px solid ${C.paper300}`,
-      borderRadius: 16, padding: '14px 16px',
-      display: 'flex', flexDirection: 'column', gap: 8,
-    }}>
-      <div>
-        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: C.ink800, lineHeight: 1.3 }}>
-          {preset.title}
-        </div>
-        <div style={{ fontSize: '0.75rem', color: C.ink400, marginTop: 2, lineHeight: 1.45 }}>
-          {preset.note}
-        </div>
-      </div>
-
-      <div style={{
-        background: C.paper100, borderRadius: 10, padding: '9px 12px',
-        fontFamily: '"JetBrains Mono","Courier New",monospace',
-        fontSize: '0.68rem', color: C.ink600, lineHeight: 1.5,
-        wordBreak: 'break-all',
-      }}>
-        {url}
-      </div>
-
-      <button
-        type="button"
-        onClick={copy}
-        style={{
-          alignSelf: 'flex-start',
-          padding: '8px 18px', borderRadius: 50, cursor: 'pointer',
-          border: `1.5px solid ${copied ? '#2e7d32' : C.paper300}`,
-          background: copied ? '#2e7d32' : '#fff',
-          color: copied ? '#fff' : C.ink800,
-          fontFamily: 'Manrope, sans-serif', fontSize: '0.8rem', fontWeight: 600,
-          transition: 'background 0.18s, border-color 0.18s, color 0.18s',
-        }}
-      >
-        {copied ? 'Скопировано' : 'Копировать ссылку'}
-      </button>
-    </div>
-  );
-}
-
-export default function UtmLinks({ eyebrowStyle }) {
-  return (
-    <div style={{
-      background: '#fff', border: `1.5px solid ${C.paper300}`,
-      borderRadius: 20, padding: '20px 22px',
-    }}>
-      <div style={eyebrowStyle}>Ссылки с метками</div>
-
-      <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: C.ink400, lineHeight: 1.6 }}>
-        Размещайте только эти ссылки — тогда каждый источник будет виден
-        в разделе «Источники» выше. Обычная ссылка без меток попадёт
-        в «Прямой заход».
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {UTM_PRESETS.map(p => <LinkRow key={p.id} preset={p} />)}
-      </div>
-    </div>
-  );
-}
+  return out;
+})();

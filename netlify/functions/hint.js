@@ -9,15 +9,20 @@
 // ключи amoCRM, намёк ещё и создаётся сделкой с контактом парня. На песочнице
 // флаг не ставится: тестовые намёки не должны попадать в рабочую воронку.
 //
-// GET с ADMIN_TOKEN отдаёт последние намёки — для проверки без CRM.
+// GET с ADMIN_TOKEN отдаёт последние намёки для админки, PATCH меняет статус
+// работы с намёком («написали ему», «пришёл», «купил») и заметку менеджера.
 
 import { getStore } from '@netlify/blobs';
+import { isAdmin } from '../lib/http.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
   'Content-Type': 'application/json',
 };
+
+export const HINT_STATUSES = ['new', 'written', 'replied', 'visited', 'bought', 'lost'];
 
 const json = (status, body) => new Response(JSON.stringify(body), { status, headers: CORS });
 
@@ -81,12 +86,31 @@ export default async (req, context) => {
   const store = getStore({ name: 'nd-hints', context });
 
   if (req.method === 'GET') {
-    const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
-    if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) return json(401, { error: 'unauthorized' });
+    if (!isAdmin(req)) return json(401, { error: 'unauthorized' });
     const { blobs } = await store.list();
-    const latest = blobs.map(b => b.key).sort().reverse().slice(0, 50);
-    const items = await Promise.all(latest.map(k => store.get(k, { type: 'json' })));
+    const latest = blobs.map(b => b.key).sort().reverse().slice(0, 300);
+    const items = await Promise.all(latest.map(async k => {
+      const h = await store.get(k, { type: 'json' }).catch(() => null);
+      return h && { key: k, status: 'new', ...h };
+    }));
     return json(200, items.filter(Boolean));
+  }
+
+  if (req.method === 'PATCH') {
+    if (!isAdmin(req)) return json(401, { error: 'unauthorized' });
+    let body;
+    try { body = await req.json(); } catch { return json(400, { error: 'invalid json' }); }
+    const key = String(body?.key ?? '');
+    const hint = key && await store.get(key, { type: 'json' }).catch(() => null);
+    if (!hint) return json(404, { error: 'not found' });
+    if (body.status !== undefined) {
+      if (!HINT_STATUSES.includes(body.status)) return json(400, { error: 'status' });
+      hint.status = body.status;
+      hint.statusAt = new Date().toISOString();
+    }
+    if (body.note !== undefined) hint.note = String(body.note).slice(0, 500);
+    await store.setJSON(key, hint);
+    return json(200, { key, ...hint });
   }
 
   if (req.method !== 'POST') return json(405, { error: 'method not allowed' });

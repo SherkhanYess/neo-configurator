@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate, usePa
 import { VALID_COMBOS, SHAPES } from './data/config.js';
 import FeedScreen         from './screens/FeedScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
-import AdminScreen        from './screens/AdminScreen.jsx';
 import SiteFooter         from './components/SiteFooter.jsx';
 import { useIjewel, RING_FILE_ID } from './hooks/useIjewel.js';
 import { track, EVENTS } from './lib/track.js';
@@ -39,7 +38,6 @@ function CatalogMain() {
   const onRingProduct  = subPath.startsWith('/product');
 
   // В админке футер не нужен: это внутренний экран, а не витрина.
-  const onAdmin        = subPath.startsWith('/admin');
 
   const showViewer = onRingProduct;
 
@@ -142,10 +140,9 @@ function CatalogMain() {
         {/* «Ваш выбор» слит со страницей модели. Разосланные ссылки ведут на ту
             же модель, форму и каратность. */}
         <Route path="/catalog/booking"                           element={<BookingRedirect />} />
-        <Route path="/catalog/admin"                             element={<AdminScreen />} />
       </Routes>
 
-      {!onAdmin && <SiteFooter />}
+      <SiteFooter />
     </div>
   );
 }

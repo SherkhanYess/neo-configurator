@@ -102,6 +102,8 @@ function core(records) {
   const categories    = new Map();
   const carats        = new Map();
   const faq           = new Map();    // какие вопросы раскрывают
+  const waTypes       = new Map();    // с какой кнопки ушли в WhatsApp
+  const perModel      = new Map();    // модель → кто открыл, написал, намекнул
   const opensBySession = new Map();   // сколько карточек открыла каждая сессия
 
   const bump = (map, key) => {
@@ -136,6 +138,15 @@ function core(records) {
       bump(shapes, r.props?.shape);
     }
     if (event === 'config_change' && r.props?.field === 'carat') bump(carats, String(r.props.value));
+    if (event === 'wa_click') bump(waTypes, r.props?.type ?? 'other');
+
+    // Модель — это пара «шинка + оправа»: Sirius с ореолом и без — разные кольца.
+    const step = { feed_card_view: 'seen', product_open: 'open', wa_click: 'wa', hint_submit: 'hint' }[event];
+    if (step && r.props?.model && r.props?.cast) {
+      const key = `${r.props.model}|${r.props.cast}`;
+      if (!perModel.has(key)) perModel.set(key, { seen: new Set(), open: new Set(), wa: new Set(), hint: new Set() });
+      perModel.get(key)[step].add(sid);
+    }
   }
 
   const countMap  = (m) => Object.fromEntries([...m.entries()].sort((a, b) => b[1] - a[1]));
@@ -168,6 +179,10 @@ function core(records) {
     categories: countMap(categories),
     carats:   countMap(carats),
     faq:      countMap(faq),
+    waTypes:  countMap(waTypes),
+    perModel: Object.fromEntries([...perModel.entries()].map(([k, v]) => [k, {
+      seen: v.seen.size, open: v.open.size, wa: v.wa.size, hint: v.hint.size,
+    }])),
   };
 }
 
@@ -175,7 +190,7 @@ function core(records) {
 // can rescope the whole page — funnel included — without re-reading raw events.
 // Source cardinality is a handful, so this costs little and keeps the daily
 // rollups cacheable.
-export const ROLLUP_VERSION = 2;
+export const ROLLUP_VERSION = 3;
 
 export function rollUp(day, records) {
   const groups = new Map();
@@ -237,6 +252,7 @@ function mergeCores(days) {
     openEvents: 0,
     openSessions: 0,
     cities: {}, utm: {}, shapes: {}, models: {}, categories: {}, carats: {}, faq: {},
+    waTypes: {}, perModel: {},
   };
   const addInto = (target, src) => {
     for (const [k, v] of Object.entries(src ?? {})) target[k] = (target[k] ?? 0) + v;
@@ -256,6 +272,11 @@ function mergeCores(days) {
     addInto(total.categories, d.categories);
     addInto(total.carats, d.carats);
     addInto(total.faq, d.faq);
+    addInto(total.waTypes, d.waTypes);
+    for (const [k, v] of Object.entries(d.perModel ?? {})) {
+      const t = total.perModel[k] ??= { seen: 0, open: 0, wa: 0, hint: 0 };
+      t.seen += v.seen ?? 0; t.open += v.open; t.wa += v.wa; t.hint += v.hint;
+    }
   }
 
   // Среднее по тем, кто вообще открывал карточки, — иначе его размывают те, кто до них не дошёл.
@@ -271,6 +292,7 @@ function mergeCores(days) {
   total.models = sortObj(total.models);
   total.carats = sortObj(total.carats);
   total.faq = sortObj(total.faq);
+  total.waTypes = sortObj(total.waTypes);
 
   // Conversion is measured against the top of the funnel, plus the step-to-step
   // drop that shows where people actually leave.

@@ -307,6 +307,18 @@ img { display: block; max-width: 100%; }
 .feed-card:active .feed-card__cta,
 .feed-card__cta:active { background: rgba(255, 255, 255, 0.24); }
 
+/* Первая загрузка ленты: карточки той же высоты, пока не пришли фото из админки. */
+.feed-card--skeleton { background: var(--paper-200, #E9EDF3); }
+.feed-card--skeleton .feed-card__photo { background: linear-gradient(180deg, var(--paper-100, #F2F5F9), var(--paper-200, #E9EDF3)); }
+.feed-card--skeleton .feed-card__body { margin-top: 0; padding-top: 4px; }
+.feed-skel { border-radius: 50px; background: var(--paper-300, #DBE2EB); animation: feed-skel 1.4s ease-in-out infinite; }
+.feed-skel--name  { width: 58%; height: 26px; }
+.feed-skel--text  { width: 82%; height: 12px; margin-top: 14px; }
+.feed-skel--short { width: 60%; margin-top: 8px; }
+.feed-skel--cta   { width: 168px; height: 46px; margin-top: 20px; }
+@keyframes feed-skel { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .feed-skel { animation: none; } }
+
 /* Пауза «на руке». */
 .feed-break {
   position: relative;

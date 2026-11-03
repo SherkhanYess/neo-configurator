@@ -9,9 +9,12 @@ import TONES from './feed-tones.json';
 // Текст — до ~75 знаков, ровно две строки на телефоне. Говорит, как устроено
 // кольцо, и ничего не обещает: «не выходит из моды» — слова продавца, а не
 // свойство изделия.
+//
+// Всё это правится в админке (раздел «Лента») и приходит с сервера
+// документом /api/content/feed. Здесь — то, что показывается, пока его нет:
+// порядок, тексты и фото из public/assets/feed/, а без фото — студийный
+// рендер с круглым камнем.
 
-// Фото кладутся в public/assets/feed/ под именем из `photo`. Пока файла нет,
-// показываем студийный рендер модели с круглым камнем.
 const MODELS = [
   { model: 'Sirius',        photo: 'sirius.webp',        text: 'Один бриллиант на четырёх лапках. Свет проходит сквозь камень со всех сторон.' },
   { model: 'Neo',           photo: 'neo.webp',           text: 'Один бриллиант на четырёх лапках. Свет проходит сквозь камень со всех сторон.' },
@@ -26,58 +29,125 @@ const MODELS = [
 
 // Кадр «на руке» — пауза в ленте после указанной по счёту модели. Без фото не
 // показывается: пустая пауза хуже никакой.
-export const BREAKS = [
-  { after: 3, photo: 'hand-1.webp', title: 'Как они выглядят на руке' },
-  { after: 6, photo: 'hand-2.webp', title: 'Как они выглядят на руке' },
+const BREAKS = [
+  { id: 'hand-1', after: 3, photo: 'hand-1.webp', title: 'Как они выглядят на руке' },
+  { id: 'hand-2', after: 6, photo: 'hand-2.webp', title: 'Как они выглядят на руке' },
 ];
 
-// Тон, в который уходит низ фото: считается из самого фото командой
-// `npm run feed:tones` (правило — в DESIGN.md). Для рендеров и фото, которые
-// ещё не посчитаны, — нейтральный тёмный.
-const FALLBACK_TONE = '#3E3E3E';
+export const DEFAULT_TITLE = 'Помолвочные кольца';
+
+const WORDS = ['', 'Одна', 'Две', 'Три', 'Четыре', 'Пять', 'Шесть', 'Семь', 'Восемь', 'Девять', 'Десять', 'Одиннадцать', 'Двенадцать'];
+const plural = (n, one, few, many) => {
+  const d = n % 10, h = n % 100;
+  if (d === 1 && h !== 11) return one;
+  if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return few;
+  return many;
+};
+
+/** Подзаголовок по умолчанию считает модели сам: скрыли одну — «Восемь оправ». */
+export function defaultSub(count) {
+  const n = WORDS[count] ?? String(count);
+  return `${n} ${plural(count, 'оправа', 'оправы', 'оправ')}, камень любой формы в каждой`;
+}
+
+// Тон, в который уходит низ фото: для фото из админки он считается при
+// загрузке, для файлов в public/assets/feed/ — командой `npm run feed:tones`
+// (правило — в DESIGN.md). Для того, что ещё не посчитано, — нейтральный тёмный.
+export const FALLBACK_TONE = '#3E3E3E';
 export const toneOf = (src) => TONES[src] ?? FALLBACK_TONE;
 
 export const feedPhoto = (file) => `/assets/feed/${file}`;
 
+const keyOf = (shank, cast) => `${shank}|${cast}`;
+const comboByName = new Map(VALID_COMBOS.map(c => [modelName(c.shank, c.cast), c]));
+
+/** Модели в порядке по умолчанию, с ключом «шинка|оправа». */
+export const DEFAULT_MODELS = MODELS.flatMap(m => {
+  const c = comboByName.get(m.model);
+  if (!c) return [];
+  const own = feedPhoto(m.photo);
+  return [{ key: keyOf(c.shank, c.cast), model: m.model, shank: c.shank, cast: c.cast, text: m.text, staticPhoto: TONES[own] ? own : null }];
+});
+
+/** Студийный рендер — фото по умолчанию, пока своего нет. */
+export const renderPhoto = (shank, cast) => ringImage(shank, cast, 'round');
+
+const position = (focus, fallbackY = 50) =>
+  `${focus?.x ?? 50}% ${focus?.y ?? fallbackY}%`;
+
 /**
- * Лента: модель, её текст, фото и из какой комбинации она собрана.
+ * Лента: модель, её текст, фото, тон и из какой комбинации она собрана.
  *
  * Комбинация нужна, чтобы попасть на страницу модели и посчитать цену —
  * в коде кольцо описывается парой «шинка + оправа», а человеку показывается
  * одно название.
  *
- * `available` — какие файлы реально лежат в public/assets/feed/ (собирается
- * при сборке в feed-tones.json): фото, которого нет, не запрашиваем.
+ * @param products  настройки моделей (видимость и имена) — /api/get-products
+ * @param content   документ ленты из админки или null
  */
-export function feedModels(products) {
-  const byName = new Map(
-    VALID_COMBOS.map(c => [modelName(c.shank, c.cast), c])
-  );
-  // Админка может выключить модель или переименовать её.
+export function feedModels(products, content) {
   const ring = (c) => products?.rings?.find(r => r.shank === c.shank && r.cast === c.cast);
+  const edits = new Map((content?.models ?? []).map(m => [m.key, m]));
 
-  return MODELS.flatMap(({ model, photo, text }, i) => {
-    const combo = byName.get(model);
-    if (!combo) return [];          // модель убрали из каталога — карточки тоже нет
-    const admin = ring(combo);
+  // Порядок из админки; модель, появившаяся в коде позже, встаёт в конец.
+  const order = [
+    ...(content?.models ?? []).map(m => m.key),
+    ...DEFAULT_MODELS.map(m => m.key),
+  ].filter((k, i, all) => all.indexOf(k) === i);
+
+  const byKey = new Map(DEFAULT_MODELS.map(m => [m.key, m]));
+
+  return order.flatMap((key, i) => {
+    const base = byKey.get(key);
+    if (!base) return [];             // модель убрали из каталога — карточки тоже нет
+    const admin = ring(base);
     if (admin && admin.enabled === false) return [];
-    const own = feedPhoto(photo);
-    const src = TONES[own] ? own : ringImage(combo.shank, combo.cast, 'round');
+    const edit = edits.get(key);
+
+    let src, tone;
+    if (edit?.photo) {
+      src = edit.photo;
+      tone = edit.tone ?? edit.toneAuto ?? FALLBACK_TONE;
+    } else {
+      src = base.staticPhoto ?? renderPhoto(base.shank, base.cast);
+      tone = toneOf(src);
+    }
+
     return [{
-      model: admin?.name || model,
-      text,
+      key,
+      model: admin?.name || base.model,
+      text: edit?.text || base.text,
       order: i,
-      shank: combo.shank,
-      cast: combo.cast,
+      shank: base.shank,
+      cast: base.cast,
       src,
-      tone: toneOf(src),
+      tone,
+      position: position(edit?.focus),
     }];
   });
 }
 
-/** Паузы, для которых фото уже есть. */
-export function feedBreaks() {
+/** Паузы «на руке», для которых фото уже есть. */
+export function feedBreaks(content) {
+  if (Array.isArray(content?.breaks)) {
+    return content.breaks
+      .filter(b => b.photo && !b.hidden)
+      .map(b => ({
+        id: b.id,
+        after: b.after,
+        title: b.title,
+        src: b.photo,
+        tone: b.tone ?? b.toneAuto ?? FALLBACK_TONE,
+        position: position(b.focus, 30),
+      }));
+  }
   return BREAKS
-    .map(b => ({ ...b, src: feedPhoto(b.photo), tone: toneOf(feedPhoto(b.photo)) }))
+    .map(b => ({ ...b, src: feedPhoto(b.photo), tone: toneOf(feedPhoto(b.photo)), position: '50% 30%' }))
     .filter(b => TONES[b.src]);
 }
+
+/** Шаблоны пауз по умолчанию — для админки, когда своих ещё нет. */
+export const DEFAULT_BREAKS = BREAKS.map(b => {
+  const src = feedPhoto(b.photo);
+  return { id: b.id, after: b.after, title: b.title, photo: TONES[src] ? src : null, tone: null, toneAuto: TONES[src] ?? null, focus: { x: 50, y: 30 }, hidden: false };
+});

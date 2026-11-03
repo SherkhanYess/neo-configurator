@@ -11,6 +11,8 @@
 // identifying is collected here; the city is derived server-side from the
 // request and never a precise location.
 
+import { mirrorToPixel } from './pixel.js';
+
 const SESSION_KEY = 'nd_sid';
 const UTM_KEY     = 'nd_utm';
 
@@ -80,6 +82,8 @@ export function track(event, props = {}, { once = false } = {}) {
     if (sentOnce.has(key)) return;
     sentOnce.add(key);
   }
+
+  mirrorToPixel(event, props);
 
   const payload = JSON.stringify({
     sessionId: getSessionId(),

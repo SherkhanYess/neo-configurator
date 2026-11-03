@@ -18,7 +18,7 @@ function formatPhone(raw) {
   return ['+7', ...parts].join(' ') + (parts.length ? '' : ' ');
 }
 
-export default function HintSheet({ ring, link, code, city, onClose }) {
+export default function HintSheet({ ring, link, code, city, trackProps, onClose }) {
   const [name, setName]       = useState('');
   const [phone, setPhone]     = useState('+7 ');
   const [size, setSize]       = useState('');
@@ -47,7 +47,7 @@ export default function HintSheet({ ring, link, code, city, onClose }) {
           : 'Не получилось отправить. Попробуйте ещё раз.');
         return;
       }
-      track(EVENTS.HINT_SUBMIT, { ring, sizeKnown: !noSize });
+      track(EVENTS.HINT_SUBMIT, { ...trackProps, sizeKnown: !noSize });
       setState('done');
     } catch {
       setState('form');
