@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import FeedScreen         from './screens/FeedScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
-import BookingScreen      from './screens/BookingScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
 import SiteFooter         from './components/SiteFooter.jsx';
 import { useIjewel, RING_FILE_ID } from './hooks/useIjewel.js';
@@ -12,15 +11,15 @@ import { decodeBooking } from './lib/bookingUrl.js';
 import './index.css';
 import './configurator.css';
 
-const BACK_BTN = {
-  position: 'absolute', top: 14, left: 14, zIndex: 10,
-  background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)',
-  backdropFilter: 'blur(8px)', borderRadius: 20,
-  padding: '0 14px', height: 34, display: 'flex', alignItems: 'center', gap: 4,
-  color: '#fff', cursor: 'pointer',
-  fontFamily: 'var(--font-body, Manrope, sans-serif)',
-  fontSize: '0.82rem', fontWeight: 500, letterSpacing: '0.01em',
-};
+
+function BookingRedirect() {
+  const location = useLocation();
+  const cfg = decodeBooking(location.search);
+  if (!cfg?.shank || cfg.type === 'pusety') return <Navigate to="/catalog" replace />;
+  const slug = cfg.shank.toLowerCase().replace(/\s+/g, '-');
+  const q = cfg.carat ? `?ct=${cfg.carat}` : '';
+  return <Navigate to={`/catalog/product/${slug}/${cfg.cast}/${cfg.shape}${q}`} replace />;
+}
 
 function CatalogMain() {
   const location = useLocation();
@@ -29,11 +28,10 @@ function CatalogMain() {
   const subPath      = location.pathname.replace(/^\/catalog/, '') || '/';
   const onRingProduct  = subPath.startsWith('/product');
 
-  const onBooking      = subPath.startsWith('/booking');
   // В админке футер не нужен: это внутренний экран, а не витрина.
   const onAdmin        = subPath.startsWith('/admin');
 
-  const showViewer = onRingProduct || onBooking;
+  const showViewer = onRingProduct;
 
   // Which iJewel model to load. On the booking screen the route says nothing
   // about the category, so the answer comes from the shared configuration —
@@ -92,7 +90,7 @@ function CatalogMain() {
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <div
-        className="cfg-viewer-panel"
+        className={`cfg-viewer-panel${onRingProduct ? ' mp-viewer' : ''}`}
         style={{ display: showViewer ? undefined : 'none', position: 'relative', flexShrink: 0 }}
       >
         <div
@@ -114,7 +112,10 @@ function CatalogMain() {
         )}
 
         {showViewer && (
-          <button style={BACK_BTN} onClick={() => navigate(-1)}>‹ Назад</button>
+          <button type="button" className="mp-back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/catalog'))}>
+            <svg width="7" height="12" viewBox="0 0 8 12" aria-hidden="true"><path d="M7 1L2 6l5 5" fill="none" stroke="#FFFFFF" strokeWidth="1.5"/></svg>
+            Назад
+          </button>
         )}
       </div>
 
@@ -128,7 +129,9 @@ function CatalogMain() {
         {/* Пусет на витрине больше нет, но разосланные ссылки не должны
             упираться в пустую страницу — уводим в каталог. */}
         <Route path="/catalog/pusety/*"                          element={<Navigate to="/catalog" replace />} />
-        <Route path="/catalog/booking"                           element={<BookingScreen ijewel={ijewel} />} />
+        {/* «Ваш выбор» слит со страницей модели. Разосланные ссылки ведут на ту
+            же модель, форму и каратность. */}
+        <Route path="/catalog/booking"                           element={<BookingRedirect />} />
         <Route path="/catalog/admin"                             element={<AdminScreen />} />
       </Routes>
 

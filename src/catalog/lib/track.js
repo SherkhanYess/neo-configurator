@@ -36,6 +36,10 @@ export const EVENTS = {
   FEED_GALLERY_SWIPE:'feed_gallery_swipe',
   FEED_STYLE_CLICK:  'feed_style_click',
   FEED_HELP_CLICK:   'feed_help_click',
+
+  // Страница модели: «Намекнуть партнёру» — открыла форму и отправила.
+  HINT_OPEN:   'hint_open',
+  HINT_SUBMIT: 'hint_submit',
 };
 
 function randomId() {

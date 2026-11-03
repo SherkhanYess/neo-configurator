@@ -17,11 +17,21 @@ const SHORT_METAL = (label) => String(label ?? '').replace(/\s*золото\s*/i
 const CITY_IN = { 'Алматы': 'Алматы', 'Астана': 'Астане' };
 const cityIn = (city) => CITY_IN[city] ?? city ?? 'Алматы';
 
+// Цветной камень называем в сообщении прямо: цена на него считается
+// отдельно, и менеджеру важно увидеть это в первой строке.
+const GEM_ADJ = {
+  'Зелёный': 'зелёный', 'Жёлтый': 'жёлтый', 'Розовый': 'розовый', 'Синий': 'синий',
+  'Рубин': 'красный', 'Красный': 'красный', 'Фиолетовый': 'фиолетовый',
+  'Чёрный': 'чёрный', 'Оранжевый': 'оранжевый',
+};
+
 /** Описание украшения одной строкой: «Sirius Овал, 1 ct, Белое золото 585». */
-function piece({ model, shape, carat, metalLabel, purity }) {
+function piece({ model, shape, carat, metalLabel, purity, gemLabel }) {
+  const gem = GEM_ADJ[gemLabel];
   return [
     [model, shape].filter(Boolean).join(' '),
     carat ? `${String(carat).replace('.', ',')} ct` : null,
+    gem ? `${gem} бриллиант` : null,
     metalLabel ? `${SHORT_METAL(metalLabel)} золото ${purity ?? '585'}` : null,
   ].filter(Boolean).join(', ');
 }
@@ -29,7 +39,7 @@ function piece({ model, shape, carat, metalLabel, purity }) {
 /**
  * Собирает текст по типу обращения.
  *
- * @param {'price'|'fitting'|'help'|'hint'} type
+ * @param {'price'|'fitting'|'help'|'hint'|'custom'} type
  * @param {object} ctx  модель, форма, карат, металл, проба, город
  * @param {object} utm  метки входа, из которых берётся код
  */
@@ -38,11 +48,13 @@ export function waMessage(type, ctx = {}, utm = {}) {
 
   switch (type) {
     case 'price':
-      return `Здравствуйте! Понравилось кольцо ${piece(ctx)}. Подскажите стоимость и срок? ${code}`;
+      return `Здравствуйте! Понравилось кольцо ${piece(ctx)}. Подскажите по наличию и деталям? ${code}`;
     case 'fitting':
       return `Здравствуйте! Хотим примерить ${[ctx.model, ctx.shape].filter(Boolean).join(' ')} в шоуруме в ${cityIn(ctx.city)}. Когда можно приехать? ${code}`;
     case 'help':
       return `Здравствуйте! Хочу сделать предложение и не знаю, какое кольцо выбрать. Поможете? ${code}`;
+    case 'custom':
+      return `Здравствуйте! Хочу кольцо по своему дизайну. Можно обсудить идею? ${code}`;
     case 'hint':
       return `Здравствуйте! Мне показали кольцо ${[ctx.model, ctx.shape].filter(Boolean).join(' ')}. Подскажите стоимость и как узнать размер? ${code}`;
     default:

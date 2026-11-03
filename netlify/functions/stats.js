@@ -46,6 +46,8 @@ const ENGAGEMENT = [
   'feed_gallery_swipe',
   'feed_style_click',
   'feed_help_click',
+  'hint_open',
+  'hint_submit',
   'session_start',
   'booking_open',
   'config_change',

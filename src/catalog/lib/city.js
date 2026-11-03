@@ -1,10 +1,7 @@
 // Выбранный шоурум.
 //
-// Раньше город спрашивали модальным окном в момент перехода в WhatsApp — лишний
-// клик на самом дорогом шаге пути. Теперь это переключатель в липкой панели:
-// человек видит его заранее и в большинстве случаев не трогает.
-//
-// Выбор держится на вкладку: открыв вторую модель, он не выбирает город заново.
+// Город спрашиваем окном при первом нажатии на WhatsApp и запоминаем на
+// вкладку: второе нажатие и вторая модель открывают чат сразу.
 
 import { WA_BY_CITY, WA_NUMBER } from '../data/config.js';
 
@@ -19,6 +16,12 @@ export function currentCity() {
     if (saved && CITIES.includes(saved)) return saved;
   } catch (_) { /* приватный режим */ }
   return CITIES[0];
+}
+
+/** Выбирал ли человек город в этой вкладке — от этого зависит, показать ли окно. */
+export function hasChosenCity() {
+  try { return CITIES.includes(sessionStorage.getItem(KEY)); }
+  catch { return false; }
 }
 
 export function rememberCity(city) {

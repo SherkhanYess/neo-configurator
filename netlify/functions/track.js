@@ -36,6 +36,8 @@ const ALLOWED_EVENTS = new Set([
   'feed_gallery_swipe',
   'feed_style_click',
   'feed_help_click',
+  'hint_open',
+  'hint_submit',
 ]);
 
 // Keeps a malformed or hostile payload from bloating storage.
