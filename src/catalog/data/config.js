@@ -1,12 +1,12 @@
 export const SHAPES = [
   { id: 'round',    label: 'Круглый',   file: 'round.webp' },
-  { id: 'princess', label: 'Принцесса', file: 'princess.webp' },
-  { id: 'radiant',  label: 'Радиант',   file: 'radiant.webp' },
-  { id: 'cushion',  label: 'Кушон',     file: 'cushion.webp' },
   { id: 'oval',     label: 'Овал',      file: 'oval.webp' },
   { id: 'pear',     label: 'Груша',     file: 'pear.webp' },
-  { id: 'heart',    label: 'Сердце',    file: 'heart.webp' },
   { id: 'marquise', label: 'Маркиз',    file: 'marquise.webp' },
+  { id: 'heart',    label: 'Сердце',    file: 'heart.webp' },
+  { id: 'cushion',  label: 'Кушон',     file: 'cushion.webp' },
+  { id: 'princess', label: 'Принцесса', file: 'princess.webp' },
+  { id: 'radiant',  label: 'Радиант',   file: 'radiant.webp' },
   { id: 'emerald',  label: 'Изумруд',   file: 'emerald.webp' },
   { id: 'asscher',  label: 'Ашер',      file: 'asscher.webp' },
 ];
