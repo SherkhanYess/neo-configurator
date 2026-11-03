@@ -7,6 +7,7 @@ import { feedModels } from '../../data/feed.js';
 import { formatPrice } from '../../data/priceCalc.js';
 import { track, EVENTS } from '../../lib/track.js';
 import { WA_ICON } from './whatsapp.jsx';
+import { useQuoteFont } from '../../lib/useQuoteFont.js';
 
 // Блоки страницы модели ниже выбора. Порядок и тексты — с холста, ряд
 // «Страница модели — после правок».
@@ -29,6 +30,7 @@ export function WaButton({ children, onClick }) {
 }
 
 export function Engraving() {
+  useQuoteFont();
   return (
     <div className="mp-engr">
       <div className="mp-engr__t">Ваши слова внутри кольца</div>
@@ -149,8 +151,8 @@ function basePrice(prices, shank, cast) {
 }
 
 /** Возврат к ленте: кому это кольцо не подошло, тот листает дальше, а не уходит. */
-export function Others({ shank, cast, prices }) {
-  const items = feedModels().filter(m => !(m.shank === shank && m.cast === cast));
+export function Others({ shank, cast, prices, products }) {
+  const items = feedModels(products).filter(m => !(m.shank === shank && m.cast === cast));
   return (
     <>
       <div className="mp-others-h">
@@ -219,7 +221,7 @@ export function Final({ onWa }) {
   return (
     <div className="mp-dark mp-final" data-dark>
       <h2 className="mp-h2">Остались вопросы?</h2>
-      <p className="mp-p" style={{ textWrap: 'balance' }}>Вам не нужно разбираться во всём — напишите нам, проведём лучшую консультацию в вашей жизни!</p>
+      <p className="mp-p" style={{ textWrap: 'balance' }}>Вам не нужно разбираться во всём&nbsp;— напишите нам, проведём лучшую консультацию в вашей жизни!</p>
       <WaButton onClick={onWa}>Написать в WhatsApp</WaButton>
       <div className="mp-note">Ответим в течение 5 минут</div>
     </div>

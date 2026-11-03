@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchProducts, saveProducts, defaultProducts } from '../data/products.js';
-import { SHAPES } from '../data/config.js';
+import { SHAPES, shapeImage } from '../data/config.js';
 
 // Controls what the catalog shows and how it is named.
 //
@@ -148,7 +148,7 @@ export default function ProductsTab({ token }) {
         {cfg.shapes.map(s => (
           <Row key={s.id} dimmed={!s.enabled}>
             <img
-              src={`/assets/shapes/${shapeFile(s.id)}`}
+              src={shapeImage(shapeFile(s.id))}
               alt=""
               width={32} height={32}
               style={{ borderRadius: 8, objectFit: 'contain', flexShrink: 0 }}

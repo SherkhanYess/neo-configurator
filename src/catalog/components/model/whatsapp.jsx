@@ -4,6 +4,7 @@ import { leadCode } from '../../lib/leadCode.js';
 import { waMessage } from '../../lib/waMessage.js';
 import { track, EVENTS } from '../../lib/track.js';
 import { SHOWROOMS } from '../../data/org.js';
+import Sheet from './Sheet.jsx';
 
 // Переход в WhatsApp со страницы модели.
 //
@@ -49,9 +50,7 @@ export function useWhatsApp() {
   };
 
   const sheet = pending && (
-    <div className="mp-sheet-bg" role="dialog" aria-modal="true" aria-label="Выбор шоурума" onClick={() => setPending(null)}>
-      <div className="mp-sheet" onClick={(e) => e.stopPropagation()}>
-        <div className="mp-sheet__grip" />
+    <Sheet label="Выбор шоурума" onClose={() => setPending(null)}>
         <div className="mp-sheet__t">В какой шоурум написать?</div>
         <p className="mp-sheet__p">Ответит менеджер вашего города — про наличие, срок и примерку.</p>
         <div style={{ marginTop: 10 }}>
@@ -64,8 +63,7 @@ export function useWhatsApp() {
         </div>
         {/* Из другого города пишут в Алматы — там головной офис. */}
         <button type="button" className="mp-textbtn" onClick={() => choose(CITIES[0])}>Я из другого города</button>
-      </div>
-    </div>
+    </Sheet>
   );
 
   return { open, sheet };

@@ -9,6 +9,7 @@ import { track, EVENTS } from '../lib/track.js';
 import { waMessage } from '../lib/waMessage.js';
 import { currentCity, waNumber } from '../lib/city.js';
 import SiteFooter from '../components/SiteFooter.jsx';
+import { useQuoteFont } from '../lib/useQuoteFont.js';
 
 // Лента моделей — вход в каталог.
 //
@@ -87,17 +88,6 @@ function ModelCard({ item, price, href, priority }) {
   );
 }
 
-// Курсив для подписи паузы грузим, только когда пауза есть на странице: шрифт
-// нужен на одну строку, конструктору и остальному каталогу он ни к чему.
-const QUOTE_FONT = 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300&display=swap';
-function useQuoteFont() {
-  useEffect(() => {
-    if (document.querySelector(`link[href="${QUOTE_FONT}"]`)) return;
-    const link = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: QUOTE_FONT });
-    document.head.appendChild(link);
-  }, []);
-}
-
 function HandBreak({ item, href }) {
   useQuoteFont();
   return (
@@ -121,9 +111,9 @@ function HandBreak({ item, href }) {
 
 export default function FeedScreen() {
   const prices = usePrices();
-  const productCfg = useProducts();
 
-  const models = useMemo(() => feedModels(), []);
+  const productCfg = useProducts();
+  const models = useMemo(() => feedModels(productCfg), [productCfg]);
   const breaks = useMemo(() => feedBreaks(), []);
 
   // Страница модели открывается с первой формой, включённой в админке.

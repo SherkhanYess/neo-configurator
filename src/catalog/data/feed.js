@@ -49,18 +49,22 @@ export const feedPhoto = (file) => `/assets/feed/${file}`;
  * `available` — какие файлы реально лежат в public/assets/feed/ (собирается
  * при сборке в feed-tones.json): фото, которого нет, не запрашиваем.
  */
-export function feedModels() {
+export function feedModels(products) {
   const byName = new Map(
     VALID_COMBOS.map(c => [modelName(c.shank, c.cast), c])
   );
+  // Админка может выключить модель или переименовать её.
+  const ring = (c) => products?.rings?.find(r => r.shank === c.shank && r.cast === c.cast);
 
   return MODELS.flatMap(({ model, photo, text }, i) => {
     const combo = byName.get(model);
     if (!combo) return [];          // модель убрали из каталога — карточки тоже нет
+    const admin = ring(combo);
+    if (admin && admin.enabled === false) return [];
     const own = feedPhoto(photo);
     const src = TONES[own] ? own : ringImage(combo.shank, combo.cast, 'round');
     return [{
-      model,
+      model: admin?.name || model,
       text,
       order: i,
       shank: combo.shank,

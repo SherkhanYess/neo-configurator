@@ -117,10 +117,6 @@ export function enabledRings(products) {
   return products.rings.filter(r => r.enabled);
 }
 
-export function enabledPusety(products) {
-  return products.pusety.filter(p => p.enabled);
-}
-
 // Admin can rename a model; falls back to the built-in name.
 export function ringName(products, shank, cast) {
   return products.rings.find(r => r.shank === shank && r.cast === cast)?.name

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import { SHAPES, SHANKS, SHAPE_IJEWEL, CAST_IJEWEL, cardName } from '../data/config.js';
+import { SHAPES, SHANKS, SHAPE_IJEWEL, CAST_IJEWEL, shapeImage } from '../data/config.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { usePrices } from '../data/prices.js';
+import { useProducts, enabledShapes, ringName, shapeLabel as adminShapeLabel } from '../data/products.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { track, EVENTS } from '../lib/track.js';
-import { useContentReveal } from '../lib/useContentReveal.js';
 import { waMessage } from '../lib/waMessage.js';
 import { leadCode, sourceLatin } from '../lib/leadCode.js';
 import { currentCity } from '../lib/city.js';
@@ -57,14 +57,14 @@ function DotPicker({ options, chosen, onChoose }) {
 
 /** Форма камня — первый выбор. Подписей под камнями нет: название огранки
  *  стоит в имени кольца в стеклянной панели. */
-function ShapePicker({ value, onChoose }) {
+function ShapePicker({ shapes, value, onChoose }) {
   return (
     <div className="mp-shapes" role="radiogroup" aria-label="Форма бриллианта">
-      {SHAPES.map(s => (
+      {shapes.map(s => (
         <button key={s.id} type="button" role="radio" aria-checked={value === s.id} aria-label={s.label} title={s.label}
                 className={`mp-shape${value === s.id ? ' is-active' : ''}`}
                 onClick={() => value !== s.id && onChoose(s.id)}>
-          <img src={`/assets/shapes/${s.file}`} alt="" />
+          <img src={shapeImage(s.file)} alt="" />
         </button>
       ))}
     </div>
@@ -87,7 +87,7 @@ export default function DetailScreen({ ijewel }) {
   const [carat,        setCarat]        = useState(startCarat);
   const [gem1,         setGem1]         = useState(null);
   const [gem1Label,    setGem1Label]    = useState(null);
-  const [gem2,         setGem2]         = useState(null);
+  const [,             setGem2]         = useState(null);
   const [gem2Label,    setGem2Label]    = useState(null);
   const [purity,       setPurity]       = useState('585');
   const [metal,        setMetal]        = useState(null);
@@ -95,6 +95,7 @@ export default function DetailScreen({ ijewel }) {
   const [castMetal,    setCastMetal]    = useState(null);
   const [combinedGold, setCombinedGold] = useState(false);
   const prices                          = usePrices();
+  const productCfg                      = useProducts();
 
   // Stores the 3D config to apply — set in Phase 1, consumed in Phase 2.
   // Using state (not ref) so Phase 2 fires in a separate React render cycle,
@@ -102,7 +103,6 @@ export default function DetailScreen({ ijewel }) {
   const [pendingInit, setPendingInit] = useState(null);
 
   const castRef = useRef(cast);
-  const reveal  = useContentReveal(ijewel.isConfigured, cardKey);
 
   // Which models actually get opened — independent of whether the 3D finished loading.
   useEffect(() => {
@@ -235,15 +235,15 @@ export default function DetailScreen({ ijewel }) {
     ijewel.applyGem('gem1', uuid);
   }, [ijewel]);
 
-  const handleGem2 = useCallback((uuid, label) => {
-    setGem2(uuid); setGem2Label(label);
-    ijewel.applyGem('gem2', uuid);
-  }, [ijewel]);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
-  const shapeLabel  = SHAPES.find(s => s.id === shape)?.label ?? shape;
-  const productName = cardName(shankId, cast, shapeLabel);
-  const model       = cardName(shankId, cast, '');
+  const shapeLabel  = adminShapeLabel(productCfg, shape);
+  // Админка может переименовать модель и выключить огранки — порядок огранок
+  // при этом остаётся тем, что задан в config.js.
+  const model       = ringName(productCfg, shankId, cast);
+  const productName = [model, shapeLabel].join(' ');
+  const allowed     = new Set(enabledShapes(productCfg).map(s => s.id));
+  const shapes      = SHAPES.filter(s => allowed.has(s.id) || s.id === shape);
 
   const choices = { shankLabel: shankId, cast, castLabel: cast, carat, purity, gem1Label, gem2Label };
   const price = calcPrice(choices, prices);
@@ -278,11 +278,11 @@ export default function DetailScreen({ ijewel }) {
         <div className="mp-plaque"><b>Вам показали это кольцо.</b> Она поделилась с нами своим размером — напишите нам в WhatsApp, чтобы узнать размер и обсудить детали кольца.</div>
       )}
 
-      <div className="mp-card" style={{ opacity: reveal.visible ? 1 : 0, transition: 'opacity 0.25s ease' }}>
+      <div className="mp-card">
         <div className="mp-config">
           <div>
             <div className="mp-head"><span className="mp-head__t">Форма бриллианта</span></div>
-            <ShapePicker value={shape} onChoose={handleShapeChange} />
+            <ShapePicker shapes={shapes} value={shape} onChoose={handleShapeChange} />
           </div>
 
           <div>
@@ -380,7 +380,7 @@ export default function DetailScreen({ ijewel }) {
       <Fitting model={model} onWa={() => wa.open('fitting', ctx, props)} />
       <div className="mp-gap--l" />
       <Proof />
-      <Others shank={shankId} cast={cast} prices={prices} />
+      <Others shank={shankId} cast={cast} prices={prices} products={productCfg} />
       <Questions />
       <Final onWa={() => wa.open('help', ctx, props)} />
 

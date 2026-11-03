@@ -1,20 +1,33 @@
 import { useState } from 'react';
 import { track, EVENTS } from '../../lib/track.js';
+import Sheet from './Sheet.jsx';
 
 // «Намекнуть партнёру». По CJM она выбирает кольцо, но не покупает: форма
 // превращает её интерес в лид на него. Берём только его имя и номер и её
 // размер. Размер ему не отправляем — чтобы узнать его, он напишет нам сам.
 
+/** Номер в виде «+7 777 123 45 67». Код страны стоит в поле сразу; вставленный
+ *  номер «8 777…» или «+7 777…» тоже приводится к этому виду. */
+function formatPhone(raw) {
+  const text = String(raw ?? '').trim();
+  let d = text.replace(/\D/g, '');
+  if (text.startsWith('+7')) d = d.slice(1);
+  else if (d.length === 11 && /^[78]/.test(d)) d = d.slice(1);
+  d = d.slice(0, 10);
+  const parts = [d.slice(0, 3), d.slice(3, 6), d.slice(6, 8), d.slice(8, 10)].filter(Boolean);
+  return ['+7', ...parts].join(' ') + (parts.length ? '' : ' ');
+}
+
 export default function HintSheet({ ring, link, code, city, onClose }) {
   const [name, setName]       = useState('');
-  const [phone, setPhone]     = useState('');
+  const [phone, setPhone]     = useState('+7 ');
   const [size, setSize]       = useState('');
   const [noSize, setNoSize]   = useState(false);
   const [state, setState]     = useState('form'); // form | sending | done
   const [error, setError]     = useState('');
 
   const digits = phone.replace(/\D/g, '');
-  const ready  = name.trim() && digits.length >= 10 && (noSize || size.trim());
+  const ready  = name.trim() && digits.length === 11 && (noSize || size.trim());
 
   async function submit(e) {
     e.preventDefault();
@@ -43,9 +56,7 @@ export default function HintSheet({ ring, link, code, city, onClose }) {
   }
 
   return (
-    <div className="mp-sheet-bg" role="dialog" aria-modal="true" aria-label="Намекнуть партнёру" onClick={onClose}>
-      <form className="mp-sheet" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <div className="mp-sheet__grip" />
+    <Sheet label="Намекнуть партнёру" onClose={onClose} as="form" onSubmit={submit}>
         {state === 'done' ? (
           <>
             <div className="mp-sheet__t">Намёк отправлен</div>
@@ -62,7 +73,7 @@ export default function HintSheet({ ring, link, code, city, onClose }) {
                 <input value={name} onChange={e => setName(e.target.value)} autoComplete="off" maxLength={60} />
               </label>
               <label className="mp-field"><span>Его WhatsApp</span>
-                <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" inputMode="tel" placeholder="+7 ___ ___ __ __" autoComplete="off" />
+                <input value={phone} onChange={e => setPhone(formatPhone(e.target.value))} type="tel" inputMode="tel" placeholder="+7 777 123 45 67" autoComplete="off" />
               </label>
             </div>
             <div className="mp-size">
@@ -83,7 +94,6 @@ export default function HintSheet({ ring, link, code, city, onClose }) {
             </button>
           </>
         )}
-      </form>
-    </div>
+    </Sheet>
   );
 }

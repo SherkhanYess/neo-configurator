@@ -1,3 +1,8 @@
+// Фото огранок кешируются браузером навсегда (immutable). Заменили картинки —
+// поднимите версию, иначе у вернувшихся посетителей останутся старые.
+export const SHAPES_VERSION = 2;
+export const shapeImage = (file) => `/assets/shapes/${file}?v=${SHAPES_VERSION}`;
+
 export const SHAPES = [
   { id: 'round',    label: 'Круглый',   file: 'round.webp' },
   { id: 'oval',     label: 'Овал',      file: 'oval.webp' },
@@ -81,17 +86,11 @@ export function ringImage(shankId, castId, shapeId) {
   return `/assets/rings/${slug}-${shape}.webp`;
 }
 
-export const METALS = ['585', '750'];
-export const METAL_LABELS = { '585': '14к Золото', '750': '18к Золото' };
 export const METAL_COLORS = [
   { id: 'white',  label: 'Белое' },
   { id: 'yellow', label: 'Жёлтое' },
   { id: 'rose',   label: 'Розовое' },
 ];
-
-export const IJEWEL_INSTANCE   = 'neodiamondkz';
-export const IJEWEL_FILE_ID    = 'MBYHa_BtQluSyH-pAufiAg';
-export const PUSETЫ_IJEWEL_FILE_ID = 'W_rSwFUyS_CtAyfx1BTS1A';
 
 // ── Пусеты ────────────────────────────────────────────────────────────────────
 // Casts available for pusety
@@ -107,17 +106,6 @@ export const PUSETЫ_SHAPES_BY_CAST = {
   halo:    ['round','oval','pear','marquise','emerald','radiant'],
 };
 
-// All valid cast × shape combos for pusety catalog grid
-export const PUSETЫ_VALID_COMBOS = [
-  ...PUSETЫ_SHAPES_BY_CAST.classic.map(shape => ({ cast: 'classic', shape })),
-  ...PUSETЫ_SHAPES_BY_CAST.halo   .map(shape => ({ cast: 'halo',    shape })),
-];
-
-export function pusetyCardName(castId, shapeLabel) {
-  const castLabel = castId === 'halo' ? 'Halo' : 'Classic';
-  return `Пусеты ${castLabel} ${shapeLabel}`;
-}
-
 export const WA_NUMBER = '77766708505';
 
 // Каждый шоурум отвечает со своего номера. «Другой город» ведёт в Алматы —
@@ -127,7 +115,6 @@ export const WA_BY_CITY = {
   'Астана':       '77776908505',
   'Другой город': '77766708505',
 };
-export const WA_CITIES = ['Алматы', 'Астана', 'Другой город'];
 
 export const SHAPE_IJEWEL = {
   round:    'shape: round',

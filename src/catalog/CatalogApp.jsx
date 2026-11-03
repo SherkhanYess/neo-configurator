@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { VALID_COMBOS, SHAPES } from './data/config.js';
 import FeedScreen         from './screens/FeedScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
 import AdminScreen        from './screens/AdminScreen.jsx';
@@ -11,6 +12,15 @@ import { decodeBooking } from './lib/bookingUrl.js';
 import './index.css';
 import './configurator.css';
 
+
+/** Адрес модели проверяем до страницы: несуществующая модель или огранка
+ *  уводит в ленту, а не оставляет пустую страницу с вечной загрузкой 3D. */
+function ProductRoute({ ijewel }) {
+  const { shank, cast, shape } = useParams();
+  const known = VALID_COMBOS.some(c => c.shank.toLowerCase().replace(/\s+/g, '-') === shank && c.cast === cast)
+             && SHAPES.some(s => s.id === shape);
+  return known ? <DetailScreen ijewel={ijewel} /> : <Navigate to="/catalog" replace />;
+}
 
 function BookingRedirect() {
   const location = useLocation();
@@ -125,7 +135,7 @@ function CatalogMain() {
             Адреса остаются рабочими: они разосланы в рекламе и в сторис. */}
         <Route path="/catalog/filter"                            element={<Navigate to="/catalog" replace />} />
         <Route path="/catalog/list"                              element={<Navigate to="/catalog" replace />} />
-        <Route path="/catalog/product/:shank/:cast/:shape"       element={<DetailScreen ijewel={ijewel} />} />
+        <Route path="/catalog/product/:shank/:cast/:shape"       element={<ProductRoute ijewel={ijewel} />} />
         {/* Пусет на витрине больше нет, но разосланные ссылки не должны
             упираться в пустую страницу — уводим в каталог. */}
         <Route path="/catalog/pusety/*"                          element={<Navigate to="/catalog" replace />} />

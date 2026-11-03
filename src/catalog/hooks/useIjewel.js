@@ -1,6 +1,5 @@
 import { useRef, useCallback, useState, useMemo, useEffect } from 'react';
 export const RING_FILE_ID   = 'MBYHa_BtQluSyH-pAufiAg';
-export const PUSETЫ_FILE_ID = 'W_rSwFUyS_CtAyfx1BTS1A';
 const INSTANCE = 'neodiamondkz';
 
 const normalizeTag = (t) => (t ?? '').replace(/:\s*/, ': ').toLowerCase().trim();
