@@ -410,7 +410,9 @@ const SPECS_HTML = `
       формы и каратности можно посмотреть на своей руке. Доставка по Казахстану бесплатно, 2–5 дней.</p>`;
 
 async function main() {
-  const shell = readFileSync(join(DIST, 'index.html'), 'utf8');
+  // Страницы каталога собираются на его собственном входе (catalog-shell.html):
+  // без кода конструктора и без 3D в шапке. index.html — для конструктора.
+  const shell = readFileSync(join(DIST, 'catalog-shell.html'), 'utf8');
   const prices = await loadPrices();
   const rep = await loadReputation();
 
@@ -501,8 +503,8 @@ async function main() {
 
   pages.push({
     path: '/catalog',
-    title: 'Neo Diamond — кольца с лабораторными бриллиантами в Алматы и Астане',
-    description: 'Помолвочные кольца и украшения с лабораторными бриллиантами. Сертификат IGI, 10 огранок, золото 585/750. Примерка в шоурумах Алматы и Астаны, изготовление 5–10 дней.',
+    title: 'Помолвочные кольца с бриллиантами в Алматы и Астане — Neo Diamond',
+    description: 'Девять моделей помолвочных колец: цена, срок изготовления 5–10 дней, сертификат IGI. Примерка в шоурумах Алматы и Астаны.',
     jsonLd: organization,
     image: ogImage('default'),
     bodyHtml: `
@@ -551,7 +553,7 @@ async function main() {
   const today = new Date().toISOString().slice(0, 10);
   // Карта сайта описывает весь домен, а не только каталог: главная страница
   // отдаётся с другого сайта Netlify, но для поисковика это один адрес.
-  const urls = ['/', '/catalog', '/catalog/list', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
+  const urls = ['/', '/catalog', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
   if (!SANDBOX) writeFileSync(join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     [...new Set(urls)].map(u =>
@@ -582,7 +584,9 @@ async function main() {
   writeFileSync(join(DIST, '_redirects'),
     `# Обе формы адреса отдают страницу напрямую — редиректов между ними нет.\n` +
     `${routes}\n\n` +
-    `# Всё остальное — одностраничное приложение.\n` +
+    `# Остальные адреса каталога (админка, старые ссылки) — его же вход.\n` +
+    `/catalog/*    /catalog-shell.html    200\n\n` +
+    `# Всё остальное — конструктор.\n` +
     `/*    /index.html    200\n`);
 
   // Машиночитаемый каталог и справка для ассистентов. В песочнице их нет: они

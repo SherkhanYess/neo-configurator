@@ -7,7 +7,7 @@ import { PhotoButtons, PhotoStage, TonePicker, retone, useUpload } from './feed/
 import { FeedCard, FeedBreak } from '../../catalog/components/FeedCard.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
 import { fetchPrices } from '../../catalog/data/prices.js';
-import { DEFAULT_TITLE, defaultSub } from '../../catalog/data/feed.js';
+import { DEFAULT_TITLE, defaultSub, typo } from '../../catalog/data/feed.js';
 
 // Раздел «Лента»: порядок моделей, фото, цвет плашки, тексты, кадры «на руке»
 // и заголовок. Слева список, в середине правка выбранного, справа — вся лента
@@ -256,8 +256,8 @@ function IntroEditor({ intro, count, update }) {
           </div>
         </div>
         <div className="st-intro-preview">
-          <h1 className="feed-title">{intro.title || DEFAULT_TITLE}</h1>
-          <p className="feed-sub">{intro.sub || defaultSub(count)}</p>
+          <h1 className="feed-title">{typo(intro.title || DEFAULT_TITLE)}</h1>
+          <p className="feed-sub">{typo(intro.sub || defaultSub(count))}</p>
         </div>
         <Card>
           <Field label="Заголовок" counter={<Counter value={intro.title} soft={28} hard={40} />}>
@@ -265,7 +265,7 @@ function IntroEditor({ intro, count, update }) {
                    onChange={e => update({ title: e.target.value })} />
           </Field>
           <Field label="Подзаголовок" counter={<Counter value={intro.sub} soft={48} hard={70} />}
-                 hint="Пусто — подставится сам и посчитает модели: скроете одну, станет «Восемь оправ»">
+                 hint="Пусто — подставится сам и посчитает модели: скроете одну, станет «Восемь колец»">
             <input className="st-input" value={intro.sub} placeholder={defaultSub(count)} maxLength={120}
                    onChange={e => update({ sub: e.target.value })} />
           </Field>
@@ -286,8 +286,8 @@ function PhonePreview({ draft, products, prices, onPick }) {
         <div className="feed">
           <header className="feed-head"><img src="/assets/logo-ink.png" alt="" className="feed-logo" /></header>
           <div className="feed-intro" onClick={() => onPick({ type: 'intro' })}>
-            <h1 className="feed-title">{draft.intro.title || DEFAULT_TITLE}</h1>
-            <p className="feed-sub">{draft.intro.sub || defaultSub(models.length)}</p>
+            <h1 className="feed-title">{typo(draft.intro.title || DEFAULT_TITLE)}</h1>
+            <p className="feed-sub">{typo(draft.intro.sub || defaultSub(models.length))}</p>
           </div>
           <div className="feed-list">
             {models.map((item, i) => {
@@ -320,7 +320,7 @@ export default function FeedEditor() {
   const [mobileEdit, setMobileEdit] = useState(false);
 
   useEffect(() => {
-    Promise.all([api('/api/content/feed'), fetchProducts(), fetchPrices()])
+    Promise.all([api('/api/content/feed?fresh'), fetchProducts(), fetchPrices()])
       .then(([content, prods, pr]) => {
         setProducts(prods);
         setPrices(pr);

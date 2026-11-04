@@ -32,7 +32,7 @@ function NameRow({ name, price }) {
   return (
     <div className="feed-card__row" ref={rowRef}>
       <h2 className="feed-card__name">{name}</h2>
-      <span className="feed-card__divider" aria-hidden="true" />
+      {price ? <span className="feed-card__divider" aria-hidden="true" /> : null}
       {price ? <span className="feed-card__price">от {formatPrice(price)}</span> : null}
     </div>
   );

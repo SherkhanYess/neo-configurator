@@ -5,6 +5,7 @@
 // defaults built from config.js, so the catalog works before any admin edit.
 
 import { getStore } from '@netlify/blobs';
+import { cachedJson } from '../lib/http.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -17,7 +18,11 @@ export default async (req, context) => {
   try {
     const store = getStore({ name: 'nd-products', context });
     const saved = await store.get('config', { type: 'json' });
-    return new Response(JSON.stringify(saved ?? null), { status: 200, headers: CORS });
+    if (new URL(req.url).searchParams.has('fresh')) {
+      return new Response(JSON.stringify(saved ?? null), { status: 200, headers: { ...CORS, 'Cache-Control': 'no-store' } });
+    }
+    // С CDN: модели нужны каждой странице каталога. Сохранение сбрасывает кэш.
+    return cachedJson(saved ?? null, 'products');
   } catch (err) {
     console.warn('get-products error (falling back to defaults):', err);
     return new Response('null', { status: 200, headers: CORS });

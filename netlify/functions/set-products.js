@@ -6,6 +6,7 @@
 // viewer rather than just mislabel a card.
 
 import { getStore } from '@netlify/blobs';
+import { purge } from '../lib/http.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -74,6 +75,7 @@ export default async (req, context) => {
   try {
     const store = getStore({ name: 'nd-products', context });
     await store.setJSON('config', clean);
+    await purge('products');
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: CORS });
   } catch (err) {
     console.error('set-products error:', err);

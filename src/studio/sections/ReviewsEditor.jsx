@@ -68,7 +68,7 @@ export default function ReviewsEditor() {
   const { draft, setDraft, dirty, load, reset } = useDraft(null);
 
   useEffect(() => {
-    api('/api/content/reviews')
+    api('/api/content/reviews?fresh')
       .then(doc => load(doc?.items ?? REVIEWS.map(r => ({ ...blank(), ...r }))))
       .catch(e => setError(e.message));
     fetch('/catalog/reputation.json').then(r => (r.ok ? r.json() : null)).then(setRep).catch(() => {});

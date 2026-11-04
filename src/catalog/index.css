@@ -166,6 +166,7 @@ img { display: block; max-width: 100%; }
   letter-spacing: -0.02em;
   line-height: 1.2;
   color: var(--ink-800, #0B2040);
+  text-wrap: balance;
 }
 .feed-sub {
   margin: 8px 0 0;
@@ -318,6 +319,37 @@ img { display: block; max-width: 100%; }
 .feed-skel--cta   { width: 168px; height: 46px; margin-top: 20px; }
 @keyframes feed-skel { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .feed-skel { animation: none; } }
+
+/* Конец ленты: «Не знаете, какое ей понравится?» — подбор в WhatsApp. */
+.feed-help {
+  margin-top: 8px;
+  padding: 32px 20px 24px;
+  border-radius: 24px;
+  background: #FFFFFF;
+  border: 1.5px solid var(--paper-300, #DBE2EB);
+  text-align: center;
+}
+.feed-help__t {
+  margin: 0 auto;
+  max-width: 16ch;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--ink-800, #0B2040);
+  text-wrap: balance;
+}
+.feed-help__p {
+  margin: 12px auto 0;
+  max-width: 36ch;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-600, #1E3149);
+  text-wrap: pretty;
+}
+.feed-help .mp-wa { margin-top: 20px; }
 
 /* Пауза «на руке». */
 .feed-break {

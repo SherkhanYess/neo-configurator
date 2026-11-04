@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
 import { ORG, SHOWROOMS, INSTAGRAM_HANDLE } from '../data/org.js';
+import { waMessage } from '../lib/waMessage.js';
+import { leadCode } from '../lib/leadCode.js';
+import { track, EVENTS } from '../lib/track.js';
+
+function readUtm() {
+  try { return JSON.parse(sessionStorage.getItem('nd_utm') ?? '{}') ?? {}; }
+  catch { return {}; }
+}
 
 // Футер решает две задачи сразу.
 //
@@ -68,10 +76,11 @@ function InstagramIcon() {
 }
 
 function Showroom({ s }) {
-  const waHref =
-    `https://wa.me/${s.wa}?text=${encodeURIComponent(
-      `Здравствуйте! Пишу с сайта, интересует украшение. Шоурум ${s.city}.`
-    )}`;
+  // Код источника в тексте — как у всех кнопок сайта: менеджер переносит его
+  // в amoCRM. Тип — ОБ (общий вопрос), шоурум — тот, на который нажали.
+  const utm = readUtm();
+  const waHref = `https://wa.me/${s.wa}?text=${encodeURIComponent(waMessage('price', { city: s.city }, utm))}`;
+  const onWa = () => track(EVENTS.WA_CLICK, { type: 'price', place: 'footer', city: s.city, code: leadCode('price', utm) });
 
   return (
     <div style={{ display: 'grid', gap: 9, alignContent: 'start' }}>
@@ -104,7 +113,7 @@ function Showroom({ s }) {
         <a href={s.twogis} target="_blank" rel="noopener noreferrer" style={BTN}>
           <TwoGisIcon />Открыть в 2ГИС
         </a>
-        <a href={waHref} target="_blank" rel="noopener noreferrer" style={BTN}>
+        <a href={waHref} target="_blank" rel="noopener noreferrer" style={BTN} onClick={onWa}>
           <WhatsAppIcon />WhatsApp
         </a>
       </div>

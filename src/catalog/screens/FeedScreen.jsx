@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
-import { feedModels, feedBreaks, defaultSub, DEFAULT_TITLE } from '../data/feed.js';
+import { feedModels, feedBreaks, defaultSub, typo, DEFAULT_TITLE } from '../data/feed.js';
 import { useContent } from '../data/content.js';
-import { usePrices } from '../data/prices.js';
+import { usePrices, pricesKnown } from '../data/prices.js';
 import { enabledShapes, useProducts } from '../data/products.js';
 import { track, EVENTS } from '../lib/track.js';
 import { waMessage } from '../lib/waMessage.js';
 import { currentCity, waNumber } from '../lib/city.js';
-import SiteFooter from '../components/SiteFooter.jsx';
 import { FeedCard, FeedBreak, FeedCardSkeleton } from '../components/FeedCard.jsx';
+import { useWhatsApp } from '../components/model/whatsapp.jsx';
+import { WaButton } from '../components/model/Sections.jsx';
 
 // Лента моделей — вход в каталог.
 //
@@ -31,7 +32,26 @@ function basePrice(prices, shank, cast) {
   return base + add;
 }
 
+/**
+ * Конец ленты — для того, кто долистал и не выбрал. По CJM выбирает она, а
+ * покупает он, и чаще всего он не знает её вкуса: подбор вместе с нами
+ * снимает этот страх. Тип обращения — ПД (подбор).
+ */
+function HelpBlock({ onWa }) {
+  return (
+    <section className="feed-help">
+      <h2 className="feed-help__t">Не знаете, какое ей понравится?</h2>
+      <p className="feed-help__p">
+        Расскажите нам о ней — что она носит, какой у неё стиль. Подберём два-три кольца,
+        которые ей подойдут, и подскажем, как незаметно узнать размер.
+      </p>
+      <WaButton onClick={onWa}>Подобрать вместе в WhatsApp</WaButton>
+    </section>
+  );
+}
+
 export default function FeedScreen() {
+  const wa = useWhatsApp();
   const prices = usePrices();
 
   const productCfg = useProducts();
@@ -95,8 +115,8 @@ export default function FeedScreen() {
       </header>
 
       <div className="feed-intro">
-        <h1 className="feed-title">{content?.intro?.title || DEFAULT_TITLE}</h1>
-        <p className="feed-sub">{content?.intro?.sub || defaultSub(models.length)}</p>
+        <h1 className="feed-title">{typo(content?.intro?.title || DEFAULT_TITLE)}</h1>
+        <p className="feed-sub">{typo(content?.intro?.sub || defaultSub(models.length))}</p>
       </div>
 
       <div className="feed-list">
@@ -110,7 +130,8 @@ export default function FeedScreen() {
                   as={Link}
                   to={modelHref(item)}
                   item={item}
-                  price={basePrice(prices, item.shank, item.cast)}
+                  // Пока цены не пришли, цены нет вовсе — а не цена по умолчанию на миг.
+                  price={pricesKnown() ? basePrice(prices, item.shank, item.cast) : null}
                   priority={i === 0}
                 />
               </div>
@@ -125,9 +146,10 @@ export default function FeedScreen() {
             </div>
           );
         })}
+        {ready && <HelpBlock onWa={() => wa.open('help', {}, { place: 'feed_end' })} />}
       </div>
+      {wa.sheet}
 
-      <SiteFooter />
     </div>
   );
 }

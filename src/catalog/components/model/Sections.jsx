@@ -45,7 +45,7 @@ export function Like({ message, onWa }) {
   return (
     <div className="mp-card mp-like">
       <h2 className="mp-h2">Понравилось кольцо?</h2>
-      <p className="mp-p">Напишите нам — подскажем по наличию, обсудим все детали и дадим бонусы.</p>
+      <p className="mp-p">Напишите нам — подскажем по наличию, обсудим детали. Вас ждут бонусы.</p>
       <div className="mp-like__label">Сообщение уже готово:</div>
       <div className="mp-bubble">{message}</div>
       <WaButton onClick={onWa}>Написать в WhatsApp</WaButton>

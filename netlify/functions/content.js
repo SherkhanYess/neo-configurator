@@ -12,7 +12,7 @@
 // если сохранили не то, её можно вернуть вручную из хранилища.
 
 import { getStore } from '@netlify/blobs';
-import { isAdmin, json, preflight } from '../lib/http.js';
+import { cachedJson, isAdmin, json, preflight, purge } from '../lib/http.js';
 
 const HISTORY = 20;
 
@@ -88,7 +88,9 @@ export default async (req, context) => {
 
   if (req.method === 'GET') {
     const doc = await store.get(name, { type: 'json' }).catch(() => null);
-    return json(200, doc ?? null);
+    // Админка читает мимо кэша — ей нужна свежая версия сразу после сохранения.
+    if (new URL(req.url).searchParams.has('fresh')) return json(200, doc ?? null);
+    return cachedJson(doc ?? null, `content-${name}`);
   }
 
   if (req.method !== 'PUT') return json(405, { error: 'method' });
@@ -108,6 +110,7 @@ export default async (req, context) => {
   }
 
   await store.setJSON(name, doc);
+  await purge(`content-${name}`);
   return json(200, doc);
 };
 

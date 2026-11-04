@@ -47,7 +47,16 @@ function merge(saved) {
 }
 
 // Filled by the first successful fetch, then reused for the rest of the visit.
-let cache = null;
+// Последние цены помнятся и в браузере: повторный заход рисует настоящую цену
+// сразу, а не цену по умолчанию, которая через миг сменилась бы на другую.
+const STORE_KEY = 'nd_prices';
+let cache = (() => {
+  try {
+    const raw = typeof localStorage !== 'undefined' && localStorage.getItem(STORE_KEY);
+    return raw ? merge(JSON.parse(raw)) : null;
+  } catch { return null; }
+})();
+let fresh = false;
 let inflight = null;
 
 // Synchronous read for code that renders before the request lands.
@@ -55,14 +64,19 @@ export function loadPrices() {
   return cache ?? PRICE_DEFAULTS;
 }
 
+/** Цены уже настоящие — с сервера в этот визит или из прошлого. */
+export const pricesKnown = () => cache !== null;
+
 export function fetchPrices() {
-  if (cache) return Promise.resolve(cache);
+  if (cache && fresh) return Promise.resolve(cache);
   if (inflight) return inflight;
 
   inflight = fetch('/api/get-prices')
     .then(r => (r.ok ? r.json() : null))
     .then(data => {
       cache = merge(data);
+      fresh = true;
+      try { if (data) localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch { /* приватный режим */ }
       return cache;
     })
     .catch(() => PRICE_DEFAULTS)
@@ -97,6 +111,7 @@ export async function savePrices(prices, token) {
     throw new Error(res.status === 401 ? 'Неверный пароль' : `Не удалось сохранить (${res.status}) ${detail}`);
   }
   cache = merge(prices);
+  fresh = true;
   return cache;
 }
 

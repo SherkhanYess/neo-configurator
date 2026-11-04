@@ -8,6 +8,7 @@ import { useIjewel, RING_FILE_ID } from './hooks/useIjewel.js';
 import { track, EVENTS } from './lib/track.js';
 import { REVEAL_TIMEOUT_MS } from './lib/useContentReveal.js';
 import { decodeBooking } from './lib/bookingUrl.js';
+import { loadIjewel, prefetchIjewel } from './lib/ijewelLoader.js';
 import './index.css';
 import './configurator.css';
 
@@ -37,9 +38,14 @@ function CatalogMain() {
   const subPath      = location.pathname.replace(/^\/catalog/, '') || '/';
   const onRingProduct  = subPath.startsWith('/product');
 
-  // В админке футер не нужен: это внутренний экран, а не витрина.
-
   const showViewer = onRingProduct;
+
+  // 3D — только там, где оно есть: на странице модели скрипты подключаются,
+  // на ленте — тихо скачиваются в кэш, пока человек листает.
+  useEffect(() => {
+    if (showViewer) loadIjewel().catch(() => {});
+    else prefetchIjewel();
+  }, [showViewer]);
 
   // Which iJewel model to load. On the booking screen the route says nothing
   // about the category, so the answer comes from the shared configuration —
