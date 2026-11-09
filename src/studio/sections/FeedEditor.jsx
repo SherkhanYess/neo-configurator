@@ -7,7 +7,7 @@ import { PhotoButtons, PhotoStage, TonePicker, retone, useUpload } from './feed/
 import { FeedCard, FeedBreak } from '../../catalog/components/FeedCard.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
 import { fetchPrices } from '../../catalog/data/prices.js';
-import { DEFAULT_HERO, defaultSub, feedHero, typo } from '../../catalog/data/feed.js';
+import { DEFAULT_HERO, DEFAULT_LIST_TITLE, feedHero, typo } from '../../catalog/data/feed.js';
 import { Hero } from '../../catalog/screens/FeedScreen.jsx';
 import { FieldInput } from './guides/FieldEditor.jsx';
 
@@ -247,7 +247,7 @@ function BreakEditor({ b, models, update, remove }) {
 
 // ─── Заголовок ленты ─────────────────────────────────────────────────────────
 
-function IntroEditor({ intro, hero, count, update, updateHero }) {
+function IntroEditor({ intro, hero, update, updateHero }) {
   const focusY = hero.focus?.y ?? 50;
   return (
     <div className="st-editor st-editor--single">
@@ -267,14 +267,20 @@ function IntroEditor({ intro, hero, count, update, updateHero }) {
             <input className="st-input" value={hero.title} placeholder={DEFAULT_HERO.title} maxLength={80}
                    onChange={e => updateHero({ title: e.target.value })} />
           </Field>
-          <Field label="Строка под ним" counter={<Counter value={hero.sub} soft={70} hard={120} />}>
-            <input className="st-input" value={hero.sub} placeholder={DEFAULT_HERO.sub} maxLength={140}
+          <Field label="Строка под ним" hint="Необязательно — пусто, и строки нет" counter={<Counter value={hero.sub} soft={70} hard={120} />}>
+            <input className="st-input" value={hero.sub} placeholder="Пусто" maxLength={140}
                    onChange={e => updateHero({ sub: e.target.value })} />
           </Field>
-          <Field label="Кнопка">
-            <input className="st-input" value={hero.cta} placeholder={DEFAULT_HERO.cta} maxLength={40}
-                   onChange={e => updateHero({ cta: e.target.value })} />
-          </Field>
+          <div className="st-grid2">
+            <Field label="Кнопка — к каталогу">
+              <input className="st-input" value={hero.cta} placeholder={DEFAULT_HERO.cta} maxLength={40}
+                     onChange={e => updateHero({ cta: e.target.value })} />
+            </Field>
+            <Field label="Кнопка — WhatsApp, свой дизайн">
+              <input className="st-input" value={hero.cta2} placeholder={DEFAULT_HERO.cta2} maxLength={40}
+                     onChange={e => updateHero({ cta2: e.target.value })} />
+            </Field>
+          </div>
           <FieldInput f={{ kind: 'image', label: 'Фото пары', hint: 'Пусто — стоит кольцо с овалом в пальцах. Своё: руки двоих, вертикальное или квадратное.' }}
                       value={hero.photo ?? ''} onChange={v => updateHero({ photo: v || null })} />
           {hero.photo && (
@@ -285,8 +291,8 @@ function IntroEditor({ intro, hero, count, update, updateHero }) {
         </Card>
         <Card>
           <Field label="Строка над моделями" counter={<Counter value={intro.title} soft={48} hard={60} />}
-                 hint="Пусто — подставится сама и посчитает модели: «Шесть колец. Листайте — одно из них её.»">
-            <input className="st-input" value={intro.title} placeholder={defaultSub(count)} maxLength={60}
+                 hint={`Пусто — «${DEFAULT_LIST_TITLE}»`}>
+            <input className="st-input" value={intro.title} placeholder={DEFAULT_LIST_TITLE} maxLength={60}
                    onChange={e => update({ title: e.target.value })} />
           </Field>
         </Card>
@@ -305,9 +311,9 @@ function PhonePreview({ draft, products, prices, onPick }) {
       <div className="st-phone__screen">
         <div className="feed">
           <div onClick={() => onPick({ type: 'intro' })} style={{ cursor: 'pointer' }}>
-            <Hero hero={feedHero(draft)} onShow={() => {}} />
+            <Hero hero={feedHero(draft)} onShow={() => {}} onDesign={() => {}} />
             <div className="feed-intro">
-              <h2 className="feed-title">{typo(draft.intro.title || defaultSub(models.length))}</h2>
+              <h2 className="feed-title">{typo(draft.intro.title || DEFAULT_LIST_TITLE)}</h2>
             </div>
           </div>
           <div className="feed-list">
@@ -408,7 +414,7 @@ export default function FeedEditor() {
                    }} />
     );
   } else if (sel.type === 'intro') {
-    editor = <IntroEditor intro={draft.intro} hero={draft.hero} count={visible.length}
+    editor = <IntroEditor intro={draft.intro} hero={draft.hero}
                           update={(p) => setDraft(d => ({ ...d, intro: { ...d.intro, ...p } }))}
                           updateHero={(p) => setDraft(d => ({ ...d, hero: { ...d.hero, ...p } }))} />;
   }

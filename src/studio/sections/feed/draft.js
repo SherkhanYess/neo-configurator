@@ -40,7 +40,7 @@ export function toDraft(content, products) {
 
   return {
     intro: { title: content?.intro?.title ?? '', sub: content?.intro?.sub ?? '' },
-    hero: { title: content?.hero?.title ?? '', sub: content?.hero?.sub ?? '', cta: content?.hero?.cta ?? '', photo: content?.hero?.photo ?? null, focus: content?.hero?.focus ?? { x: 50, y: 50 } },
+    hero: { title: content?.hero?.title ?? '', sub: content?.hero?.sub ?? '', cta: content?.hero?.cta ?? '', cta2: content?.hero?.cta2 ?? '', photo: content?.hero?.photo ?? null, focus: content?.hero?.focus ?? { x: 50, y: 50 } },
     models,
     breaks,
   };

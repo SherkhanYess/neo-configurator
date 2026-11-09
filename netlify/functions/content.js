@@ -59,6 +59,7 @@ export function cleanFeed(body) {
     title: str(body?.hero?.title, 80),
     sub: str(body?.hero?.sub, 140),
     cta: str(body?.hero?.cta, 40),
+    cta2: str(body?.hero?.cta2, 40),
     photo: photo(body?.hero?.photo),
     focus: focus(body?.hero?.focus),
   };

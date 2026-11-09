@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
-import { feedModels, feedBreaks, feedHero, defaultSub, typo } from '../data/feed.js';
+import { feedModels, feedBreaks, feedHero, typo, DEFAULT_LIST_TITLE } from '../data/feed.js';
 import { useContent } from '../data/content.js';
 import { usePrices, pricesKnown } from '../data/prices.js';
 import { enabledShapes, useProducts } from '../data/products.js';
@@ -36,12 +36,12 @@ function basePrice(prices, shank, cast) {
 }
 
 /**
- * Обложка бренда — первый экран. Герой — двое, а не кольцо: чёрно-белое фото
- * рук пары (загружается в админке, сайт сам делает его чёрно-белым), знак
- * aena и обещание бренда. Кнопка ведёт вниз, к моделям. Без фото — та же
- * «глубина» со знаком: обложка не ломается, пока съёмки нет.
+ * Обложка бренда — первый экран: чёрно-белое фото (загружается в админке,
+ * сайт сам делает его чёрно-белым), знак aena и обещание. Две кнопки:
+ * «Смотреть каталог» — вниз, к моделям; «Обсудить свой дизайн» — WhatsApp,
+ * тип ИД (кольцо по своему дизайну).
  */
-export function Hero({ hero, onShow }) {
+export function Hero({ hero, onShow, onDesign }) {
   useQuoteFont();
   return (
     <section className={`feed-hero${hero.photo ? ' has-photo' : ''}`} aria-label="aena">
@@ -49,8 +49,11 @@ export function Hero({ hero, onShow }) {
       <img className="feed-hero__sign" src="/assets/aena/sign-pearl.png" alt="aena" />
       <div className="feed-hero__body">
         <h1 className="feed-hero__t">{typo(hero.title)}</h1>
-        <p className="feed-hero__p">{typo(hero.sub)}</p>
-        <button type="button" className="feed-hero__cta" onClick={onShow}>{hero.cta}</button>
+        {hero.sub && <p className="feed-hero__p">{typo(hero.sub)}</p>}
+        <div className="feed-hero__btns">
+          <button type="button" className="feed-hero__cta" onClick={onShow}>{hero.cta}</button>
+          <button type="button" className="feed-hero__cta feed-hero__cta--line" onClick={onDesign}>{hero.cta2}</button>
+        </div>
       </div>
     </section>
   );
@@ -177,12 +180,11 @@ export default function FeedScreen() {
 
   return (
     <div className="feed">
-      {ready ? <Hero hero={hero} onShow={showRings} /> : <div className="feed-hero" aria-hidden="true" />}
+      {ready ? <Hero hero={hero} onShow={showRings} onDesign={() => wa.open('custom', {}, { place: 'hero' })} /> : <div className="feed-hero" aria-hidden="true" />}
 
-      {/* Над моделями — короткая строка: сколько колец. Заголовок страницы —
-          обещание бренда на обложке. */}
+      {/* Над моделями — короткая строка. Заголовок страницы — обещание на обложке. */}
       <div className="feed-intro" ref={listRef}>
-        <h2 className="feed-title">{typo(content?.intro?.title || defaultSub(models.length))}</h2>
+        <h2 className="feed-title">{typo(content?.intro?.title || DEFAULT_LIST_TITLE)}</h2>
       </div>
 
       <div className="feed-list">

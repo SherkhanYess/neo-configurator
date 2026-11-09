@@ -45,9 +45,10 @@ export const DEFAULT_TITLE = 'То, что между вами, — в одно�
 // нет — кольцо с овалом в пальцах (выбор владельца, 09.11.2026; фото из
 // Pinterest — до своей съёмки).
 export const DEFAULT_HERO = {
-  title: 'То, что между вами, должно остаться',
-  sub: 'Помолвочные кольца с бриллиантами. Шоурумы в Алматы и Астане',
-  cta: 'Смотреть кольца',
+  title: 'Символ вашей любви',
+  sub: '',
+  cta: 'Смотреть каталог',
+  cta2: 'Обсудить свой дизайн',
   photo: '/assets/aena/hero-oval.webp',
   focus: { x: 50, y: 40 },
 };
@@ -59,6 +60,7 @@ export function feedHero(content) {
     title: h.title || DEFAULT_HERO.title,
     sub: h.sub || DEFAULT_HERO.sub,
     cta: h.cta || DEFAULT_HERO.cta,
+    cta2: h.cta2 || DEFAULT_HERO.cta2,
     photo: h.photo || DEFAULT_HERO.photo,
     position: position(h.photo ? h.focus : DEFAULT_HERO.focus),
   };
@@ -74,6 +76,9 @@ const plural = (n, one, few, many) => {
   if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return few;
   return many;
 };
+
+/** Строка над моделями по умолчанию. */
+export const DEFAULT_LIST_TITLE = 'Каталог помолвочных колец';
 
 /** Подзаголовок по умолчанию считает модели сам: скрыли одну — «Восемь колец». */
 export function defaultSub(count) {
