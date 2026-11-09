@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import { SHAPES, SHANKS, SHAPE_IJEWEL, CAST_IJEWEL, shapeImage } from '../data/config.js';
+import { SHAPES, SHANKS, SHAPE_IJEWEL, CAST_IJEWEL, VALID_COMBOS, shapeImage } from '../data/config.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { usePrices } from '../data/prices.js';
 import { useProducts, enabledShapes, ringName, shapeLabel as adminShapeLabel } from '../data/products.js';
@@ -71,19 +71,40 @@ function ShapePicker({ shapes, value, onChoose }) {
   );
 }
 
+/**
+ * Ореол — не отдельная модель, а выбор на странице: «Halo Luxe» без ореола —
+ * это «Sirius Luxe». Переключатель меняет голову кольца в 3D так же, как
+ * выбор огранки, — без перезагрузки, — а вместе с ней имя, цену, адрес
+ * страницы и текст в WhatsApp: всё, как будто человек открыл ту модель.
+ */
+function HaloPicker({ on, extra, onChange }) {
+  return (
+    <div>
+      <div className="mp-head"><span className="mp-head__t">Ореол из бриллиантов</span><span className="mp-head__v">{extra}</span></div>
+      <div className="mp-halo" role="radiogroup" aria-label="Ореол из бриллиантов">
+        {[[false, 'Без ореола'], [true, 'С ореолом']].map(([v, l]) => (
+          <button key={l} type="button" role="radio" aria-checked={on === v}
+                  className={`mp-chip${on === v ? ' is-active' : ''}`} onClick={() => on !== v && onChange(v)}>{l}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DetailScreen({ ijewel }) {
-  const { shank: shankSlug, cast, shape: shapeParam } = useParams();
+  const { shank: shankSlug, cast: castParam, shape: shapeParam } = useParams();
   const location = useLocation();
   // Карат из ссылки-намёка или старой ссылки «Ваш выбор» — иначе 1 ct.
   const urlCarat = Number(new URLSearchParams(location.search).get('ct'));
   const startCarat = CARAT_OPTIONS.includes(urlCarat) ? urlCarat : DEFAULT_CARAT;
 
   const shankId    = slugToShankId(shankSlug);
-  const cardKey    = `${shankSlug}/${cast}/${shapeParam}`;
+  const cardKey    = `${shankSlug}/${castParam}/${shapeParam}`;
   // Stable boolean: false→true once, never reverts — safe dep without reference churn
   const hasVariations = ijewel.shankVariations.length > 0;
 
   const [shape,        setShape]        = useState(shapeParam);
+  const [cast,         setCast]         = useState(castParam);
   const [carat,        setCarat]        = useState(startCarat);
   const [gem1,         setGem1]         = useState(null);
   const [gem1Label,    setGem1Label]    = useState(null);
@@ -109,7 +130,7 @@ export default function DetailScreen({ ijewel }) {
     track(EVENTS.PRODUCT_OPEN, {
       category: 'ring',
       model:    shankId,
-      cast:     cast,
+      cast:     castParam,
       shape:    shapeParam,
     });
   }, [cardKey]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -129,6 +150,7 @@ export default function DetailScreen({ ijewel }) {
 
     // Reset all selection UI
     setShape(shapeParam);
+    setCast(castParam);
     setCarat(startCarat);
     setPurity('585');
     setCombinedGold(false);
@@ -136,13 +158,13 @@ export default function DetailScreen({ ijewel }) {
     setGem2(null);    setGem2Label(null);
     setMetal(null);   setMetalLabel(null);
     setCastMetal(null);
-    castRef.current = cast;
+    castRef.current = castParam;
 
     // These two batched together: React renders once with loader shown + pendingInit set.
     // Phase 2 fires only AFTER that render, guaranteeing the loader is on screen
     // before the SDK makes any 3D changes.
     ijewel.resetConfigured();
-    setPendingInit({ shapeTag: SHAPE_IJEWEL[shapeParam], castTag: CAST_IJEWEL[cast], shankName: sv.id });
+    setPendingInit({ shapeTag: SHAPE_IJEWEL[shapeParam], castTag: CAST_IJEWEL[castParam], shankName: sv.id });
   }, [cardKey, ijewel.isReady, hasVariations]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Phase 2: Apply 3D changes after loader is painted ──────────────────────
@@ -200,11 +222,32 @@ export default function DetailScreen({ ijewel }) {
     return m?.uuid ?? null;
   }, [ijewel.castMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Адрес страницы следует за выбором: ссылкой можно поделиться, а «назад»
+  // и обновление страницы откроют то же кольцо. Меняем адрес мимо роутера —
+  // иначе он принял бы это за переход на другую модель и перезапустил 3D.
+  const syncUrl = useCallback((nextCast, nextShape) => {
+    const url = `/catalog/product/${shankSlug}/${nextCast}/${nextShape}${window.location.search}`;
+    try { window.history.replaceState(window.history.state, '', url); } catch { /* старый браузер — адрес прежний */ }
+  }, [shankSlug]);
+
+  const shapeRef = useRef(shapeParam);
+  useEffect(() => { shapeRef.current = shape; }, [shape]);
+
   const handleShapeChange = useCallback((newShape) => {
     setShape(newShape);
     track(EVENTS.CONFIG_CHANGE, { field: 'shape', value: newShape });
     ijewel.applyHead(SHAPE_IJEWEL[newShape], CAST_IJEWEL[castRef.current]);
-  }, [ijewel]);
+    syncUrl(castRef.current, newShape);
+  }, [ijewel, syncUrl]);
+
+  const handleHalo = useCallback((on) => {
+    const next = on ? 'halo' : 'classic';
+    setCast(next);
+    castRef.current = next;
+    track(EVENTS.CONFIG_CHANGE, { field: 'halo', value: on, model: shankId });
+    ijewel.applyHead(SHAPE_IJEWEL[shapeRef.current], CAST_IJEWEL[next]);
+    syncUrl(next, shapeRef.current);
+  }, [ijewel, shankId, syncUrl]);
 
   const handleShankMetal = useCallback((uuid, label) => {
     setMetal(uuid); setMetalLabel(label);
@@ -246,6 +289,12 @@ export default function DetailScreen({ ijewel }) {
   const shapes      = SHAPES.filter(s => allowed.has(s.id) || s.id === shape);
 
   const choices = { shankLabel: shankId, cast, castLabel: cast, carat, purity, gem1Label, gem2Label };
+
+  // Ореол есть у всех шинок, кроме Bezel; выключенную в админке пару не предлагаем.
+  const comboOn = (c) => VALID_COMBOS.some(v => v.shank === shankId && v.cast === c)
+    && productCfg?.rings?.find(r => r.shank === shankId && r.cast === c)?.enabled !== false;
+  const canHalo = (cast === 'classic' || cast === 'halo') && comboOn('classic') && comboOn('halo');
+  const haloExtra = prices?.casts?.halo ? `+ ${formatPrice(prices.casts.halo)}` : '';
   const price = calcPrice(choices, prices);
 
   // Надбавки показываем рядом с заголовком выбора, а не цену целиком: цена
@@ -291,6 +340,8 @@ export default function DetailScreen({ ijewel }) {
             <div className="mp-head"><span className="mp-head__t">Форма бриллианта</span></div>
             <ShapePicker shapes={shapes} value={shape} onChoose={handleShapeChange} />
           </div>
+
+          {canHalo && <HaloPicker on={cast === 'halo'} extra={haloExtra} onChange={handleHalo} />}
 
           <div>
             <div className="mp-head"><span className="mp-head__t">Каратность</span><span className="mp-head__v">{plus(caratExtra)}</span></div>
@@ -387,7 +438,7 @@ export default function DetailScreen({ ijewel }) {
       <Fitting model={model} onWa={() => wa.open('fitting', ctx, props)} />
       <div className="mp-gap--l" />
       <Proof />
-      <Others shank={shankId} cast={cast} prices={prices} products={productCfg} />
+      <Others shank={shankId} prices={prices} products={productCfg} />
       <Questions />
       <Final onWa={() => wa.open('help', ctx, props)} />
 

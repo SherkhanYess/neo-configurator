@@ -410,10 +410,36 @@ const SPECS_HTML = `
       <p>Шоурумы в Алматы (ЖК Esentai City) и Астане (ЖК Atlant). Образцы в наличии —
       формы и каратности можно посмотреть на своей руке. Доставка по Казахстану бесплатно, 2–5 дней.</p>`;
 
+/**
+ * Имена моделей из админки («Модели и цены»): переименовали Halo Luxe — новое
+ * имя попадает и в заголовки страниц, и в превью ссылок. Без связи — имена из
+ * кода. Адреса и картинки не меняются: они держатся за шинку и оправу.
+ */
+async function applyAdminNames() {
+  try {
+    const res = await fetch(`${SITE}/api/get-products`, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) throw new Error(String(res.status));
+    const rings = (await res.json())?.rings ?? [];
+    let renamed = 0;
+    for (const combo of COMBOS) {
+      const name = rings.find(r => r.shank === combo[0] && r.cast === combo[1])?.name?.trim();
+      if (name && name !== combo[2]) {
+        MODEL_SLUG[name] = MODEL_SLUG[combo[2]];
+        combo[2] = name;
+        renamed++;
+      }
+    }
+    console.log(`  имена моделей: из админки${renamed ? `, переименовано ${renamed}` : ''}`);
+  } catch (e) {
+    console.log('  имена моделей: из кода —', e.message);
+  }
+}
+
 async function main() {
   // Страницы каталога собираются на его собственном входе (catalog-shell.html):
   // без кода конструктора и без 3D в шапке. index.html — для конструктора.
   const shell = readFileSync(join(DIST, 'catalog-shell.html'), 'utf8');
+  await applyAdminNames();
   const prices = await loadPrices();
   const rep = await loadReputation();
 
@@ -521,7 +547,7 @@ async function main() {
   pages.push({
     path: '/catalog',
     title: 'Помолвочные кольца с бриллиантами в Алматы и Астане — Neo Diamond',
-    description: 'Девять моделей помолвочных колец: цена, срок изготовления 5–10 дней, сертификат IGI. Примерка в шоурумах Алматы и Астаны.',
+    description: 'Помолвочные кольца с бриллиантами: цена сразу, срок изготовления 5–10 дней, сертификат IGI. Примерка в шоурумах Алматы и Астаны.',
     jsonLd: organization,
     image: ogImage('default'),
     bodyHtml: `

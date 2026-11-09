@@ -155,9 +155,10 @@ function basePrice(prices, shank, cast) {
 }
 
 /** Возврат к ленте: кому это кольцо не подошло, тот листает дальше, а не уходит. */
-export function Others({ shank, cast, prices, products }) {
+export function Others({ shank, prices, products }) {
   const { data: feed } = useContent('feed');
-  const items = feedModels(products, feed).filter(m => !(m.shank === shank && m.cast === cast));
+  // Та же шинка с ореолом и без — одно кольцо с переключателем: её здесь нет.
+  const items = feedModels(products, feed).filter(m => m.shank !== shank);
   return (
     <>
       <div className="mp-others-h">

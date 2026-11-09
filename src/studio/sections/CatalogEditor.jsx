@@ -111,6 +111,11 @@ export default function CatalogEditor() {
 
         <div className="st-stack">
           <Card title="Модели" aside={<span className="st-muted st-muted--s">фото и тексты — в разделе «Лента»</span>}>
+            <p className="st-note" style={{ marginTop: 0 }}>
+              Модели с ореолом (кроме Halo Luxe) в ленте не стоят — их открывают переключателем «С ореолом» на странице модели без
+              ореола. Название из этого списка показывается везде: в ленте, на странице модели, в «Других моделях» и в сообщении WhatsApp.
+              Выключенная модель пропадает из ленты, а её ореол — из переключателя.
+            </p>
             {products.rings.map(r => (
               <div key={`${r.shank}|${r.cast}`} className={`st-itemrow${r.enabled ? '' : ' is-off'}`}>
                 <span className="st-itemrow__main">

@@ -453,6 +453,7 @@ img { display: block; max-width: 100%; }
 }
 .mp-shape img { width: 70%; height: 70%; object-fit: contain; }
 .mp-shape.is-active { border-color: var(--ink-800); background: var(--paper-200, #E9E1D3); }
+.mp-halo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .mp-carats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .mp-chip {
   height: 42px; border-radius: 50px; border: 1.5px solid var(--paper-300, #DDD3C3); background: #FFFFFF;
