@@ -343,12 +343,14 @@ export default function DetailScreen({ ijewel }) {
 
       <div className="mp-card">
         <div className="mp-config">
+          {/* Ореол — первым: это выбор самого кольца, и его видно сразу. */}
+          {canHalo && <HaloPicker on={cast === 'halo'} extra={haloExtra} onChange={handleHalo} />}
+
           <div>
             <div className="mp-head"><span className="mp-head__t">Форма бриллианта</span></div>
             <ShapePicker shapes={shapes} value={shape} onChoose={handleShapeChange} />
           </div>
 
-          {canHalo && <HaloPicker on={cast === 'halo'} extra={haloExtra} onChange={handleHalo} />}
 
           <div>
             <div className="mp-head"><span className="mp-head__t">Каратность</span><span className="mp-head__v">{plus(caratExtra)}</span></div>
