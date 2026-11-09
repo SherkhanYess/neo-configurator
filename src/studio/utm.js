@@ -9,7 +9,7 @@
 // «Источники» keys on source AND medium together, so instagram/bio and
 // instagram/stories stay separate rows instead of collapsing into «instagram».
 
-// Витрина aena живёт в корне своего домена, без /catalog. Ссылки для рекламы
+// Витрина taena живёт в корне своего домена, без /catalog. Ссылки для рекламы
 // ведут сюда.
 export const BASE = 'https://aena.neodiamond.kz';
 

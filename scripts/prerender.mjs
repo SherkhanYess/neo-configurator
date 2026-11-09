@@ -25,7 +25,7 @@ import { guideList, guidePath, minutesLabel, outlineOf } from '../src/catalog/da
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
 
-// Адрес сайта: витрина aena в корне своего домена. От него — канонические
+// Адрес сайта: витрина taena в корне своего домена. От него — канонические
 // ссылки, Open Graph и карта сайта.
 const SITE = (process.env.SITE_URL || 'https://aena.neodiamond.kz').replace(/\/$/, '');
 

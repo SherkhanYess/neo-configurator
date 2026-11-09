@@ -61,7 +61,7 @@ async function buildCard({ ringPath, logoPath, name, priceText, out }) {
   const layers = [
     { input: studio, left: 0, top: 0 },
     { input: ringBuf, left: Math.round((PANEL - ring.width) / 2), top: Math.round((H - ring.height) / 2) },
-    { input: await textPng(`<span foreground="${INK4}" letter_spacing="6000">aena</span>`, 'Jost 22'), left: tx, top: 150 },
+    { input: await textPng(`<span foreground="${INK4}" letter_spacing="6000">taena</span>`, 'Jost 22'), left: tx, top: 150 },
     { input: await textPng(`<span foreground="${INK}">${name}</span>`, 'Jost 62'), left: tx, top: 205 },
   ];
   if (priceText) {
@@ -69,7 +69,7 @@ async function buildCard({ ringPath, logoPath, name, priceText, out }) {
   }
   layers.push({ input: await textPng(`<span foreground="${INK4}">10 огранок · Сертификат IGI</span>`, 'Jost 24'), left: tx, top: priceText ? 400 : 320 });
   if (logoPath && existsSync(logoPath)) {
-    layers.push({ input: await sharp(logoPath).resize({ height: 34 }).png().toBuffer(), left: tx, top: 500 });
+    layers.push({ input: await sharp(logoPath).resize({ height: 50 }).png().toBuffer(), left: tx, top: 500 });
   }
 
   await base.composite(layers).jpeg({ quality: 88, mozjpeg: true }).toFile(out);
@@ -84,7 +84,7 @@ async function buildCard({ ringPath, logoPath, name, priceText, out }) {
 export async function generateOgCards({ dist, combos, shapes, modelSlug, priceFor, money }) {
   const outDir = join(dist, 'assets', 'og');
   mkdirSync(outDir, { recursive: true });
-  const logoPath = join(dist, 'assets', 'aena', 'word-deep.png');
+  const logoPath = join(dist, 'assets', 'taena', 'word-deep.png');
   const done = new Set();
   let failures = 0;
 
@@ -112,7 +112,7 @@ export async function generateOgCards({ dist, combos, shapes, modelSlug, priceFo
   try {
     const ringPath = join(dist, 'assets', 'rings', 'neo-halo-round.webp');
     if (existsSync(ringPath)) {
-      await buildCard({ ringPath, logoPath, name: 'aena', priceText: null, out: join(outDir, 'default.jpg') });
+      await buildCard({ ringPath, logoPath, name: 'taena', priceText: null, out: join(outDir, 'default.jpg') });
       done.add('default');
     }
   } catch (e) {
@@ -142,7 +142,7 @@ async function buildGuideCard({ ringPath, title, minutes, out }) {
     { input: rounded, left: W - 440 - 80, top: Math.round((H - 440) / 2) },
     { input: await textPng(`<span foreground="#896E4C" letter_spacing="5000">ГИД ДЛЯ МУЖЧИН</span>`, 'Jost 22'), left: 80, top: 96 },
     { input: titlePng, left: 80, top: 150 },
-    { input: await textPng(`<span foreground="#C9BFAE">${minutes} · aena</span>`, 'Jost 24'), left: 80, top: H - 120 },
+    { input: await textPng(`<span foreground="#C9BFAE">${minutes} · taena</span>`, 'Jost 24'), left: 80, top: H - 120 },
   ]).jpeg({ quality: 88, mozjpeg: true }).toFile(out);
 }
 

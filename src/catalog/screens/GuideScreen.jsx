@@ -113,7 +113,7 @@ function Guide({ guide, others }) {
             <svg width="7" height="12" viewBox="0 0 8 12" aria-hidden="true"><path d="M7 1L2 6l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
             Кольца
           </Link>
-          <Link to="/" aria-label="aena — каталог"><img src="/assets/aena/sign-bronze.png" alt="aena" /></Link>
+          <Link to="/" aria-label="taena — каталог"><img src="/assets/taena/sign-bronze.png" alt="taena" /></Link>
           <div className="gd-progress" ref={barRef} aria-hidden="true" />
         </header>
 

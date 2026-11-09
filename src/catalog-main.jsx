@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './styles.css';
 import CatalogApp from './catalog/CatalogApp.jsx';
 
-// Вход витрины aena (aena.neodiamond.kz): лента в корне, модели, гиды и
+// Вход витрины taena (aena.neodiamond.kz): лента в корне, модели, гиды и
 // админка /admin. Отдельный от конструктора (src/main.jsx), который живёт на
 // con.neodiamond.kz: витрине не нужны ни его код, ни 4 МБ скриптов 3D в шапке —
 // 3D подтягивается, когда человек открывает модель.

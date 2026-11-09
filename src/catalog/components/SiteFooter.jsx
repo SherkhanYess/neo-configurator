@@ -10,7 +10,7 @@ function readUtm() {
   catch { return {}; }
 }
 
-// Футер aena. Бренд дочерний: шоурумы, телефоны и отзывы — компании Neo
+// Футер taena. Бренд дочерний: шоурумы, телефоны и отзывы — компании Neo
 // Diamond, поэтому её имя стоит рядом со знаком и в строке рейтинга.
 //
 // Футер решает две задачи сразу.
@@ -188,13 +188,13 @@ export default function SiteFooter() {
     >
       <div style={{ maxWidth: 760, margin: '0 auto', display: 'grid', gap: 26 }}>
 
-        {/* Знак и слово aena жемчугом на глубине — как «знак отдельно» и
-            «слово отдельно» в брендбуке. aena — дочерний бренд Neo Diamond:
+        {/* Знак и слово taena жемчугом на глубине — как «знак отдельно» и
+            «слово отдельно» в брендбуке. taena — дочерний бренд Neo Diamond:
             адреса, телефоны и отзывы в 2ГИС у них общие. */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src="/assets/aena/sign-pearl.png" alt="" width="41" height="32" style={{ display: 'block' }} />
-            <img src="/assets/aena/word-pearl.png" alt="aena" width="85" height="22" style={{ display: 'block' }} />
+            <img src="/assets/taena/sign-pearl.png" alt="" width="41" height="32" style={{ display: 'block' }} />
+            <img src="/assets/taena/word-pearl.png" alt="taena" width="108" height="32" style={{ display: 'block' }} />
           </div>
           <div style={{
             marginTop: 14, fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontWeight: 300,
@@ -235,7 +235,7 @@ export default function SiteFooter() {
         )}
 
         <div style={{ borderTop: `1px solid ${C.ink600}`, paddingTop: 16, fontSize: '0.78rem', color: C.ink200 }}>
-          © {new Date().getFullYear()} aena — дочерний бренд компании {ORG.name}
+          © {new Date().getFullYear()} taena — дочерний бренд компании {ORG.name}
         </div>
 
       </div>

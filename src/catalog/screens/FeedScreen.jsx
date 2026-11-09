@@ -37,16 +37,16 @@ function basePrice(prices, shank, cast) {
 
 /**
  * Обложка бренда — первый экран: чёрно-белое фото (загружается в админке,
- * сайт сам делает его чёрно-белым), знак aena и обещание. Две кнопки:
+ * сайт сам делает его чёрно-белым), знак taena и обещание. Две кнопки:
  * «Смотреть каталог» — вниз, к моделям; «Обсудить свой дизайн» — WhatsApp,
  * тип ИД (кольцо по своему дизайну).
  */
 export function Hero({ hero, onShow, onDesign }) {
   useQuoteFont();
   return (
-    <section className={`feed-hero${hero.photo ? ' has-photo' : ''}`} aria-label="aena">
+    <section className={`feed-hero${hero.photo ? ' has-photo' : ''}`} aria-label="taena">
       {hero.photo && <img className="feed-hero__photo" src={hero.photo} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: hero.position }} />}
-      <img className="feed-hero__sign" src="/assets/aena/sign-pearl.png" alt="aena" />
+      <img className="feed-hero__sign" src="/assets/taena/sign-pearl.png" alt="taena" />
       <div className="feed-hero__body">
         <h1 className="feed-hero__t">{typo(hero.title)}</h1>
         {hero.sub && <p className="feed-hero__p">{typo(hero.sub)}</p>}

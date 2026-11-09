@@ -320,7 +320,7 @@ img { display: block; max-width: 100%; }
 @keyframes feed-skel { 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .feed-skel { animation: none; } }
 
-/* Обложка бренда — первый экран ленты (брендбук aena: глубина, знак жемчугом,
+/* Обложка бренда — первый экран ленты (брендбук taena: глубина, знак жемчугом,
    обещание курсивом Cormorant, герой — двое). Фото — из админки, всегда ч/б. */
 .feed-hero {
   position: relative; overflow: hidden; isolation: isolate;
@@ -331,7 +331,7 @@ img { display: block; max-width: 100%; }
 }
 .feed-hero:not(.has-photo)::before {
   content: ''; position: absolute; inset: -10% -30%; z-index: -1;
-  background: url('/assets/aena/sign-pearl.png') center 42% / 78% auto no-repeat; opacity: 0.045;
+  background: url('/assets/taena/sign-pearl.png') center 42% / 78% auto no-repeat; opacity: 0.045;
 }
 .feed-hero__photo {
   /* Фото — верхние три четверти: кольцо над текстом, а не под ним. */
