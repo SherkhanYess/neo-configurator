@@ -374,7 +374,7 @@
 .gd-split { margin: 20px -20px 0; padding: 18px 20px 0; border-top: 1px solid var(--paper-200); }
 .gd-stones { margin-top: 14px; display: flex; gap: 8px; }
 .gd-stones > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 13px; line-height: 1.4; }
-.gd-stones > div > span { height: 96px; display: flex; align-items: flex-end; }
+.gd-stones__img { height: 96px; display: flex; align-items: flex-end; }
 .gd-ladder__row { padding: 14px 0; border-bottom: 1px solid var(--paper-200); }
 .gd-ladder__row:last-child { border-bottom: none; }
 .gd-ladder__top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 14.5px; font-weight: 700; color: var(--ink-800); }

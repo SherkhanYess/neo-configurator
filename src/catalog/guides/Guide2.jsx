@@ -154,8 +154,8 @@ function SameMoney() {
       <div className="gd-split">
         <b className="gd-b" style={{ fontSize: 15.5 }}>А на те же 2 миллиона</b>
         <div className="gd-stones">
-          <div><span><img src={SHAPE('round')} alt="" style={{ width: 46, height: 46 }} /></span>Sirius с природным<br />1 карат<br /><span className="gd-price">≈ {formatPrice(NATURAL_SIRIUS)}</span></div>
-          <div><span><img src={SHAPE('round')} alt="" style={{ width: 88, height: 88 }} /></span>Neo Halo Luxe с лабораторным<br />5 карат<br /><span className="gd-price">{money(lab5)}</span></div>
+          <div><span className="gd-stones__img"><img src={SHAPE('round')} alt="" style={{ width: 46, height: 46 }} /></span>Sirius с природным<br />1 карат<br /><span className="gd-price">≈ {formatPrice(NATURAL_SIRIUS)}</span></div>
+          <div><span className="gd-stones__img"><img src={SHAPE('round')} alt="" style={{ width: 88, height: 88 }} /></span>Neo Halo Luxe с лабораторным<br />5 карат<br /><span className="gd-price">{money(lab5)}</span></div>
         </div>
       </div>
     </Card>
