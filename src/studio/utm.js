@@ -13,38 +13,22 @@
 // ведут сюда.
 export const BASE = 'https://aena.neodiamond.kz';
 
-// Реклама: площадка — instagram, размещение — performance. Тип рекламы — utm_content: target (новые люди) или retarget (кто
-// уже был на сайте). Кампания подставляется перформанс-менеджером и приезжает
-// в код источника внутри сообщения WhatsApp, поэтому её имя — короткое
-// слово: obraz, vitrina, vybor.
-export const AD = { utm_source: 'instagram', utm_medium: 'performance' };
-export const AD_TYPES = [['target', 'Таргет'], ['retarget', 'Ретаргет']];
+// Реклама идёт через Ads Manager. Метки там ставятся один раз, строкой
+// «Параметры URL» на объявлении: площадка и размещение — постоянные, а
+// кампанию, креатив и номер объявления Meta подставляет сама. Поэтому в
+// админке нет рекламных ссылок с ручной кампанией — только эта строка и
+// чистый адрес посадочной страницы.
+//
+// Кампании называются «РК <Тема>_<Таргет|Ретаргет>» — тип рекламы едет в
+// названии. Номер объявления ({{ad.id}}) — то, по чему информационный центр
+// свяжет визит и заявку с креативом из Meta: он не меняется при
+// переименовании.
+export const ADS_URL_PARAMS =
+  'utm_source=instagram&utm_medium=performance&utm_campaign={{campaign.name}}&utm_content={{ad.name}}&utm_term={{ad.id}}';
 
-/** Метки рекламной ссылки: площадка, размещение, кампания и тип рекламы. */
-export const adParams = (campaign, adType) => ({ ...AD, utm_campaign: campaign, utm_content: adType });
-
+// Ссылки не из рекламы: шапка профиля, сторис, рассылка — у каждой своё
+// размещение, чтобы в «Источниках» они не сливались.
 export const UTM_PRESETS = [
-  {
-    id: 'ad_obraz',
-    title: 'Реклама Instagram — «Образ»',
-    note: 'Основной трафик. Ведёт в ленту, можно добавить &style=halo.',
-    ad: true,
-    params: { ...AD, utm_campaign: 'obraz' },
-  },
-  {
-    id: 'ad_vitrina',
-    title: 'Реклама Instagram — «Витрина»',
-    note: 'Тест. Ведёт сразу на страницу модели: /product/sirius/halo/oval.',
-    ad: true,
-    params: { ...AD, utm_campaign: 'vitrina' },
-  },
-  {
-    id: 'ad_vybor',
-    title: 'Реклама Instagram — «Выбор»',
-    note: 'Кампания vybor.',
-    ad: true,
-    params: { ...AD, utm_campaign: 'vybor' },
-  },
   {
     id: 'guide',
     title: 'Внешний гайд (PDF, статья не на сайте)',
@@ -83,15 +67,11 @@ export function buildUtmUrl(params, path = '') {
   return `${BASE}${path}${q.toString() ? `?${q}` : ''}`;
 }
 
-/** Метки готовой ссылки; у рекламной — ещё тип рекламы. */
-export const presetParams = (p, adType) => (p.ad ? { ...p.params, utm_content: adType } : p.params);
-
 // Подписи для разбивки «Источники» — по тому же ключу, что и сервер:
-// «источник / размещение». У рекламных кампаний ключ общий
-// (instagram / performance), поэтому для него — общее название без имени
-// кампании.
+// «источник / размещение». У всей рекламы ключ общий (instagram /
+// performance) — кампании и креативы различаются уже в информационном центре.
 export const UTM_LABELS = (() => {
-  const out = {};
+  const out = { 'instagram / performance': 'Реклама Instagram' };
   for (const p of UTM_PRESETS) {
     const key = `${p.params.utm_source} / ${p.params.utm_medium}`;
     out[key] = key in out ? p.title.split(' — ')[0] : p.title;

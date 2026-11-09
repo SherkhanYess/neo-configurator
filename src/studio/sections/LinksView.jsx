@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Field, PageHead, Svg, useToast } from '../ui.jsx';
-import { AD, AD_TYPES, UTM_PRESETS, adParams, buildUtmUrl, presetParams } from '../utm.js';
+import { ADS_URL_PARAMS, BASE, UTM_PRESETS, buildUtmUrl } from '../utm.js';
 import { useProducts } from '../../catalog/data/products.js';
 import { guideList, guidePath } from '../../catalog/data/guides.js';
 import { api } from '../api.js';
@@ -30,32 +30,50 @@ function useGuides() {
   return guideList(doc);
 }
 
-/**
- * Гиды — посадочные для рекламы. Кампания по умолчанию — gid: так в коде
- * заявки видно, что человек пришёл с рекламы гида, а какой это был гид —
- * в аналитике, таблица «Гиды».
- */
-function GuideLinks({ guides, copy, adType }) {
-  const [campaign, setCampaign] = useState('gid');
+/** Куда ведёт ссылка: лента, страница модели или гид. */
+function TargetSelect({ value, onChange, models, guides }) {
   return (
-    <Card title="Гиды — ссылки для рекламы" aside={<span className="st-muted st-muted--s">реклама Instagram, по ссылке на гид</span>}>
-      <Field label="Кампания" hint="Одно латинское слово — оно попадёт в код заявки в WhatsApp: [К-ОБ·gid]">
-        <input className="st-input" value={campaign} onChange={e => setCampaign(latin(e.target.value))} />
+    <select className="st-input" value={value} onChange={onChange}>
+      <option value="">Лента — все модели</option>
+      <optgroup label="Модели">
+        {models.map(m => (
+          <option key={m.key} value={`/product/${slugOf(m.shank)}/${m.cast}/round`}>{m.model}</option>
+        ))}
+      </optgroup>
+      <optgroup label="Гиды">
+        {guides.map(g => <option key={g.slug} value={guidePath(g.slug)}>{g.title}</option>)}
+      </optgroup>
+    </select>
+  );
+}
+
+/**
+ * Реклама: в Ads Manager на объявлении два поля — «Веб-сайт» (чистый адрес
+ * посадочной) и «Параметры URL» (одна строка на все объявления). Метки
+ * кампании и креатива Meta подставляет сама.
+ */
+function AdsCard({ copy, models, guides }) {
+  const [landing, setLanding] = useState('');
+  const site = `${BASE}${landing}`;
+  return (
+    <Card title="Реклама в Ads Manager" aside={<span className="st-muted st-muted--s">два поля в объявлении</span>}>
+      <Field label="1. Веб-сайт" hint="Куда ведёт объявление. Адрес без меток — метки добавит строка ниже">
+        <TargetSelect value={landing} onChange={e => setLanding(e.target.value)} models={models} guides={guides} />
       </Field>
-      <div className="st-list-links" style={{ marginTop: 14 }}>
-        {guides.map(g => {
-          const url = buildUtmUrl(adParams(campaign, adType), guidePath(g.slug));
-          return (
-            <div key={g.slug} className="st-linkrow">
-              <div className="st-linkrow__text">
-                <b>{g.title}</b>
-                <code>{url}</code>
-              </div>
-              <Button variant="secondary" onClick={() => copy(url)}><Svg name="copy" size={16} />Копировать</Button>
-            </div>
-          );
-        })}
+      <div className="st-urlbox">
+        <code>{site}</code>
+        <Button variant="secondary" onClick={() => copy(site)}><Svg name="copy" size={16} />Копировать</Button>
       </div>
+      <Field label="2. Параметры URL" hint="Одна и та же строка во всех объявлениях. Кампанию, креатив и номер объявления Meta подставит сама">
+        <div className="st-urlbox" style={{ marginTop: 0 }}>
+          <code>{ADS_URL_PARAMS}</code>
+          <Button onClick={() => copy(ADS_URL_PARAMS)}><Svg name="copy" size={16} />Копировать</Button>
+        </div>
+      </Field>
+      <p className="st-note">
+        Кампании называйте «РК Тема_Таргет» или «РК Тема_Ретаргет», например «РК Образ_Ретаргет», и не переименовывайте
+        после запуска — иначе одна кампания распадётся в аналитике на две. Креативы — как удобно.
+      </p>
     </Card>
   );
 }
@@ -65,47 +83,25 @@ export default function LinksView() {
   const guides = useGuides();
   // Все модели, у которых есть своя страница, — и те, что не стоят в ленте.
   const models = useProducts().rings.map(r => ({ key: `${r.shank}|${r.cast}`, shank: r.shank, cast: r.cast, model: r.name }));
-  // Тип рекламы — один на всю страницу: переключили — пересобрались все
-  // рекламные ссылки (готовые, гиды и своя).
-  const [adType, setAdType] = useState('target');
-  const [form, setForm] = useState({ ...AD, utm_campaign: '', target: '' });
+  // Своя ссылка — для мест не из рекламы (рекламные метки ставит Ads Manager).
+  const [form, setForm] = useState({ utm_source: 'instagram', utm_medium: 'bio', utm_campaign: '', target: '' });
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: k === 'target' ? e.target.value : latin(e.target.value) }));
-  const isAd = form.utm_medium === AD.utm_medium;
-  const custom = buildUtmUrl({ utm_source: form.utm_source, utm_medium: form.utm_medium, utm_campaign: form.utm_campaign, ...(isAd ? { utm_content: adType } : {}) }, form.target);
+  const custom = buildUtmUrl({ utm_source: form.utm_source, utm_medium: form.utm_medium, utm_campaign: form.utm_campaign }, form.target);
 
   return (
     <div className="st-links">
       <PageHead title="Ссылки" sub="Размещайте только ссылки отсюда — тогда каждый источник будет виден в аналитике и в коде заявки в WhatsApp." />
 
-      <Card title="Тип рекламы" aside={<span className="st-muted st-muted--s">метка utm_content во всех рекламных ссылках</span>}>
-        <div className="st-chips">
-          {AD_TYPES.map(([v, l]) => (
-            <button key={v} type="button" className={`st-chip${adType === v ? ' is-on' : ''}`} aria-pressed={adType === v} onClick={() => setAdType(v)}>
-              {l} <span className="st-mono">{v}</span>
-            </button>
-          ))}
-        </div>
-        <p className="st-note">Таргет — на новых людей, ретаргет — на тех, кто уже был на сайте или в профиле. Площадка во всех рекламных ссылках — instagram, размещение — performance.</p>
-      </Card>
+      <AdsCard copy={copy} models={models} guides={guides} />
 
-      <Card title="Своя ссылка">
+      <Card title="Своя ссылка" aside={<span className="st-muted st-muted--s">не для рекламы: профиль, сторис, рассылка</span>}>
         <div className="st-grid3">
           <Field label="Площадка" hint="instagram, tiktok…"><input className="st-input" value={form.utm_source} onChange={set('utm_source')} /></Field>
-          <Field label="Размещение" hint="performance — реклама; bio, stories…"><input className="st-input" value={form.utm_medium} onChange={set('utm_medium')} /></Field>
+          <Field label="Размещение" hint="bio, stories, post, manager…"><input className="st-input" value={form.utm_medium} onChange={set('utm_medium')} /></Field>
           <Field label="Кампания" hint="одно слово: obraz, vitrina"><input className="st-input" value={form.utm_campaign} onChange={set('utm_campaign')} /></Field>
         </div>
         <Field label="Куда ведёт">
-          <select className="st-input" value={form.target} onChange={set('target')}>
-            <option value="">Лента — все модели</option>
-            <optgroup label="Модели">
-              {models.map(m => (
-                <option key={m.key} value={`/product/${slugOf(m.shank)}/${m.cast}/round`}>{m.model}</option>
-              ))}
-            </optgroup>
-            <optgroup label="Гиды">
-              {guides.map(g => <option key={g.slug} value={guidePath(g.slug)}>{g.title}</option>)}
-            </optgroup>
-          </select>
+          <TargetSelect value={form.target} onChange={set('target')} models={models} guides={guides} />
         </Field>
         <div className="st-urlbox">
           <code>{custom}</code>
@@ -113,11 +109,9 @@ export default function LinksView() {
         </div>
       </Card>
 
-      <GuideLinks guides={guides} copy={copy} adType={adType} />
-
       <div className="st-list-links">
         {UTM_PRESETS.map(p => {
-          const url = buildUtmUrl(presetParams(p, adType));
+          const url = buildUtmUrl(p.params);
           return (
             <div key={p.id} className="st-linkrow">
               <div className="st-linkrow__text">
