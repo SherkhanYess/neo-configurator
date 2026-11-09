@@ -40,6 +40,7 @@ export function toDraft(content, products) {
 
   return {
     intro: { title: content?.intro?.title ?? '', sub: content?.intro?.sub ?? '' },
+    hero: { title: content?.hero?.title ?? '', sub: content?.hero?.sub ?? '', cta: content?.hero?.cta ?? '', photo: content?.hero?.photo ?? null, focus: content?.hero?.focus ?? { x: 50, y: 50 } },
     models,
     breaks,
   };
@@ -48,6 +49,7 @@ export function toDraft(content, products) {
 export function toContent(draft) {
   return {
     intro: draft.intro,
+    hero: draft.hero,
     models: draft.models.map(({ key, text, photo, tone, toneAuto, focus }) => ({ key, text, photo, tone, toneAuto, focus })),
     breaks: draft.breaks.map(({ id, title, after, photo, tone, toneAuto, focus, hidden }) => ({ id, title, after, photo, tone, toneAuto, focus, hidden })),
   };

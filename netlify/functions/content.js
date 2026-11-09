@@ -54,8 +54,18 @@ export function cleanFeed(body) {
       hidden: b?.hidden === true,
     }));
 
+  // Обложка бренда в начале ленты: обещание, подпись, кнопка и фото пары.
+  const hero = {
+    title: str(body?.hero?.title, 80),
+    sub: str(body?.hero?.sub, 140),
+    cta: str(body?.hero?.cta, 40),
+    photo: photo(body?.hero?.photo),
+    focus: focus(body?.hero?.focus),
+  };
+
   return {
     version: 1,
+    hero,
     intro: { title: str(body?.intro?.title, 60), sub: str(body?.intro?.sub, 120) },
     models: unique,
     breaks,

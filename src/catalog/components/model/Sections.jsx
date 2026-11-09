@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FAQ_GROUPS } from '../Faq.jsx';
 import { SHOWROOMS } from '../../data/org.js';
 import { REVIEWS } from '../../data/reviews.js';
+import { useReputation } from '../../lib/reputation.js';
 import { useContent } from '../../data/content.js';
 import { feedModels } from '../../data/feed.js';
 import { formatPrice } from '../../data/priceCalc.js';
@@ -88,19 +89,6 @@ export function Fitting({ model, onWa }) {
       <div className="mp-note">Без обязательств — можно просто посмотреть</div>
     </div>
   );
-}
-
-function useReputation() {
-  const [rep, setRep] = useState(null);
-  useEffect(() => {
-    let alive = true;
-    fetch('/reputation.json')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && d?.rating) setRep(d); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
-  return rep;
 }
 
 /** «Нас выбирают»: рейтинг и отзывы из 2ГИС. */

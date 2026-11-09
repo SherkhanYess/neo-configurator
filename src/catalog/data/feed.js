@@ -39,6 +39,28 @@ const BREAKS = [
 
 export const DEFAULT_TITLE = 'То, что между вами, — в одном кольце';
 
+// Обложка бренда — первое, что видит человек: знак aena, обещание бренда и
+// чёрно-белое фото рук двоих (брендбук aena: «герой — двое, а не кольцо»).
+// Фото загружают в админке; сайт сам делает его чёрно-белым. Без фото
+// обложка остаётся тёмной «глубиной» со знаком.
+export const DEFAULT_HERO = {
+  title: 'То, что между вами, должно остаться',
+  sub: 'Помолвочные кольца с бриллиантами. Шоурумы в Алматы и Астане',
+  cta: 'Смотреть кольца',
+};
+
+/** Обложка: что сохранено в админке, а пустое — по умолчанию. */
+export function feedHero(content) {
+  const h = content?.hero ?? {};
+  return {
+    title: h.title || DEFAULT_HERO.title,
+    sub: h.sub || DEFAULT_HERO.sub,
+    cta: h.cta || DEFAULT_HERO.cta,
+    photo: h.photo || null,
+    position: position(h.focus),
+  };
+}
+
 /** Тире не начинает строку: пробел перед ним — неразрывный. */
 export const typo = (text) => String(text ?? '').replace(/ +([—–])/g, '\u00A0$1');
 

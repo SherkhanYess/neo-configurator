@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { SHAPES } from '../data/config.js';
-import { feedModels, feedBreaks, defaultSub, typo, DEFAULT_TITLE } from '../data/feed.js';
+import { feedModels, feedBreaks, feedHero, defaultSub, typo } from '../data/feed.js';
 import { useContent } from '../data/content.js';
 import { usePrices, pricesKnown } from '../data/prices.js';
 import { enabledShapes, useProducts } from '../data/products.js';
@@ -12,6 +12,8 @@ import { FeedCard, FeedBreak, FeedCardSkeleton } from '../components/FeedCard.js
 import { useWhatsApp } from '../components/model/whatsapp.jsx';
 import { WaButton } from '../components/model/Sections.jsx';
 import GuidesStrip from '../components/GuidesStrip.jsx';
+import { useReputation } from '../lib/reputation.js';
+import { useQuoteFont } from '../lib/useQuoteFont.js';
 
 // Лента моделей — вход в каталог.
 //
@@ -31,6 +33,55 @@ function basePrice(prices, shank, cast) {
   const base = prices.baseByShank?.[shank] ?? 0;
   const add  = cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0;
   return base + add;
+}
+
+/**
+ * Обложка бренда — первый экран. Герой — двое, а не кольцо: чёрно-белое фото
+ * рук пары (загружается в админке, сайт сам делает его чёрно-белым), знак
+ * aena и обещание бренда. Кнопка ведёт вниз, к моделям. Без фото — та же
+ * «глубина» со знаком: обложка не ломается, пока съёмки нет.
+ */
+export function Hero({ hero, onShow }) {
+  useQuoteFont();
+  return (
+    <section className={`feed-hero${hero.photo ? ' has-photo' : ''}`} aria-label="aena">
+      {hero.photo && <img className="feed-hero__photo" src={hero.photo} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: hero.position }} />}
+      <img className="feed-hero__sign" src="/assets/aena/sign-pearl.png" alt="aena" />
+      <div className="feed-hero__body">
+        <h1 className="feed-hero__t">{typo(hero.title)}</h1>
+        <p className="feed-hero__p">{typo(hero.sub)}</p>
+        <button type="button" className="feed-hero__cta" onClick={onShow}>{hero.cta}</button>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * «Почему нам доверяют» — после колец и гидов, перед подбором в WhatsApp:
+ * отвечает на главный страх человека с рекламы, прежде чем он напишет.
+ */
+const STAR_ICON = <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" /></svg>;
+function Trust() {
+  const rep = useReputation();
+  const facts = [
+    rep ? { v: <>{Number(rep.rating).toFixed(1).replace('.', ',')}{STAR_ICON}</>, c: `в 2ГИС, ${rep.ratings} оценок`, href: rep.url } : null,
+    { v: '5–10', c: 'дней на изготовление' },
+    { v: 'IGI', c: 'сертификат на каждый камень' },
+    { v: 'В подарок', c: 'гравировка внутри кольца', small: true },
+  ].filter(Boolean);
+  return (
+    <section className="feed-trust" aria-labelledby="feed-trust-t">
+      <h2 className="feed-trust__t" id="feed-trust-t">Почему нам доверяют</h2>
+      <div className="feed-trust__row" style={{ '--n': facts.length }}>
+        {facts.map((f, i) => {
+          const inner = <><b className={f.small ? 'is-small' : ''}>{f.v}</b><small>{f.c}</small></>;
+          return f.href
+            ? <a key={i} className="feed-trust__f" href={f.href} target="_blank" rel="noopener noreferrer">{inner}</a>
+            : <div key={i} className="feed-trust__f">{inner}</div>;
+        })}
+      </div>
+    </section>
+  );
 }
 
 /**
@@ -59,6 +110,9 @@ export default function FeedScreen() {
   const { data: content, ready } = useContent('feed');
   const models = useMemo(() => feedModels(productCfg, content), [productCfg, content]);
   const breaks = useMemo(() => feedBreaks(content), [content]);
+  const hero = useMemo(() => feedHero(content), [content]);
+  const listRef = useRef(null);
+  const showRings = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   // Страница модели открывается с первой формой, включённой в админке.
   const firstShape = useMemo(() => {
@@ -111,13 +165,12 @@ export default function FeedScreen() {
 
   return (
     <div className="feed">
-      <header className="feed-head">
-        <img src="/assets/aena/sign-bronze.png" alt="aena" className="feed-logo" />
-      </header>
+      {ready ? <Hero hero={hero} onShow={showRings} /> : <div className="feed-hero" aria-hidden="true" />}
 
-      <div className="feed-intro">
-        <h1 className="feed-title">{typo(content?.intro?.title || DEFAULT_TITLE)}</h1>
-        <p className="feed-sub">{typo(content?.intro?.sub || defaultSub(models.length))}</p>
+      {/* Над моделями — короткая строка: сколько колец. Заголовок страницы —
+          обещание бренда на обложке. */}
+      <div className="feed-intro" ref={listRef}>
+        <h2 className="feed-title">{typo(content?.intro?.title || defaultSub(models.length))}</h2>
       </div>
 
       <div className="feed-list">
@@ -148,6 +201,7 @@ export default function FeedScreen() {
           );
         })}
         {ready && <GuidesStrip />}
+        {ready && <Trust />}
         {ready && <HelpBlock onWa={() => wa.open('help', {}, { place: 'feed_end' })} />}
       </div>
       {wa.sheet}

@@ -7,7 +7,9 @@ import { PhotoButtons, PhotoStage, TonePicker, retone, useUpload } from './feed/
 import { FeedCard, FeedBreak } from '../../catalog/components/FeedCard.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
 import { fetchPrices } from '../../catalog/data/prices.js';
-import { DEFAULT_TITLE, defaultSub, typo } from '../../catalog/data/feed.js';
+import { DEFAULT_HERO, defaultSub, feedHero, typo } from '../../catalog/data/feed.js';
+import { Hero } from '../../catalog/screens/FeedScreen.jsx';
+import { FieldInput } from './guides/FieldEditor.jsx';
 
 // Раздел «Лента»: порядок моделей, фото, цвет плашки, тексты, кадры «на руке»
 // и заголовок. Слева список, в середине правка выбранного, справа — вся лента
@@ -43,8 +45,8 @@ function ModelList({ draft, setDraft, sel, setSel }) {
               onClick={() => setSel({ type: 'intro' })}>
         <span className="st-list__aa">Aa</span>
         <span className="st-list__body">
-          <b>{draft.intro.title || DEFAULT_TITLE}</b>
-          <small>Заголовок ленты</small>
+          <b>{draft.hero.title || DEFAULT_HERO.title}</b>
+          <small>Обложка бренда и строка над моделями</small>
         </span>
       </button>
 
@@ -245,29 +247,47 @@ function BreakEditor({ b, models, update, remove }) {
 
 // ─── Заголовок ленты ─────────────────────────────────────────────────────────
 
-function IntroEditor({ intro, count, update }) {
+function IntroEditor({ intro, hero, count, update, updateHero }) {
+  const focusY = hero.focus?.y ?? 50;
   return (
     <div className="st-editor st-editor--single">
       <div className="st-editor__form">
         <div className="st-editor__head">
           <div>
             <div className="st-eyebrow">Начало ленты</div>
-            <h2 className="st-h2">Заголовок</h2>
+            <h2 className="st-h2">Обложка бренда</h2>
           </div>
         </div>
-        <div className="st-intro-preview">
-          <h1 className="feed-title">{typo(intro.title || DEFAULT_TITLE)}</h1>
-          <p className="feed-sub">{typo(intro.sub || defaultSub(count))}</p>
-        </div>
+        <p className="st-muted">
+          Первый экран: знак aena, обещание и фото рук двоих. Фото на сайте всегда чёрно-белое — загружайте любое, цвет уберётся сам.
+          Пусто — подставится текст по умолчанию.
+        </p>
         <Card>
-          <Field label="Заголовок" counter={<Counter value={intro.title} soft={28} hard={40} />}>
-            <input className="st-input" value={intro.title} placeholder={DEFAULT_TITLE} maxLength={60}
-                   onChange={e => update({ title: e.target.value })} />
+          <Field label="Обещание" counter={<Counter value={hero.title} soft={40} hard={70} />}>
+            <input className="st-input" value={hero.title} placeholder={DEFAULT_HERO.title} maxLength={80}
+                   onChange={e => updateHero({ title: e.target.value })} />
           </Field>
-          <Field label="Подзаголовок" counter={<Counter value={intro.sub} soft={48} hard={70} />}
-                 hint="Пусто — подставится сам и посчитает модели: скроете одну, станет «Восемь колец»">
-            <input className="st-input" value={intro.sub} placeholder={defaultSub(count)} maxLength={120}
-                   onChange={e => update({ sub: e.target.value })} />
+          <Field label="Строка под ним" counter={<Counter value={hero.sub} soft={70} hard={120} />}>
+            <input className="st-input" value={hero.sub} placeholder={DEFAULT_HERO.sub} maxLength={140}
+                   onChange={e => updateHero({ sub: e.target.value })} />
+          </Field>
+          <Field label="Кнопка">
+            <input className="st-input" value={hero.cta} placeholder={DEFAULT_HERO.cta} maxLength={40}
+                   onChange={e => updateHero({ cta: e.target.value })} />
+          </Field>
+          <FieldInput f={{ kind: 'image', label: 'Фото пары', hint: 'Руки двоих, кольцо — на втором плане. Вертикальное или квадратное.' }}
+                      value={hero.photo ?? ''} onChange={v => updateHero({ photo: v || null })} />
+          {hero.photo && (
+            <Field label={`Кадр по высоте — ${focusY}%`} hint="Двигайте, пока в кадре не окажутся руки">
+              <input type="range" min="0" max="100" value={focusY} onChange={e => updateHero({ focus: { x: 50, y: Number(e.target.value) } })} />
+            </Field>
+          )}
+        </Card>
+        <Card>
+          <Field label="Строка над моделями" counter={<Counter value={intro.title} soft={48} hard={60} />}
+                 hint="Пусто — подставится сама и посчитает модели: «Шесть колец. Листайте — одно из них её.»">
+            <input className="st-input" value={intro.title} placeholder={defaultSub(count)} maxLength={60}
+                   onChange={e => update({ title: e.target.value })} />
           </Field>
         </Card>
       </div>
@@ -284,10 +304,11 @@ function PhonePreview({ draft, products, prices, onPick }) {
       <div className="st-phone__label">Так увидит покупатель</div>
       <div className="st-phone__screen">
         <div className="feed">
-          <header className="feed-head"><img src="/assets/aena/sign-bronze.png" alt="" className="feed-logo" /></header>
-          <div className="feed-intro" onClick={() => onPick({ type: 'intro' })}>
-            <h1 className="feed-title">{typo(draft.intro.title || DEFAULT_TITLE)}</h1>
-            <p className="feed-sub">{typo(draft.intro.sub || defaultSub(models.length))}</p>
+          <div onClick={() => onPick({ type: 'intro' })} style={{ cursor: 'pointer' }}>
+            <Hero hero={feedHero(draft)} onShow={() => {}} />
+            <div className="feed-intro">
+              <h2 className="feed-title">{typo(draft.intro.title || defaultSub(models.length))}</h2>
+            </div>
           </div>
           <div className="feed-list">
             {models.map((item, i) => {
@@ -387,7 +408,9 @@ export default function FeedEditor() {
                    }} />
     );
   } else if (sel.type === 'intro') {
-    editor = <IntroEditor intro={draft.intro} count={visible.length} update={(p) => setDraft(d => ({ ...d, intro: { ...d.intro, ...p } }))} />;
+    editor = <IntroEditor intro={draft.intro} hero={draft.hero} count={visible.length}
+                          update={(p) => setDraft(d => ({ ...d, intro: { ...d.intro, ...p } }))}
+                          updateHero={(p) => setDraft(d => ({ ...d, hero: { ...d.hero, ...p } }))} />;
   }
 
   return (
