@@ -1,4 +1,4 @@
-# taena — витрина (aena.neodiamond.kz)
+# taena — витрина (taena.neodiamond.kz)
 
 Витрина второго бренда, taena, в корне своего домена: лента «/», модели
 «/product/…», гиды «/guides/…», админка «/admin». Старые адреса с `/catalog`

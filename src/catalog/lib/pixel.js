@@ -10,7 +10,7 @@
 // Шлём только с боевых адресов. Песочница и локальная разработка иначе
 // подмешали бы тестовые клики в обучение рекламы.
 
-const LIVE_HOSTS = new Set(['aena.neodiamond.kz', 'neodiamond.kz', 'www.neodiamond.kz', 'con.neodiamond.kz']);
+const LIVE_HOSTS = new Set(['taena.neodiamond.kz', 'neodiamond.kz', 'www.neodiamond.kz', 'con.neodiamond.kz']);
 
 const MAP = {
   product_open: (p) => ['ViewContent', {

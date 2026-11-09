@@ -11,7 +11,7 @@
 
 // Витрина taena живёт в корне своего домена, без /catalog. Ссылки для рекламы
 // ведут сюда.
-export const BASE = 'https://aena.neodiamond.kz';
+export const BASE = 'https://taena.neodiamond.kz';
 
 // Реклама идёт через Ads Manager. Метки там ставятся один раз, строкой
 // «Параметры URL» на объявлении: площадка и размещение — постоянные, а

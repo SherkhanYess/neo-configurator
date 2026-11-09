@@ -29,7 +29,7 @@ const DIST = join(ROOT, 'dist');
 
 // Адрес сайта: витрина taena в корне своего домена. От него — канонические
 // ссылки, Open Graph и карта сайта.
-const SITE = (process.env.SITE_URL || 'https://aena.neodiamond.kz').replace(/\/$/, '');
+const SITE = (process.env.SITE_URL || 'https://taena.neodiamond.kz').replace(/\/$/, '');
 
 // Песочница: отдельный сайт для разработки новой витрины. В поиске ей делать
 // нечего — это копия каталога, и в индексе она конкурировала бы с основным
@@ -162,7 +162,7 @@ function page(shell, { path, title, description, bodyHtml, jsonLd, image }) {
     `<meta name="description" content="${esc(description)}" />`,
     `<link rel="canonical" href="${esc(url)}" />`,
     `<meta property="og:type" content="website" />`,
-    `<meta property="og:site_name" content="Neo Diamond" />`,
+    `<meta property="og:site_name" content="taena" />`,
     `<meta property="og:title" content="${esc(title)}" />`,
     `<meta property="og:description" content="${esc(description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
@@ -445,8 +445,6 @@ async function main() {
   try {
     ogDone = await generateOgCards({
       dist: DIST, combos: COMBOS, shapes: SHAPES, modelSlug: MODEL_SLUG,
-      priceFor: (shank, cast) => basePrice(prices, shank, cast),
-      money,
     });
   } catch (e) {
     console.warn('og-карточки пропущены:', e.message);
@@ -479,7 +477,7 @@ async function main() {
       const path = `/product/${slug(shank)}/${cast}/${shapeId}`;
       pages.push({
         path,
-        title: `${name} — помолвочное кольцо с бриллиантом ${money(price)} | Neo Diamond`,
+        title: `${name} — помолвочное кольцо с бриллиантом ${money(price)} | taena`,
         description: `${name}: кольцо с лабораторным бриллиантом огранки «${shapeLabel}», от ${money(price)}. Чистота VVS2/VS1, цвет D/E, сертификат IGI. Примерка в Алматы и Астане.`,
         jsonLd: productJsonLd({ name, price, shapeLabel, path }),
         image: ogImage(`${MODEL_SLUG[model]}-${shapeId}`),
@@ -504,7 +502,7 @@ async function main() {
 
   pages.push({
     path: '/list',
-    title: 'Каталог помолвочных колец с ценами | Neo Diamond, Алматы и Астана',
+    title: 'Каталог помолвочных колец с ценами | taena, Алматы и Астана',
     description: `Каталог колец с лабораторными бриллиантами: ${COMBOS.length} моделей, ${SHAPES.length} огранок, цены от ${money(Math.min(...COMBOS.map(([s, c]) => basePrice(prices, s, c))))}. Сертификат IGI, примерка в Алматы и Астане.`,
     jsonLd: [organization, itemListJsonLd(prices)],
     image: ogImage('default'),
@@ -542,12 +540,12 @@ async function main() {
 
   pages.push({
     path: '/',
-    title: 'Помолвочные кольца с бриллиантами в Алматы и Астане — Neo Diamond',
+    title: 'Помолвочные кольца с бриллиантами в Алматы и Астане — taena',
     description: 'Помолвочные кольца с бриллиантами: цена сразу, срок изготовления 5–10 дней, сертификат IGI. Примерка в шоурумах Алматы и Астаны.',
     jsonLd: organization,
     image: ogImage('default'),
     bodyHtml: `
-      <h1>Кольца с лабораторными бриллиантами — Neo Diamond</h1>
+      <h1>Кольца с лабораторными бриллиантами — taena</h1>
       <p>Ювелирная студия в Алматы и Астане. Каждый камень от 0,5 карат — с сертификатом IGI.</p>
       <h2>Огранки</h2>
       <ul>${SHAPES.map(([, l]) => `<li>${esc(l)}</li>`).join('')}</ul>
@@ -560,7 +558,7 @@ async function main() {
   for (const g of GUIDES) {
     pages.push({
       path: guidePath(g.slug),
-      title: `${g.title} — Neo Diamond`,
+      title: `${g.title} — taena`,
       description: g.description,
       image: guideOg.has(g.slug) ? `${SITE}/assets/og/guide-${g.slug}.jpg` : ogImage('default'),
       jsonLd: {

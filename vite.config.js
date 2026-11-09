@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Витрина aena живёт в корне своего домена (aena.neodiamond.kz): лента — «/»,
+// Витрина taena живёт в корне своего домена (taena.neodiamond.kz): лента — «/»,
 // модели — «/product/…», гиды — «/guides/…», админка — «/admin». Вход один —
 // catalog-shell.html. Конструктор (index.html, src/configurator) на этом
 // сайте не нужен и не собирается; его код не тронут, он живёт на

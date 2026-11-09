@@ -159,7 +159,7 @@ export default function StudioApp() {
   useEffect(() => { if (authed) markStaff(); }, [authed]);
 
   useEffect(() => {
-    document.title = 'Админка — Neo Diamond';
+    document.title = 'Админка — taena';
     // Админку не индексируем, даже если ссылка куда-то утечёт.
     const meta = document.createElement('meta');
     meta.name = 'robots'; meta.content = 'noindex, nofollow';

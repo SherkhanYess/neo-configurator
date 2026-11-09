@@ -297,7 +297,7 @@ export default function DetailScreen({ ijewel }) {
   // ореол или сменили огранку — вкладка называет то кольцо, что на экране.
   const fromPrice = calcPrice({ shankLabel: shankId, cast, carat: 1 }, prices);
   useEffect(() => {
-    if (fromPrice) document.title = `${productName} — помолвочное кольцо с бриллиантом ${formatPrice(fromPrice)} | Neo Diamond`;
+    if (fromPrice) document.title = `${productName} — помолвочное кольцо с бриллиантом ${formatPrice(fromPrice)} | taena`;
   }, [productName, fromPrice]);
 
   // Надбавки показываем рядом с заголовком выбора, а не цену целиком: цена

@@ -52,7 +52,7 @@ function Guide({ guide, others }) {
   useEffect(() => {
     const meta = document.querySelector('meta[name="description"]');
     const prevDesc = meta?.getAttribute('content');
-    document.title = `${guide.title} — Neo Diamond`;
+    document.title = `${guide.title} — taena`;
     if (guide.description) meta?.setAttribute('content', guide.description);
     return () => {
       document.title = DEFAULT_TITLE;
