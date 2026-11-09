@@ -49,6 +49,9 @@ export function useContent(name) {
   });
 
   useEffect(() => {
+    // Уже получили в этот визит — второй раз не спрашиваем. Сверяемся с
+    // сервером, только если показали сохранённое с прошлого раза.
+    if (name in memory && state.data === memory[name]) return;
     let alive = true;
     const timer = setTimeout(() => {
       if (alive) setState(s => (s.ready ? s : { ...s, ready: true }));
@@ -58,7 +61,7 @@ export function useContent(name) {
       .catch(() => { if (alive) setState(s => ({ ...s, ready: true })); })
       .finally(() => clearTimeout(timer));
     return () => { alive = false; clearTimeout(timer); };
-  }, [name]);
+  }, [name]); // eslint-disable-line react-hooks/exhaustive-deps -- state читаем один раз, при открытии
 
   return state;
 }
