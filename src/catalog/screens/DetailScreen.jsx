@@ -336,7 +336,7 @@ export default function DetailScreen({ ijewel }) {
       </div>
 
       {fromHint && (
-        <div className="mp-plaque"><b>Вам показали это кольцо.</b> Размер нам уже прислали — напишите в WhatsApp, подскажем его и обсудим детали кольца.</div>
+        <div className="mp-plaque"><b>Вам показали это кольцо.</b> Она поделилась с нами своим размером — напишите нам в WhatsApp, чтобы узнать размер и обсудить детали кольца.</div>
       )}
 
       <div className="mp-card">
