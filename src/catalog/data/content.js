@@ -19,10 +19,20 @@ function stored(name) {
   } catch { return undefined; }
 }
 
+// Ленту шапка страницы (catalog-shell.html) начинает запрашивать раньше, чем
+// загрузится код, — берём этот ответ, а не спрашиваем второй раз.
+function request(name) {
+  if (name === 'feed' && typeof window !== 'undefined' && window.__ndFeed) {
+    const early = window.__ndFeed;
+    window.__ndFeed = null;
+    return early;
+  }
+  return fetch(`/api/content/${name}`).then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))));
+}
+
 export function fetchContent(name) {
   if (inflight[name]) return inflight[name];
-  inflight[name] = fetch(`/api/content/${name}`)
-    .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+  inflight[name] = request(name)
     .then(doc => {
       memory[name] = doc;
       try { localStorage.setItem(storageKey(name), JSON.stringify(doc)); } catch { /* приватный режим */ }
