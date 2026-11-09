@@ -12,7 +12,7 @@ import { currentCity } from '../lib/city.js';
 import { useWhatsApp, readUtm } from '../components/model/whatsapp.jsx';
 import HintSheet from '../components/model/HintSheet.jsx';
 import GlassBar from '../components/model/GlassBar.jsx';
-import { Engraving, Like, Pair, Fitting, Proof, Others, Questions, Final } from '../components/model/Sections.jsx';
+import { Engraving, Like, Pair, Service, Fitting, Proof, Others, Questions, Final } from '../components/model/Sections.jsx';
 
 // Восемь вариантов, две строки по четыре. Цена любого считается одинаково:
 // база включает 1 ct, сверху — caratPrice за каждый карат сверх одного.
@@ -445,6 +445,7 @@ export default function DetailScreen({ ijewel }) {
         onHint={() => { track(EVENTS.HINT_OPEN, props); setHintOpen(true); }}
         onCustom={() => wa.open('custom', ctx, props)}
       />
+      <Service />
       <div className="mp-gap" />
       <Fitting model={model} onWa={() => wa.open('fitting', ctx, props)} />
       <div className="mp-gap--l" />

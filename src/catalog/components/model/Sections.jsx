@@ -103,7 +103,7 @@ function useReputation() {
   return rep;
 }
 
-/** «Нас выбирают»: рейтинг, отзывы и коротко про сертификат, уход и сервис. */
+/** «Нас выбирают»: рейтинг и отзывы из 2ГИС. */
 export function Proof() {
   const rep = useReputation();
   // Цитаты из админки; пока их там нет — из кода.
@@ -135,6 +135,18 @@ export function Proof() {
       {rep && (
         <a className="mp-link" href={rep.url} target="_blank" rel="noopener noreferrer">Все отзывы в 2ГИС {ARROW}</a>
       )}
+    </>
+  );
+}
+
+/**
+ * Сертификат, уход навсегда, футляр, ремонт — сразу под «Намекнуть
+ * партнёру»: это ответ на «а что будет после покупки», пока человек ещё
+ * решает, а не довод в самом низу страницы.
+ */
+export function Service() {
+  return (
+    <>
       <div className="mp-card mp-theses">
         {[
           [icon(<><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></>), 'Сертификат IGI / GIA', 'На каждый камень, номер — на самом бриллианте'],
