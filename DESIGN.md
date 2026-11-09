@@ -223,7 +223,9 @@ Manager, а не админка: в объявлении «Веб-сайт» —
 списка. Данные песочницы и боевого сайта разные: Blobs у каждого сайта свои.
 
 Meta Pixel: `product_open` → ViewContent, `wa_click` → Contact,
-`hint_submit` → Lead (`src/catalog/lib/pixel.js`), только с боевых адресов.
+`hint_submit` → HintSent (своё событие; стандартный Lead не занимаем — цель
+оптимизации Contact), `guide_read` → GuideRead (`src/catalog/lib/pixel.js`),
+только с боевых адресов.
 
 ## Страница модели (`/product/:shank/:cast/:shape`)
 

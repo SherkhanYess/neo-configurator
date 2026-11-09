@@ -4,7 +4,7 @@
 // которых крутится реклама:
 //   открыл модель        → ViewContent
 //   ушёл в WhatsApp      → Contact
-//   отправила намёк      → Lead
+//   отправила намёк      → HintSent (своё событие)
 //   дочитал гид          → GuideRead (своё событие)
 //
 // Шлём только с боевых адресов. Песочница и локальная разработка иначе
@@ -27,11 +27,15 @@ const MAP = {
   // Дочитал гид — своё событие: реклама гидов учится на тех, кто читает до
   // конца, а не на случайных заходах.
   guide_read: (p) => ['GuideRead', { content_name: p.guide, content_category: 'guide' }, 'trackCustom'],
-  hint_submit: (p) => ['Lead', {
+  // Намёк — своё событие, а не стандартный Lead: его шлёт тот, кто хочет
+  // кольцо, а не тот, кто покупает, и для цели «Лиды» Meta первым предлагает
+  // именно Lead. Наш лид — WhatsApp (Contact); Lead оставлен свободным под
+  // настоящие заявки (например, квалифицированный лид из amoCRM).
+  hint_submit: (p) => ['HintSent', {
     content_name: p.model,
     content_category: 'hint',
     ...(p.price ? { value: p.price, currency: 'KZT' } : {}),
-  }],
+  }, 'trackCustom'],
 };
 
 export function mirrorToPixel(event, props = {}) {

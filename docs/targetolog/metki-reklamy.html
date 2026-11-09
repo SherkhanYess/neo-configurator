@@ -130,12 +130,13 @@
         <thead><tr><th>Событие</th><th>Когда срабатывает</th></tr></thead>
         <tbody>
           <tr><td class="mono">Contact</td><td>Человек нажал «Написать в WhatsApp» — главное целевое действие</td></tr>
-          <tr><td class="mono">Lead</td><td>Отправили намёк партнёру со страницы кольца</td></tr>
           <tr><td class="mono">ViewContent</td><td>Открыл страницу модели</td></tr>
-          <tr><td class="mono">GuideRead</td><td>Дочитал гид до конца (своё событие, для рекламы гидов)</td></tr>
+          <tr><td class="mono">GuideRead</td><td>Дочитал гид до конца (своё событие)</td></tr>
+          <tr><td class="mono">HintSent</td><td>Отправили намёк партнёру со страницы кольца (своё событие)</td></tr>
         </tbody>
       </table>
     </div>
+    <p class="note">Оптимизация — на <span class="mono">Contact</span>. Стандартный <span class="mono">Lead</span> сайт не отправляет: намёк шлёт тот, кто хочет кольцо, а не тот, кто покупает, поэтому он вынесен в своё событие <span class="mono">HintSent</span>. Свои события (<span class="mono">GuideRead</span>, <span class="mono">HintSent</span>) годятся для аудиторий; чтобы выбрать их целью, сначала сделайте из них индивидуальную конверсию в Events Manager.</p>
   </section>
 
   <section>
