@@ -52,6 +52,9 @@ export function mergeProducts(saved) {
 
   let rings;
   if (saved.version >= 2 && Array.isArray(saved.rings)) {
+    // Лента без единой модели — не выбор, а сбой: так сохраняла админка,
+    // открытая до появления «В ленте» (10.11.2026). Тогда — как по умолчанию.
+    const noFeed = saved.rings.every(r => r?.feed !== true);
     const seen = new Set();
     rings = saved.rings
       .filter(r => validRing(r) && !seen.has(keyOf(r.shank, r.cast)) && seen.add(keyOf(r.shank, r.cast)))
@@ -60,7 +63,7 @@ export function mergeProducts(saved) {
         cast: r.cast,
         name: (r.name ?? '').trim() || modelName(r.shank, r.cast),
         enabled: r.enabled !== false,
-        feed: typeof r.feed === 'boolean' ? r.feed : feedByDefault(r.shank, r.cast),
+        feed: typeof r.feed === 'boolean' && !noFeed ? r.feed : feedByDefault(r.shank, r.cast),
       }));
   } else {
     // Версия 1: список — из кода, из документа — только имена и видимость.

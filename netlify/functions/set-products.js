@@ -35,7 +35,9 @@ function sanitize(body) {
       .map(s => ({ id: str(s.id), label: str(s.label, str(s.id)), enabled: bool(s.enabled) })),
     rings: arr(body?.rings)
       .filter(r => SHANK_RE.test(r?.shank ?? '') && CASTS_ALL.includes(r?.cast))
-      .map(r => ({ shank: r.shank, cast: r.cast, name: str(r.name), enabled: bool(r.enabled), feed: r.feed === true })),
+      // «В ленте» пишем, только если админка его прислала: старая админка (открытая
+      // до обновления) о нём не знает, и пропуск значит «как по умолчанию», а не «нет».
+      .map(r => ({ shank: r.shank, cast: r.cast, name: str(r.name), enabled: bool(r.enabled), ...(typeof r.feed === 'boolean' ? { feed: r.feed } : {}) })),
     pusety: arr(body?.pusety)
       .filter(p => str(p?.cast) && str(p?.shape))
       .map(p => ({ cast: str(p.cast), shape: str(p.shape), enabled: bool(p.enabled) })),

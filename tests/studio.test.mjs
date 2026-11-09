@@ -124,6 +124,11 @@ console.log('\nсписок моделей:');
   eq('версия 1: имя из админки сохранилось', v1.rings.find(r => r.shank === 'Sirius' && r.cast === 'classic').name, 'Сириус');
   eq('ореол Sirius не в ленте, Halo Luxe — в ленте', [v1.rings.find(r => r.shank === 'Sirius' && r.cast === 'halo').feed, v1.rings.find(r => r.shank === 'Sirius Luxe' && r.cast === 'halo').feed], [false, true]);
 
+  // Живой случай 10.11.2026: старая админка сохранила все пары с feed: false.
+  const broken = mergeProducts({ version: 2, rings: v1.rings.map(r => ({ ...r, feed: false })) });
+  eq('лента без моделей — сбой, берём по умолчанию', broken.rings.filter(r => r.feed).map(r => `${r.shank}|${r.cast}`),
+     v1.rings.filter(r => r.feed).map(r => `${r.shank}|${r.cast}`));
+
   const added = addModel(v1, { shank: 'Aurora 2', name: 'Аврора', halo: true });
   eq('новая модель: две оправы', added.rings.filter(r => r.shank === 'Aurora 2').map(r => [r.cast, r.name, r.feed]), [['classic', 'Аврора', true], ['halo', 'Аврора Halo', false]]);
   eq('новая модель находится по адресу', shankFromSlug(added, 'aurora-2'), 'Aurora 2');
