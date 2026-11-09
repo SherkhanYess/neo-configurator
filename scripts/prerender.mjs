@@ -50,7 +50,7 @@ const COMBOS = [];
 // добавленных в админке, рендеров нет — их страницы без своей картинки.
 const MODEL_SLUG = {};
 const PRICE_FALLBACK = {
-  baseByShank: { 'Neo':800000,'Sirius':550000,'Sirius Luxe':650000,'Bezel':550000 },
+  baseByShank: { 'Neo':800000,'Neo Luxe':900000,'Sirius':550000,'Sirius Luxe':650000,'Bezel':550000 },
   casts: { halo:150000, bezel:100000 },
 };
 
@@ -409,8 +409,9 @@ const SPECS_HTML = `
       формы и каратности можно посмотреть на своей руке. Доставка по Казахстану бесплатно, 2–5 дней.</p>`;
 
 /**
- * Модели из админки («Модели и цены»): какие есть, как называются. Скрытые
- * не публикуем. Без связи — стартовый список из кода.
+ * Модели из админки («Модели и цены»): какие есть, как называются. Скрытая
+ * модель пропадает из ленты, но её страница по адресу открывается — страницу
+ * делаем и ей. Без связи — стартовый список из кода.
  */
 async function loadModels() {
   let saved = null;
@@ -422,7 +423,7 @@ async function loadModels() {
   } catch (e) {
     console.log('  модели: из кода —', e.message);
   }
-  for (const r of mergeProducts(saved).rings.filter(x => x.enabled)) {
+  for (const r of mergeProducts(saved).rings) {
     COMBOS.push([r.shank, r.cast, r.name]);
     const file = renderSlug(r.shank, r.cast);
     if (file) MODEL_SLUG[r.name] = file;

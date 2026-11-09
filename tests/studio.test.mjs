@@ -118,9 +118,9 @@ eq('чужая картинка и чужая ссылка не сохраняю
 
 console.log('\nсписок моделей:');
 {
-  // Старый документ (версия 1) с Neo Luxe: список — из кода, где её больше нет.
-  const v1 = mergeProducts({ version: 1, rings: [{ shank: 'Neo Luxe', cast: 'classic', name: 'Neo Luxe', enabled: true }, { shank: 'Sirius', cast: 'classic', name: 'Сириус', enabled: true }] });
-  eq('версия 1: удалённой в коде модели нет', v1.rings.some(r => r.shank === 'Neo Luxe'), false);
+  // Старый документ (версия 1) с моделью, которой в коде уже нет: список — из кода.
+  const v1 = mergeProducts({ version: 1, rings: [{ shank: 'Old Model', cast: 'classic', name: 'Old Model', enabled: true }, { shank: 'Sirius', cast: 'classic', name: 'Сириус', enabled: true }] });
+  eq('версия 1: удалённой в коде модели нет', v1.rings.some(r => r.shank === 'Old Model'), false);
   eq('версия 1: имя из админки сохранилось', v1.rings.find(r => r.shank === 'Sirius' && r.cast === 'classic').name, 'Сириус');
   eq('ореол Sirius не в ленте, Halo Luxe — в ленте', [v1.rings.find(r => r.shank === 'Sirius' && r.cast === 'halo').feed, v1.rings.find(r => r.shank === 'Sirius Luxe' && r.cast === 'halo').feed], [false, true]);
 
@@ -137,7 +137,7 @@ console.log('\nсписок моделей:');
   const removed = removeModel(added, 'Aurora 2');
   eq('удаление убирает все оправы', removed.rings.some(r => r.shank === 'Aurora 2'), false);
   eq('после удаления адрес не находится', shankFromSlug(removed, 'aurora-2'), null);
-  eq('цены удалённой модели стёрты', Object.keys(prunePrices({ baseByShank: { Sirius: 1, 'Aurora 2': 2, 'Neo Luxe': 3 } }, removed).baseByShank), ['Sirius']);
+  eq('цены удалённой модели стёрты', Object.keys(prunePrices({ baseByShank: { Sirius: 1, 'Aurora 2': 2, 'Old Model': 3 } }, removed).baseByShank), ['Sirius']);
   eq('лента удалённой модели стёрта', pruneFeed({ models: [{ key: 'Aurora 2|classic' }, { key: 'Sirius|classic' }] }, removed).models.map(m => m.key), ['Sirius|classic']);
 
   eq('ключ ленты с цифрой в шинке принят', cleanFeed({ models: [{ key: 'Aurora 2|classic' }] }).models.length, 1);

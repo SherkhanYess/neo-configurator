@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react';
 export const PRICE_DEFAULTS = {
   baseByShank: {
     'Neo':         800000,
+    'Neo Luxe':    900000,
     'Sirius':      550000,
     'Sirius Luxe': 650000,
     'Bezel':       550000,

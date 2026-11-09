@@ -22,6 +22,7 @@ export const SHAPES = [
 // id = точное имя вариации шинки в iJewel.
 export const SHANKS = [
   { id: 'Neo',         label: 'Neo' },
+  { id: 'Neo Luxe',    label: 'Neo Luxe' },
   { id: 'Sirius',      label: 'Sirius' },
   { id: 'Sirius Luxe', label: 'Sirius Luxe' },
   { id: 'Bezel',       label: 'Bezel' },
@@ -38,6 +39,8 @@ export const CASTS = [
 export const VALID_COMBOS = [
   { shank: 'Neo',         cast: 'classic' },
   { shank: 'Neo',         cast: 'halo' },
+  { shank: 'Neo Luxe',    cast: 'classic' },
+  { shank: 'Neo Luxe',    cast: 'halo' },
   { shank: 'Sirius',      cast: 'classic' },
   { shank: 'Sirius',      cast: 'halo' },
   { shank: 'Sirius Luxe', cast: 'classic' },
@@ -49,6 +52,8 @@ export const VALID_COMBOS = [
 const MODEL_NAMES = {
   'Neo|classic':         'Neo',
   'Neo|halo':            'Neo Halo',
+  'Neo Luxe|classic':    'Neo Luxe',
+  'Neo Luxe|halo':       'Neo Halo Luxe',
   'Sirius|classic':      'Sirius',
   'Sirius|halo':         'Halo',
   'Sirius Luxe|classic': 'Sirius Luxe',
@@ -70,6 +75,8 @@ export function cardName(shankId, castId, shapeLabel) {
 const RENDERS = {
   'Neo|classic':         'neo',
   'Neo|halo':            'neo-halo',
+  'Neo Luxe|classic':    'neo-luxe',
+  'Neo Luxe|halo':       'neo-halo-luxe',
   'Sirius|classic':      'sirius',
   'Sirius|halo':         'halo',
   'Sirius Luxe|classic': 'sirius-luxe',
