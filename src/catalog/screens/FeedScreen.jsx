@@ -61,20 +61,25 @@ export function Hero({ hero, onShow }) {
  * отвечает на главный страх человека с рекламы, прежде чем он напишет.
  */
 const STAR_ICON = <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" /></svg>;
+const GIFT_ICON = <svg className="is-line" viewBox="0 0 24 24" aria-label="Подарок"><rect x="3.5" y="8" width="17" height="4" rx="1" /><path d="M5 12v8.5h14V12M12 8v12.5" /><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zM12 8c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z" /></svg>;
+const ratings = (n) => {
+  const d = n % 10, h = n % 100;
+  return `${n} ${d === 1 && h !== 11 ? 'оценка' : d >= 2 && d <= 4 && (h < 12 || h > 14) ? 'оценки' : 'оценок'}`;
+};
 function Trust() {
   const rep = useReputation();
   const facts = [
-    rep ? { v: <>{Number(rep.rating).toFixed(1).replace('.', ',')}{STAR_ICON}</>, c: `в 2ГИС, ${rep.ratings} оценок`, href: rep.url } : null,
+    rep ? { v: <>{Number(rep.rating).toFixed(1).replace('.', ',')}{STAR_ICON}</>, c: `в 2ГИС, ${ratings(Number(rep.ratings))}`, href: rep.url } : null,
     { v: '5–10', c: 'дней на изготовление' },
     { v: 'IGI', c: 'сертификат на каждый камень' },
-    { v: 'В подарок', c: 'гравировка внутри кольца', small: true },
+    { v: GIFT_ICON, c: 'гравировка в подарок' },
   ].filter(Boolean);
   return (
     <section className="feed-trust" aria-labelledby="feed-trust-t">
       <h2 className="feed-trust__t" id="feed-trust-t">Почему нам доверяют</h2>
       <div className="feed-trust__row" style={{ '--n': facts.length }}>
         {facts.map((f, i) => {
-          const inner = <><b className={f.small ? 'is-small' : ''}>{f.v}</b><small>{f.c}</small></>;
+          const inner = <><b>{f.v}</b><small>{f.c}</small></>;
           return f.href
             ? <a key={i} className="feed-trust__f" href={f.href} target="_blank" rel="noopener noreferrer">{inner}</a>
             : <div key={i} className="feed-trust__f">{inner}</div>;
@@ -112,7 +117,14 @@ export default function FeedScreen() {
   const breaks = useMemo(() => feedBreaks(content), [content]);
   const hero = useMemo(() => feedHero(content), [content]);
   const listRef = useRef(null);
-  const showRings = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // scrollIntoView с плавной прокруткой в части браузеров молча стоит на месте —
+  // считаем позицию сами.
+  const showRings = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 8, behavior: calm ? 'auto' : 'smooth' });
+  };
 
   // Страница модели открывается с первой формой, включённой в админке.
   const firstShape = useMemo(() => {
