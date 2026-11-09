@@ -1,7 +1,9 @@
 // Фото, загруженные в админке.
 //
-// POST /api/media        — загрузить (только админ). Тело — сам файл.
-// GET  /api/media/:id    — отдать файл посетителю.
+// POST   /api/media      — загрузить (только админ). Тело — сам файл.
+// GET    /api/media/:id  — отдать файл посетителю.
+// DELETE /api/media/:id  — стереть (только админ): так админка убирает фото
+//                          удалённой модели, чтобы в хранилище не копился мусор.
 //
 // Файл приходит уже сжатым: админка уменьшает его в браузере до размера,
 // которого хватает телефону. Имя каждого файла новое, поэтому отдаём его с
@@ -34,6 +36,14 @@ export default async (req, context) => {
         'Netlify-CDN-Cache-Control': FOREVER,
       },
     });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!isAdmin(req)) return json(401, { error: 'unauthorized' });
+    const id = String(context.params?.id ?? '');
+    if (!/^[a-z0-9-]+\.(webp|jpg|png|avif)$/.test(id)) return json(400, { error: 'id' });
+    await store.delete(id);
+    return json(200, { ok: true });
   }
 
   if (req.method !== 'POST') return json(405, { error: 'method' });

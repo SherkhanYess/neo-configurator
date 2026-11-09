@@ -39,8 +39,9 @@ eq('нечисловой карат отбрасывается',  decodeBooking(
 eq('неизвестный цвет → null, не мусор', decodeBooking('line=neo&shape=round&color=zzz').gem1Label, null);
 
 console.log('\nимена моделей из нескольких слов:');
-eq('Neo Luxe → neo-luxe',   encodeBooking({ shank: 'Neo Luxe', shape: 'round' }).includes('line=neo-luxe'), true);
-eq('обратно в Neo Luxe',    decodeBooking('line=neo-luxe&shape=round').shank, 'Neo Luxe');
+eq('Sirius Luxe → sirius-luxe', encodeBooking({ shank: 'Sirius Luxe', shape: 'round' }).includes('line=sirius-luxe'), true);
+eq('обратно в Sirius Luxe',     decodeBooking('line=sirius-luxe&shape=round').shank, 'Sirius Luxe');
+eq('удалённая Neo Luxe → в ленту', decodeBooking('line=neo-luxe&shape=round')?.shank ?? null, null);
 
 console.log('\nкороткая форма цвета металла:');
 eq('«Белое» → «Белое золото»', decodeBooking(encodeBooking({ shank: 'Neo', shape: 'round', metalLabel: 'Белое' })).metalLabel, 'Белое золото');

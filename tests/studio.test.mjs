@@ -3,6 +3,7 @@
 import { cleanFeed, cleanReviews, cleanGuides } from '../netlify/functions/content.js';
 import { DEFAULT_GUIDES } from '../src/catalog/data/guidesDefault.js';
 import { rollUp, mergeDays } from '../netlify/functions/stats.js';
+import { mergeProducts, addModel, removeModel, prunePrices, pruneFeed, shankFromSlug } from '../src/catalog/data/models.js';
 
 let pass = 0, fail = 0;
 const eq = (name, got, want) => {
@@ -114,6 +115,33 @@ const dirty = cleanGuides({ items: [
 eq('неверный адрес и повтор отброшены', dirty.items.map(g => g.slug), ['ok-gid']);
 eq('неизвестный блок отброшен', dirty.items[0].blocks.map(b => b.type), ['p', 'image', 'cta']);
 eq('чужая картинка и чужая ссылка не сохраняются', [dirty.items[0].blocks[1].src, dirty.items[0].blocks[2].to], ['', '']);
+
+console.log('\nсписок моделей:');
+{
+  // Старый документ (версия 1) с Neo Luxe: список — из кода, где её больше нет.
+  const v1 = mergeProducts({ version: 1, rings: [{ shank: 'Neo Luxe', cast: 'classic', name: 'Neo Luxe', enabled: true }, { shank: 'Sirius', cast: 'classic', name: 'Сириус', enabled: true }] });
+  eq('версия 1: удалённой в коде модели нет', v1.rings.some(r => r.shank === 'Neo Luxe'), false);
+  eq('версия 1: имя из админки сохранилось', v1.rings.find(r => r.shank === 'Sirius' && r.cast === 'classic').name, 'Сириус');
+  eq('ореол Sirius не в ленте, Halo Luxe — в ленте', [v1.rings.find(r => r.shank === 'Sirius' && r.cast === 'halo').feed, v1.rings.find(r => r.shank === 'Sirius Luxe' && r.cast === 'halo').feed], [false, true]);
+
+  const added = addModel(v1, { shank: 'Aurora 2', name: 'Аврора', halo: true });
+  eq('новая модель: две оправы', added.rings.filter(r => r.shank === 'Aurora 2').map(r => [r.cast, r.name, r.feed]), [['classic', 'Аврора', true], ['halo', 'Аврора Halo', false]]);
+  eq('новая модель находится по адресу', shankFromSlug(added, 'aurora-2'), 'Aurora 2');
+  eq('версия 2 читается как есть', mergeProducts(added).rings.length, added.rings.length);
+  let err = '';
+  try { addModel(added, { shank: 'aurora 2' }); } catch (e) { err = e.message; }
+  eq('повтор шинки не принят', err.includes('уже есть'), true);
+  try { addModel(added, { shank: 'Аврора' }); } catch (e) { err = e.message; }
+  eq('кириллица в шинке не принята', err.includes('латиницей'), true);
+
+  const removed = removeModel(added, 'Aurora 2');
+  eq('удаление убирает все оправы', removed.rings.some(r => r.shank === 'Aurora 2'), false);
+  eq('после удаления адрес не находится', shankFromSlug(removed, 'aurora-2'), null);
+  eq('цены удалённой модели стёрты', Object.keys(prunePrices({ baseByShank: { Sirius: 1, 'Aurora 2': 2, 'Neo Luxe': 3 } }, removed).baseByShank), ['Sirius']);
+  eq('лента удалённой модели стёрта', pruneFeed({ models: [{ key: 'Aurora 2|classic' }, { key: 'Sirius|classic' }] }, removed).models.map(m => m.key), ['Sirius|classic']);
+
+  eq('ключ ленты с цифрой в шинке принят', cleanFeed({ models: [{ key: 'Aurora 2|classic' }] }).models.length, 1);
+}
 
 console.log(`\nитого: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

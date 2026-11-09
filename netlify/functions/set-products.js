@@ -1,12 +1,14 @@
 // Netlify Function v2: set-products
 // Saves the catalog product configuration (admin only).
 //
-// Only visibility and naming are accepted. The iJewel bindings live in the
-// bundle and are not writable here — a bad shank name would break the 3D
-// viewer rather than just mislabel a card.
+// Версия 2 — полный список моделей: админка добавляет и удаляет модели, и чего
+// нет в документе, того нет на сайте (src/catalog/data/models.js). Имя шинки —
+// точное имя вариации в iJewel: латиница, цифры, пробелы. Теги огранок и оправ
+// живут в коде и здесь не пишутся.
 
 import { getStore } from '@netlify/blobs';
 import { purge } from '../lib/http.js';
+import { SHANK_RE, CASTS_ALL } from '../../src/catalog/data/models.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -27,13 +29,13 @@ function sanitize(body) {
   const arr = (v) => (Array.isArray(v) ? v.slice(0, MAX_ITEMS) : []);
 
   return {
-    version: 1,
+    version: 2,
     shapes: arr(body?.shapes)
       .filter(s => str(s?.id))
       .map(s => ({ id: str(s.id), label: str(s.label, str(s.id)), enabled: bool(s.enabled) })),
     rings: arr(body?.rings)
-      .filter(r => str(r?.shank) && str(r?.cast))
-      .map(r => ({ shank: str(r.shank), cast: str(r.cast), name: str(r.name), enabled: bool(r.enabled) })),
+      .filter(r => SHANK_RE.test(r?.shank ?? '') && CASTS_ALL.includes(r?.cast))
+      .map(r => ({ shank: r.shank, cast: r.cast, name: str(r.name), enabled: bool(r.enabled), feed: r.feed === true })),
     pusety: arr(body?.pusety)
       .filter(p => str(p?.cast) && str(p?.shape))
       .map(p => ({ cast: str(p.cast), shape: str(p.shape), enabled: bool(p.enabled) })),
@@ -62,6 +64,10 @@ export default async (req, context) => {
   const clean = sanitize(body);
   if (!clean.shapes.length && !clean.rings.length && !clean.pusety.length) {
     return new Response(JSON.stringify({ error: 'Empty product config' }), { status: 400, headers: CORS });
+  }
+
+  if (!clean.rings.length) {
+    return new Response(JSON.stringify({ error: 'Хотя бы одна модель должна остаться' }), { status: 400, headers: CORS });
   }
 
   // Refuse to hide the whole catalog by accident.

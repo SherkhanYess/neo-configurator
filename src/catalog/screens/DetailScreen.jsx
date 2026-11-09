@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
-import { SHAPES, SHANKS, SHAPE_IJEWEL, CAST_IJEWEL, VALID_COMBOS, shapeImage } from '../data/config.js';
+import { SHAPES, SHAPE_IJEWEL, CAST_IJEWEL, shapeImage } from '../data/config.js';
+import { ringOf, shankFromSlug } from '../data/models.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { usePrices } from '../data/prices.js';
 import { useProducts, enabledShapes, ringName, shapeLabel as adminShapeLabel } from '../data/products.js';
@@ -27,10 +28,6 @@ const CHEV = (
 // can reach WhatsApp without a carat for the manager to work from.
 const DEFAULT_CARAT = 1;
 
-
-function slugToShankId(slug) {
-  return SHANKS.find(s => s.id.toLowerCase().replace(/\s+/g, '-') === slug)?.id ?? slug;
-}
 
 function DotPicker({ options, chosen, onChoose }) {
   if (!options?.length) return null;
@@ -98,7 +95,8 @@ export default function DetailScreen({ ijewel }) {
   const urlCarat = Number(new URLSearchParams(location.search).get('ct'));
   const startCarat = CARAT_OPTIONS.includes(urlCarat) ? urlCarat : DEFAULT_CARAT;
 
-  const shankId    = slugToShankId(shankSlug);
+  const productCfg = useProducts();
+  const shankId    = shankFromSlug(productCfg, shankSlug) ?? shankSlug;
   const cardKey    = `${shankSlug}/${castParam}/${shapeParam}`;
   // Stable boolean: false→true once, never reverts — safe dep without reference churn
   const hasVariations = ijewel.shankVariations.length > 0;
@@ -116,7 +114,6 @@ export default function DetailScreen({ ijewel }) {
   const [castMetal,    setCastMetal]    = useState(null);
   const [combinedGold, setCombinedGold] = useState(false);
   const prices                          = usePrices();
-  const productCfg                      = useProducts();
 
   // Stores the 3D config to apply — set in Phase 1, consumed in Phase 2.
   // Using state (not ref) so Phase 2 fires in a separate React render cycle,
@@ -291,8 +288,7 @@ export default function DetailScreen({ ijewel }) {
   const choices = { shankLabel: shankId, cast, castLabel: cast, carat, purity, gem1Label, gem2Label };
 
   // Ореол есть у всех шинок, кроме Bezel; выключенную в админке пару не предлагаем.
-  const comboOn = (c) => VALID_COMBOS.some(v => v.shank === shankId && v.cast === c)
-    && productCfg?.rings?.find(r => r.shank === shankId && r.cast === c)?.enabled !== false;
+  const comboOn = (c) => ringOf(productCfg, shankId, c)?.enabled === true;
   const canHalo = (cast === 'classic' || cast === 'halo') && comboOn('classic') && comboOn('halo');
   const haloExtra = prices?.casts?.halo ? `+ ${formatPrice(prices.casts.halo)}` : '';
   const price = calcPrice(choices, prices);

@@ -1,4 +1,4 @@
-import { DEFAULT_MODELS, DEFAULT_BREAKS, feedModels, feedBreaks, renderPhoto, toneOf } from '../../../catalog/data/feed.js';
+import { DEFAULT_BREAKS, feedBase, feedModels, feedBreaks, renderPhoto, toneOf } from '../../../catalog/data/feed.js';
 import { modelName } from '../../../catalog/data/config.js';
 
 // Черновик ленты в админке и обратно — в документы для сервера.
@@ -10,22 +10,24 @@ import { modelName } from '../../../catalog/data/config.js';
 
 export function toDraft(content, products) {
   const edits = new Map((content?.models ?? []).map(m => [m.key, m]));
-  const order = [...(content?.models ?? []).map(m => m.key), ...DEFAULT_MODELS.map(m => m.key)]
-    .filter((k, i, all) => all.indexOf(k) === i);
-  const byKey = new Map(DEFAULT_MODELS.map(m => [m.key, m]));
+  const all = feedBase(products);
+  const order = [...(content?.models ?? []).map(m => m.key), ...all.map(m => m.key)]
+    .filter((k, i, list) => list.indexOf(k) === i);
+  const byKey = new Map(all.map(m => [m.key, m]));
 
+  // Модели, которой больше нет в списке моделей, в черновике тоже нет — при
+  // сохранении её текст и фото уходят из документа ленты.
   const models = order.flatMap(key => {
     const base = byKey.get(key);
     if (!base) return [];
     const edit = edits.get(key);
-    const ring = products?.rings?.find(r => r.shank === base.shank && r.cast === base.cast);
     return [{
       key,
       shank: base.shank,
       cast: base.cast,
       defaultName: modelName(base.shank, base.cast),
-      name: ring?.name || base.model,
-      enabled: ring ? ring.enabled !== false : true,
+      name: base.model,
+      enabled: base.enabled,
       text: edit?.text || base.text,
       photo: edit?.photo ?? base.staticPhoto ?? null,
       tone: edit?.tone ?? null,
@@ -72,9 +74,13 @@ export function previewFeed(draft, products) {
   return { models: feedModels(prods, content), breaks: feedBreaks(content) };
 }
 
+/** Есть ли что показать на сайте: своё фото или студийный рендер. У модели,
+ *  добавленной в админке, рендера нет — без фото её карточки на сайте нет. */
+export const canShow = (m) => Boolean(m.photo || renderPhoto(m.shank, m.cast));
+
 /** Одна карточка для предпросмотра — в том числе скрытая модель. */
 export function previewItem(m) {
-  const src = m.photo ?? renderPhoto(m.shank, m.cast);
+  const src = m.photo ?? renderPhoto(m.shank, m.cast) ?? null;
   return {
     key: m.key,
     model: m.name || m.defaultName,

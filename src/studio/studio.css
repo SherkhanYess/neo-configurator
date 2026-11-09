@@ -4,7 +4,7 @@
    Шампань — только для активного пункта меню и цен, как на сайте.
    Выбор — контур чернилами, не заливка. */
 
-.st-app, .st-login, .st-crop, .st-toasts {
+.st-app, .st-login, .st-crop, .st-toasts, .st-modal {
   --st-ground: #EEE8DE;
   --st-surface: #FFFFFF;
   --st-ink: #061B1B;
@@ -31,7 +31,7 @@
 /* Окно кадрирования и уведомления рисуются поверх, вне .st-app, — цвета им
    нужны те же, а фон страницы — нет. */
 .st-app, .st-login { background: var(--st-ground); min-height: 100dvh; }
-.st-app *:focus-visible, .st-login *:focus-visible, .st-crop *:focus-visible { outline: 2px solid var(--st-info); outline-offset: 2px; }
+.st-app *:focus-visible, .st-login *:focus-visible, .st-crop *:focus-visible, .st-modal *:focus-visible { outline: 2px solid var(--st-info); outline-offset: 2px; }
 
 /* ─── Типографика ─── */
 .st-h1 {
@@ -713,3 +713,32 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
 .st-crop__zoom { align-self: stretch; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--st-muted); }
 .st-crop__zoom input { flex: 1; accent-color: var(--st-ink); }
 .st-crop__btns { align-self: stretch; display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ─── Окно поверх: подтверждение удаления, новая модель ─────────────────── */
+.st-modal {
+  position: fixed; inset: 0; z-index: 190; display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(4, 20, 20, 0.62);
+}
+.st-modal__panel {
+  width: min(100%, 480px); max-height: calc(100dvh - 32px); overflow: auto; box-sizing: border-box;
+  padding: 22px 22px 18px; border-radius: 24px; background: var(--st-surface);
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 30px 60px -20px rgba(4, 20, 20, 0.5);
+}
+.st-modal__title { font-size: 17px; line-height: 1.35; }
+.st-modal__body { display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; line-height: 1.55; }
+.st-modal__body ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.st-modal__body p { margin: 0; }
+.st-modal__warn { padding: 10px 12px; border-radius: 12px; background: #FBF3E6; color: #6B4A12; font-size: 12.5px; }
+.st-modal__btns { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+/* Модели: группа на шинку — её оправы и кнопка удаления. */
+.st-model { padding: 10px 0 12px; border-bottom: 1px solid var(--st-line-soft); }
+.st-model:last-of-type { border-bottom: 0; }
+.st-model__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.st-model__head .st-eyebrow { margin: 0; }
+.st-model .st-itemrow { border-bottom: 0; padding: 4px 0; }
+.st-model__feed { font-size: 11px; padding: 4px 9px; }
+.st-models__add { margin-top: 12px; }
+.st-leftovers { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 14px; margin-bottom: 14px; border-radius: 14px; background: #FBF3E6; color: #6B4A12; font-size: 13px; line-height: 1.5; }

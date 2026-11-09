@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { VALID_COMBOS, SHAPES } from './data/config.js';
+import { SHAPES } from './data/config.js';
+import { useProductsState } from './data/products.js';
+import { ringOf, shankFromSlug } from './data/models.js';
 import FeedScreen         from './screens/FeedScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
 import SiteFooter         from './components/SiteFooter.jsx';
@@ -16,13 +18,18 @@ import './index.css';
 import './configurator.css';
 
 
-/** Адрес модели проверяем до страницы: несуществующая модель или огранка
- *  уводит в ленту, а не оставляет пустую страницу с вечной загрузкой 3D. */
+/** Адрес модели проверяем до страницы: несуществующая (или удалённая в
+ *  админке) модель или огранка уводит в ленту, а не оставляет пустую страницу
+ *  с вечной загрузкой 3D. Модель, добавленную в админке, код не знает — пока
+ *  список не пришёл с сервера, ждём, а не уводим. */
 function ProductRoute({ ijewel }) {
   const { shank, cast, shape } = useParams();
-  const known = VALID_COMBOS.some(c => c.shank.toLowerCase().replace(/\s+/g, '-') === shank && c.cast === cast)
-             && SHAPES.some(s => s.id === shape);
-  return known ? <DetailScreen ijewel={ijewel} /> : <Navigate to="/" replace />;
+  const [products, loaded] = useProductsState();
+  const shankId = shankFromSlug(products, shank);
+  const known = shankId && ringOf(products, shankId, cast) && SHAPES.some(s => s.id === shape);
+  if (known) return <DetailScreen ijewel={ijewel} />;
+  if (!loaded) return null;
+  return <Navigate to="/" replace />;
 }
 
 function BookingRedirect() {

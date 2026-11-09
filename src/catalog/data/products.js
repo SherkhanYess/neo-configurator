@@ -1,62 +1,20 @@
 import { useState, useEffect } from 'react';
-import { SHAPES, VALID_COMBOS, PUSETЫ_SHAPES_BY_CAST, PUSETЫ_CASTS, modelName } from './config.js';
+import { SHAPES, modelName } from './config.js';
+import { defaultProducts, mergeProducts } from './models.js';
 
-// Which products the catalog shows, served by /api/get-products.
+// Какие модели и огранки показывает витрина — /api/get-products, правится в
+// админке. Правила списка (добавить, удалить, версии документа) — models.js;
+// здесь — загрузка, кэш и хуки.
 //
-// Deliberately limited to visibility and naming. The bindings to iJewel — shank
-// variation names, shape and cast tags — stay in config.js and are not editable:
-// they must match the 3D model exactly, and a typo there would break the viewer
-// rather than just mislabel a card.
-//
-// The document is an overlay. Anything missing falls back to config.js, so a
-// failed request leaves the catalog exactly as it ships.
+// Привязка к iJewel (теги огранок и оправ) — в config.js: она должна точно
+// совпадать с 3D-моделью. Имя шинки новой модели админка берёт у владельца.
 
-export function defaultProducts() {
-  return {
-    version: 1,
-    shapes: SHAPES.map(s => ({ id: s.id, label: s.label, enabled: true })),
-    rings: VALID_COMBOS.map(({ shank, cast }) => ({
-      shank, cast,
-      name: modelName(shank, cast),
-      enabled: true,
-    })),
-    pusety: PUSETЫ_CASTS.flatMap(c =>
-      (PUSETЫ_SHAPES_BY_CAST[c.id] ?? []).map(shape => ({
-        cast: c.id, shape, enabled: true,
-      }))
-    ),
-  };
-}
-
-// Fills gaps from the defaults so an older stored document keeps working after
-// a new shape or model ships.
-function merge(saved) {
-  const base = defaultProducts();
-  if (!saved || typeof saved !== 'object') return base;
-
-  const shapeById = new Map((saved.shapes ?? []).map(s => [s.id, s]));
-  const ringByKey  = new Map((saved.rings  ?? []).map(r => [`${r.shank}|${r.cast}`, r]));
-  const pusetByKey = new Map((saved.pusety ?? []).map(p => [`${p.cast}|${p.shape}`, p]));
-
-  return {
-    version: 1,
-    shapes: base.shapes.map(s => {
-      const o = shapeById.get(s.id);
-      return o ? { ...s, label: o.label || s.label, enabled: o.enabled !== false } : s;
-    }),
-    rings: base.rings.map(r => {
-      const o = ringByKey.get(`${r.shank}|${r.cast}`);
-      return o ? { ...r, name: o.name || r.name, enabled: o.enabled !== false } : r;
-    }),
-    pusety: base.pusety.map(p => {
-      const o = pusetByKey.get(`${p.cast}|${p.shape}`);
-      return o ? { ...p, enabled: o.enabled !== false } : p;
-    }),
-  };
-}
+export { defaultProducts };
+const merge = mergeProducts;
 
 let cache = null;
 let inflight = null;
+let failed = false;   // сервер не ответил — живём на стартовом списке
 
 export function loadProducts() {
   return cache ?? defaultProducts();
@@ -71,20 +29,28 @@ export function fetchProducts() {
   inflight = fetch(fresh ? '/api/get-products?fresh' : '/api/get-products')
     .then(r => (r.ok ? r.json() : null))
     .then(data => { cache = merge(data); return cache; })
-    .catch(() => defaultProducts())
+    .catch(() => { failed = true; return defaultProducts(); })
     .finally(() => { inflight = null; });
 
   return inflight;
 }
 
+/** Список уже с сервера (или запрос не удался — тогда стартовый из кода). */
+export const productsLoaded = () => cache !== null || failed;
+
 export function useProducts() {
-  const [products, setProducts] = useState(loadProducts);
+  return useProductsState()[0];
+}
+
+/** [модели, пришли ли они с сервера] — страница модели ждёт, прежде чем решить, что такой нет. */
+export function useProductsState() {
+  const [state, setState] = useState(() => [loadProducts(), productsLoaded()]);
   useEffect(() => {
     let alive = true;
-    fetchProducts().then(p => { if (alive) setProducts(p); });
+    fetchProducts().then(p => { if (alive) setState([p, true]); });
     return () => { alive = false; };
   }, []);
-  return products;
+  return state;
 }
 
 export async function saveProducts(products, token) {

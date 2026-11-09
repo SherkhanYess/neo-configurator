@@ -185,3 +185,22 @@ export function Svg({ name, size = 18, ...rest }) {
     </svg>
   );
 }
+
+/** Окно поверх страницы: подтверждение или короткая форма. Escape — закрыть. */
+export function Modal({ title, children, onClose, actions }) {
+  useEffect(() => {
+    const key = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [onClose]);
+  return (
+    <div className="st-modal" role="dialog" aria-modal="true" aria-label={title}
+         onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="st-modal__panel">
+        <b className="st-modal__title">{title}</b>
+        <div className="st-modal__body">{children}</div>
+        {actions && <div className="st-modal__btns">{actions}</div>}
+      </div>
+    </div>
+  );
+}

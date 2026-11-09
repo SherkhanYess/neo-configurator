@@ -29,7 +29,7 @@ const focus = (v) => ({ x: num(v?.x, 0, 100, 50), y: num(v?.y, 0, 100, 50) });
 export function cleanFeed(body) {
   const models = (Array.isArray(body?.models) ? body.models : [])
     .slice(0, 40)
-    .filter(m => /^[A-Za-z ]{2,30}\|(classic|halo|bezel)$/.test(m?.key ?? ''))
+    .filter(m => /^[A-Za-z][A-Za-z0-9 ]{1,29}\|(classic|halo|bezel)$/.test(m?.key ?? ''))
     .map(m => ({
       key: m.key,
       text: str(m.text, 160),

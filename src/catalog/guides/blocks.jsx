@@ -1,6 +1,7 @@
 import { useEffect, useState, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { usePrices, pricesKnown } from '../data/prices.js';
+import { useProducts } from '../data/products.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { SHOWROOMS } from '../data/org.js';
 import { SHAPE_IDS } from '../data/guideSchema.js';
@@ -297,14 +298,25 @@ function Bar({ label, sub, price, share, ink }) {
   );
 }
 
-// Лабораторные цены — из прайса сайта: Sirius 1 ct и Neo Halo Luxe 5 ct.
+// Лабораторные цены — из прайса сайта. Слева — Sirius 1 ct (нет его — самая
+// доступная модель). Справа — самая дорогая модель с камнем 5 ct, которая ещё
+// укладывается в цену природного: её имя встаёт в подпись вместо {model}.
+// Удалили или добавили модель в админке — блок пересчитается сам.
 // Природный — число из админки (оценка владельца).
 function SameMoney({ b }) {
   const prices = usePrices();
+  const products = useProducts();
   const known = pricesKnown();
   const natural = b.natural || 2000000;
-  const lab1 = known ? calcPrice({ shankLabel: 'Sirius', cast: 'classic', carat: 1 }, prices) : null;
-  const lab5 = known ? calcPrice({ shankLabel: 'Neo Luxe', cast: 'halo', carat: 5 }, prices) : null;
+  const at = (r, carat) => calcPrice({ shankLabel: r.shank, cast: r.cast, carat }, prices);
+  const rings = products.rings.filter(r => r.enabled);
+  const start = rings.find(r => r.shank === 'Sirius' && r.cast === 'classic')
+    ?? [...rings].sort((a, z) => at(a, 1) - at(z, 1))[0];
+  const fits = rings.filter(r => at(r, 5) <= natural).sort((a, z) => at(z, 5) - at(a, 5));
+  const big = fits[0] ?? [...rings].sort((a, z) => at(a, 5) - at(z, 5))[0];
+  const lab1 = known && start ? at(start, 1) : null;
+  const lab5 = known && big ? at(big, 5) : null;
+  const labCaption = String(b.labCaption ?? '').replace(/\{model\}/g, big?.name ?? '');
   const money = (v) => (v ? formatPrice(v) : '—');
   return (
     <Card>
@@ -316,7 +328,7 @@ function SameMoney({ b }) {
           <b className="gd-b-title">{t(b.title2)}</b>
           <div className="gd-stones">
             <div><span className="gd-stones__img"><img src={SHAPE('round')} alt="" style={{ width: 46, height: 46 }} /></span>{lines(b.natCaption)}<br /><span className="gd-price">≈ {formatPrice(natural)}</span></div>
-            <div><span className="gd-stones__img"><img src={SHAPE('round')} alt="" style={{ width: 88, height: 88 }} /></span>{lines(b.labCaption)}<br /><span className="gd-price">{money(lab5)}</span></div>
+            <div><span className="gd-stones__img"><img src={SHAPE('round')} alt="" style={{ width: 88, height: 88 }} /></span>{lines(labCaption)}<br /><span className="gd-price">{money(lab5)}</span></div>
           </div>
         </div>
       )}

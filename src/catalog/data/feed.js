@@ -1,4 +1,5 @@
-import { VALID_COMBOS, modelName, ringImage } from './config.js';
+import { ringImage } from './config.js';
+import { defaultProducts, keyOf } from './models.js';
 import TONES from './feed-tones.json';
 
 // Содержание ленты: модели, по карточке на каждую.
@@ -6,11 +7,11 @@ import TONES from './feed-tones.json';
 // Лента — не каталог, а обложки линеек: на фото одна шинка с разными
 // огранками. Огранка в ленте не упоминается, её выбирают на странице модели.
 //
-// Ореол — тоже выбор на странице модели, а не отдельная карточка: Halo, Neo
-// Halo и Neo Halo Luxe в ленте не стоят, их открывают переключателем «С
-// ореолом» у Sirius, Neo и Neo Luxe. Исключение — Halo Luxe: у него своя
-// карточка, а на странице ореол включён с самого начала (решение владельца,
-// 09.11.2026). Страницы всех пар по-прежнему открываются по своим адресам.
+// Какие модели стоят в ленте — решает список моделей (models.js, админка
+// «Модели и цены»): у каждой пары «шинка + оправа» есть признак feed. Ореол —
+// выбор на странице модели, а не отдельная карточка: Halo и Neo Halo в ленте
+// не стоят. Исключение — Halo Luxe: у него своя карточка, а на странице ореол
+// включён с самого начала (решение владельца, 09.11.2026).
 //
 // Текст — до ~75 знаков, ровно две строки на телефоне. Говорит, как устроено
 // кольцо, и ничего не обещает: «не выходит из моды» — слова продавца, а не
@@ -18,17 +19,17 @@ import TONES from './feed-tones.json';
 //
 // Всё это правится в админке (раздел «Лента») и приходит с сервера
 // документом /api/content/feed. Здесь — то, что показывается, пока его нет:
-// порядок, тексты и фото из public/assets/feed/, а без фото — студийный
-// рендер с круглым камнем.
+// тексты и фото из public/assets/feed/, а без фото — студийный рендер с
+// круглым камнем. У модели, добавленной в админке, нет ни того ни другого:
+// её карточка появляется, когда в «Ленте» загрузят фото.
 
-const MODELS = [
-  { model: 'Sirius',        photo: 'sirius.webp',        text: 'Один бриллиант на четырёх лапках. Свет проходит сквозь камень со всех сторон.' },
-  { model: 'Neo',           photo: 'neo.webp',           text: 'Один бриллиант на четырёх лапках. Свет проходит сквозь камень со всех сторон.' },
-  { model: 'Sirius Luxe',   photo: 'sirius-luxe.webp',   text: 'Бриллианты продолжаются по шинке. Кольцо собирает свет и сверху, и сбоку.' },
-  { model: 'Neo Luxe',      photo: 'neo-luxe.webp',      text: 'Бриллианты продолжаются по шинке. Кольцо собирает свет и сверху, и сбоку.' },
-  { model: 'Halo Luxe',     photo: 'halo-luxe.webp',     text: 'Ореол вокруг камня и дорожка по шинке. Свет идёт со всех сторон.' },
-  { model: 'Bezel',         photo: 'bezel.webp',         text: 'Камень в сплошном золотом ободке. Ничего не выступает и не цепляется.' },
-];
+const SEED = {
+  'Sirius|classic':      { photo: 'sirius.webp',      text: 'Один бриллиант на четырёх лапках. Свет проходит сквозь камень со всех сторон.' },
+  'Neo|classic':         { photo: 'neo.webp',         text: 'Один бриллиант на четырёх лапках. Свет проходит сквозь камень со всех сторон.' },
+  'Sirius Luxe|classic': { photo: 'sirius-luxe.webp', text: 'Бриллианты продолжаются по шинке. Кольцо собирает свет и сверху, и сбоку.' },
+  'Sirius Luxe|halo':    { photo: 'halo-luxe.webp',   text: 'Ореол вокруг камня и дорожка по шинке. Свет идёт со всех сторон.' },
+  'Bezel|bezel':         { photo: 'bezel.webp',       text: 'Камень в сплошном золотом ободке. Ничего не выступает и не цепляется.' },
+};
 
 // Кадр «на руке» — пауза в ленте после указанной по счёту модели. Без фото не
 // показывается: пустая пауза хуже никакой.
@@ -100,16 +101,24 @@ export const toneOf = (src) => TONES[src] ?? FALLBACK_TONE;
 
 export const feedPhoto = (file) => `/assets/feed/${file}`;
 
-const keyOf = (shank, cast) => `${shank}|${cast}`;
-const comboByName = new Map(VALID_COMBOS.map(c => [modelName(c.shank, c.cast), c]));
-
-/** Модели в порядке по умолчанию, с ключом «шинка|оправа». */
-export const DEFAULT_MODELS = MODELS.flatMap(m => {
-  const c = comboByName.get(m.model);
-  if (!c) return [];
-  const own = feedPhoto(m.photo);
-  return [{ key: keyOf(c.shank, c.cast), model: m.model, shank: c.shank, cast: c.cast, text: m.text, staticPhoto: TONES[own] ? own : null }];
-});
+/**
+ * Модели ленты в порядке списка моделей: ключ «шинка|оправа», имя, текст и
+ * фото по умолчанию. Скрытые тоже здесь — админке они нужны, сайт их убирает.
+ */
+export function feedBase(products) {
+  return (products?.rings ?? defaultProducts().rings)
+    .filter(r => r.feed)
+    .map(r => {
+      const key = keyOf(r.shank, r.cast);
+      const seed = SEED[key];
+      const own = seed ? feedPhoto(seed.photo) : null;
+      return {
+        key, model: r.name, shank: r.shank, cast: r.cast, enabled: r.enabled !== false,
+        text: seed?.text ?? '',
+        staticPhoto: own && TONES[own] ? own : null,
+      };
+    });
+}
 
 /** Студийный рендер — фото по умолчанию, пока своего нет. */
 export const renderPhoto = (shank, cast) => ringImage(shank, cast, 'round');
@@ -128,22 +137,17 @@ const position = (focus, fallbackY = 50) =>
  * @param content   документ ленты из админки или null
  */
 export function feedModels(products, content) {
-  const ring = (c) => products?.rings?.find(r => r.shank === c.shank && r.cast === c.cast);
   const edits = new Map((content?.models ?? []).map(m => [m.key, m]));
+  const base = feedBase(products);
+  const byKey = new Map(base.map(m => [m.key, m]));
 
-  // Порядок из админки; модель, появившаяся в коде позже, встаёт в конец.
-  const order = [
-    ...(content?.models ?? []).map(m => m.key),
-    ...DEFAULT_MODELS.map(m => m.key),
-  ].filter((k, i, all) => all.indexOf(k) === i);
+  // Порядок из админки; модель, которой в нём ещё нет (новая), — в конец.
+  const order = [...(content?.models ?? []).map(m => m.key), ...base.map(m => m.key)]
+    .filter((k, i, all) => all.indexOf(k) === i);
 
-  const byKey = new Map(DEFAULT_MODELS.map(m => [m.key, m]));
-
-  return order.flatMap((key, i) => {
-    const base = byKey.get(key);
-    if (!base) return [];             // модель убрали из каталога — карточки тоже нет
-    const admin = ring(base);
-    if (admin && admin.enabled === false) return [];
+  return order.flatMap((key) => {
+    const m = byKey.get(key);
+    if (!m || !m.enabled) return [];  // модели нет или она скрыта — карточки тоже нет
     const edit = edits.get(key);
 
     let src, tone;
@@ -151,22 +155,22 @@ export function feedModels(products, content) {
       src = edit.photo;
       tone = edit.tone ?? edit.toneAuto ?? FALLBACK_TONE;
     } else {
-      src = base.staticPhoto ?? renderPhoto(base.shank, base.cast);
-      tone = toneOf(src);
+      src = m.staticPhoto ?? renderPhoto(m.shank, m.cast);
+      tone = src ? toneOf(src) : FALLBACK_TONE;
     }
+    if (!src) return [];              // новая модель без фото — пустая карточка хуже никакой
 
     return [{
       key,
-      model: admin?.name || base.model,
-      text: edit?.text || base.text,
-      order: i,
-      shank: base.shank,
-      cast: base.cast,
+      model: m.model,
+      text: edit?.text || m.text,
+      shank: m.shank,
+      cast: m.cast,
       src,
       tone,
       position: position(edit?.focus),
     }];
-  });
+  }).map((m, i) => ({ ...m, order: i }));
 }
 
 /** Паузы «на руке», для которых фото уже есть. */

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { SHANKS } from './config.js';
 
 // Prices live in Netlify Blobs and are served by /api/get-prices.
 //
@@ -14,7 +13,6 @@ import { SHANKS } from './config.js';
 export const PRICE_DEFAULTS = {
   baseByShank: {
     'Neo':         800000,
-    'Neo Luxe':    900000,
     'Sirius':      550000,
     'Sirius Luxe': 650000,
     'Bezel':       550000,
@@ -115,4 +113,3 @@ export async function savePrices(prices, token) {
   return cache;
 }
 
-export const SHANK_LABELS = SHANKS.map(s => s.id);

@@ -16,11 +16,12 @@ export const SHAPES = [
   { id: 'asscher',  label: 'Ашер',      file: 'asscher.webp' },
 ];
 
-// Real shank designs from iJewel. id = exact iJewel variation name.
-// Bezel shank only pairs with bezel cast (enforced in CATALOG_PRODUCTS).
+// Модели, с которыми витрина работает, пока в админке ничего не сохранено.
+// Дальше список моделей живёт в админке («Модели и цены»): там их добавляют и
+// удаляют, а это — только стартовый набор (src/catalog/data/models.js).
+// id = точное имя вариации шинки в iJewel.
 export const SHANKS = [
   { id: 'Neo',         label: 'Neo' },
-  { id: 'Neo Luxe',    label: 'Neo Luxe' },
   { id: 'Sirius',      label: 'Sirius' },
   { id: 'Sirius Luxe', label: 'Sirius Luxe' },
   { id: 'Bezel',       label: 'Bezel' },
@@ -37,8 +38,6 @@ export const CASTS = [
 export const VALID_COMBOS = [
   { shank: 'Neo',         cast: 'classic' },
   { shank: 'Neo',         cast: 'halo' },
-  { shank: 'Neo Luxe',    cast: 'classic' },
-  { shank: 'Neo Luxe',    cast: 'halo' },
   { shank: 'Sirius',      cast: 'classic' },
   { shank: 'Sirius',      cast: 'halo' },
   { shank: 'Sirius Luxe', cast: 'classic' },
@@ -46,12 +45,10 @@ export const VALID_COMBOS = [
   { shank: 'Bezel',       cast: 'bezel' },
 ];
 
-// Model name by shank+cast combo (Sirius+halo = "Halo", Neo Luxe+halo = "Neo Halo Luxe", etc.)
+// Имя модели по паре «шинка + оправа» (Sirius + halo = «Halo» и т. п.).
 const MODEL_NAMES = {
   'Neo|classic':         'Neo',
   'Neo|halo':            'Neo Halo',
-  'Neo Luxe|classic':    'Neo Luxe',
-  'Neo Luxe|halo':       'Neo Halo Luxe',
   'Sirius|classic':      'Sirius',
   'Sirius|halo':         'Halo',
   'Sirius Luxe|classic': 'Sirius Luxe',
@@ -67,23 +64,25 @@ export function cardName(shankId, castId, shapeLabel) {
   return [modelName(shankId, castId), shapeLabel].filter(Boolean).join(' ');
 }
 
-const MODEL_SLUG = {
-  'Neo':           'neo',
-  'Neo Halo':      'neo-halo',
-  'Neo Luxe':      'neo-luxe',
-  'Neo Halo Luxe': 'neo-halo-luxe',
-  'Sirius':        'sirius',
-  'Sirius Luxe':   'sirius-luxe',
-  'Halo':          'halo',
-  'Halo Luxe':     'halo-luxe',
-  'Bezel':         'bezel',
+// Студийные рендеры public/assets/rings/<файл>-<огранка>.webp — по паре
+// «шинка + оправа», а не по имени: имя меняют в админке, файлы остаются.
+// У моделей, добавленных в админке, рендеров нет — там фото из «Ленты».
+const RENDERS = {
+  'Neo|classic':         'neo',
+  'Neo|halo':            'neo-halo',
+  'Sirius|classic':      'sirius',
+  'Sirius|halo':         'halo',
+  'Sirius Luxe|classic': 'sirius-luxe',
+  'Sirius Luxe|halo':    'halo-luxe',
+  'Bezel|bezel':         'bezel',
 };
 
+export const renderSlug = (shankId, castId) => RENDERS[`${shankId}|${castId}`] ?? null;
+
 export function ringImage(shankId, castId, shapeId) {
-  const slug = MODEL_SLUG[modelName(shankId, castId)];
+  const slug = renderSlug(shankId, castId);
   if (!slug) return null;
-  const shape = shapeId ?? 'round';
-  return `/assets/rings/${slug}-${shape}.webp`;
+  return `/assets/rings/${slug}-${shapeId ?? 'round'}.webp`;
 }
 
 export const METAL_COLORS = [

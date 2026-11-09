@@ -21,6 +21,8 @@ import { fileURLToPath } from 'node:url';
 // чтобы текст на странице и разметка для машин не разошлись.
 import { ORG, SHOWROOMS, HOURS_NOTE, INSTAGRAM_HANDLE, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
 import { guideList, guidePath, minutesLabel, outlineOf } from '../src/catalog/data/guides.js';
+import { mergeProducts } from '../src/catalog/data/models.js';
+import { renderSlug } from '../src/catalog/data/config.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -40,19 +42,15 @@ const SHAPES = [
   ['oval','Овал'], ['pear','Груша'], ['heart','Сердце'], ['marquise','Маркиз'],
   ['emerald','Изумруд'], ['asscher','Ашер'],
 ];
-const COMBOS = [
-  ['Neo','classic','Neo'], ['Neo','halo','Neo Halo'],
-  ['Neo Luxe','classic','Neo Luxe'], ['Neo Luxe','halo','Neo Halo Luxe'],
-  ['Sirius','classic','Sirius'], ['Sirius','halo','Halo'],
-  ['Sirius Luxe','classic','Sirius Luxe'], ['Sirius Luxe','halo','Halo Luxe'],
-  ['Bezel','bezel','Bezel'],
-];
-const MODEL_SLUG = {
-  'Neo':'neo','Neo Halo':'neo-halo','Neo Luxe':'neo-luxe','Neo Halo Luxe':'neo-halo-luxe',
-  'Sirius':'sirius','Sirius Luxe':'sirius-luxe','Halo':'halo','Halo Luxe':'halo-luxe','Bezel':'bezel',
-};
+// Модели — [шинка, оправа, имя]: список из админки (loadModels), без связи —
+// стартовый из кода. Удалили модель в админке — следующая сборка не делает
+// её страниц, превью и строк в каталоге.
+const COMBOS = [];
+// Имя модели → файл студийного рендера (для OG-превью). У моделей,
+// добавленных в админке, рендеров нет — их страницы без своей картинки.
+const MODEL_SLUG = {};
 const PRICE_FALLBACK = {
-  baseByShank: { 'Neo':800000,'Neo Luxe':900000,'Sirius':550000,'Sirius Luxe':650000,'Bezel':550000 },
+  baseByShank: { 'Neo':800000,'Sirius':550000,'Sirius Luxe':650000,'Bezel':550000 },
   casts: { halo:150000, bezel:100000 },
 };
 
@@ -411,35 +409,32 @@ const SPECS_HTML = `
       формы и каратности можно посмотреть на своей руке. Доставка по Казахстану бесплатно, 2–5 дней.</p>`;
 
 /**
- * Имена моделей из админки («Модели и цены»): переименовали Halo Luxe — новое
- * имя попадает и в заголовки страниц, и в превью ссылок. Без связи — имена из
- * кода. Адреса и картинки не меняются: они держатся за шинку и оправу.
+ * Модели из админки («Модели и цены»): какие есть, как называются. Скрытые
+ * не публикуем. Без связи — стартовый список из кода.
  */
-async function applyAdminNames() {
+async function loadModels() {
+  let saved = null;
   try {
     const res = await fetch(`${SITE}/api/get-products`, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) throw new Error(String(res.status));
-    const rings = (await res.json())?.rings ?? [];
-    let renamed = 0;
-    for (const combo of COMBOS) {
-      const name = rings.find(r => r.shank === combo[0] && r.cast === combo[1])?.name?.trim();
-      if (name && name !== combo[2]) {
-        MODEL_SLUG[name] = MODEL_SLUG[combo[2]];
-        combo[2] = name;
-        renamed++;
-      }
-    }
-    console.log(`  имена моделей: из админки${renamed ? `, переименовано ${renamed}` : ''}`);
+    saved = await res.json();
+    console.log('  модели: из админки');
   } catch (e) {
-    console.log('  имена моделей: из кода —', e.message);
+    console.log('  модели: из кода —', e.message);
   }
+  for (const r of mergeProducts(saved).rings.filter(x => x.enabled)) {
+    COMBOS.push([r.shank, r.cast, r.name]);
+    const file = renderSlug(r.shank, r.cast);
+    if (file) MODEL_SLUG[r.name] = file;
+  }
+  console.log(`  моделей: ${COMBOS.length}`);
 }
 
 async function main() {
   // Страницы каталога собираются на его собственном входе (catalog-shell.html):
   // без кода конструктора и без 3D в шапке. index.html — для конструктора.
   const shell = readFileSync(join(DIST, 'catalog-shell.html'), 'utf8');
-  await applyAdminNames();
+  await loadModels();
   const prices = await loadPrices();
   const rep = await loadReputation();
 

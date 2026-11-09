@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, getToken } from '../api.js';
 import { Button, Card, Counter, ErrorNote, Field, Loading, PageHead, SaveBar, Svg, Toggle, useDraft, useToast } from '../ui.jsx';
 import { moveItem, useSortable } from '../sortable.js';
-import { toDraft, toContent, toProducts, previewFeed, previewItem, previewBreak } from './feed/draft.js';
+import { toDraft, toContent, toProducts, previewFeed, previewItem, previewBreak, canShow } from './feed/draft.js';
 import { PhotoButtons, PhotoStage, TonePicker, retone, useUpload } from './feed/PhotoStage.jsx';
 import { FeedCard, FeedBreak } from '../../catalog/components/FeedCard.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
@@ -68,7 +68,7 @@ function ModelList({ draft, setDraft, sel, setSel }) {
             <span className="st-list__body">
               <b>{item.model}</b>
               <small>
-                {!m.enabled ? 'Скрыта с сайта' : m.photo ? m.text : <em>Нет своего фото — показан рендер</em>}
+                {!m.enabled ? 'Скрыта с сайта' : m.photo ? m.text : canShow(m) ? <em>Нет своего фото — показан рендер</em> : <em>Нет фото — на сайте не показана</em>}
               </small>
             </span>
             {!m.enabled && <Svg name="eyeOff" className="st-list__flag" />}
@@ -368,7 +368,9 @@ export default function FeedEditor() {
   const visible = draft.models.filter(m => m.enabled);
   const model = sel.type === 'model' ? draft.models.find(m => m.key === sel.key) : null;
   const brk = sel.type === 'break' ? draft.breaks.find(b => b.id === sel.id) : null;
-  const noPhoto = visible.filter(m => !m.photo).length;
+  const onSite = visible.filter(canShow);
+  const noPhoto = onSite.filter(m => !m.photo).length;
+  const waiting = visible.length - onSite.length;
 
   async function save() {
     setSaving(true);
@@ -423,9 +425,12 @@ export default function FeedEditor() {
     <div className={`st-feed${mobileEdit ? ' is-editing' : ''}`}>
       <PageHead
         title="Лента"
-        sub={noPhoto
-          ? `На сайте ${visible.length} ${visible.length === 1 ? 'модель' : 'моделей'}. Своего фото нет у ${noPhoto} — там пока студийный рендер.`
-          : `На сайте ${visible.length} моделей, у всех свои фото.`}
+        sub={[
+          noPhoto
+            ? `На сайте ${onSite.length} ${onSite.length === 1 ? 'модель' : 'моделей'}. Своего фото нет у ${noPhoto} — там пока студийный рендер.`
+            : `На сайте ${onSite.length} моделей, у всех свои фото.`,
+          waiting ? `Ещё ${waiting} ждут фото — без него карточки на сайте нет.` : '',
+        ].filter(Boolean).join(' ')}
       />
 
       <div className="st-feed__grid">

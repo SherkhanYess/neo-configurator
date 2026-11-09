@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Field, PageHead, Svg, useToast } from '../ui.jsx';
 import { UTM_PRESETS, buildUtmUrl } from '../utm.js';
-import { DEFAULT_MODELS } from '../../catalog/data/feed.js';
+import { useProducts } from '../../catalog/data/products.js';
 import { guideList, guidePath } from '../../catalog/data/guides.js';
 import { api } from '../api.js';
 
@@ -63,6 +63,8 @@ function GuideLinks({ guides, copy }) {
 export default function LinksView() {
   const copy = useCopy();
   const guides = useGuides();
+  // Все модели, у которых есть своя страница, — и те, что не стоят в ленте.
+  const models = useProducts().rings.map(r => ({ key: `${r.shank}|${r.cast}`, shank: r.shank, cast: r.cast, model: r.name }));
   const [form, setForm] = useState({ utm_source: 'meta', utm_medium: 'paid', utm_campaign: '', target: '' });
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: k === 'target' ? e.target.value : latin(e.target.value) }));
   const custom = buildUtmUrl({ utm_source: form.utm_source, utm_medium: form.utm_medium, utm_campaign: form.utm_campaign }, form.target);
@@ -81,7 +83,7 @@ export default function LinksView() {
           <select className="st-input" value={form.target} onChange={set('target')}>
             <option value="">Лента — все модели</option>
             <optgroup label="Модели">
-              {DEFAULT_MODELS.map(m => (
+              {models.map(m => (
                 <option key={m.key} value={`/product/${slugOf(m.shank)}/${m.cast}/round`}>{m.model}</option>
               ))}
             </optgroup>

@@ -1,16 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getToken } from '../api.js';
-import { Card, ErrorNote, Loading, PageHead, SaveBar, Toggle, useDraft, useToast } from '../ui.jsx';
+import { Button, Card, ErrorNote, Field, Loading, Modal, PageHead, SaveBar, Svg, Toggle, useDraft, useToast } from '../ui.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
-import { fetchPrices, savePrices, SHANK_LABELS } from '../../catalog/data/prices.js';
+import { fetchPrices, savePrices } from '../../catalog/data/prices.js';
 import { SHAPES, shapeImage } from '../../catalog/data/config.js';
+import { modelShanks, prunePrices } from '../../catalog/data/models.js';
 import { formatPrice } from '../../catalog/data/priceCalc.js';
+import { addModelToSite, clearLeftovers, findLeftovers, planRemoval, removeModelEverywhere } from '../models.js';
 
-// Раздел «Модели и цены»: какие огранки и модели есть на сайте, как они
-// называются и сколько стоят.
+// Раздел «Модели и цены»: какие модели и огранки есть на сайте, как они
+// называются и сколько стоят. Здесь же модели добавляют и удаляют
+// (src/studio/models.js): удаление стирает модель отовсюду — из ленты, цен,
+// ссылок в гидах и хранилища фото.
 //
-// Привязка к 3D-модели (названия шинок и тегов в iJewel) в коде и здесь не
-// меняется: опечатка там сломала бы просмотр, а не просто подпись.
+// Модель держится за шинку в 3D-сцене iJewel — её точное имя вводят при
+// добавлении. Теги огранок и оправ — в коде: опечатка там сломала бы просмотр.
+
+const CAST_NAMES = { classic: 'на лапках', halo: 'с ореолом', bezel: 'в ободке' };
 
 const CAST_LABELS = { halo: 'Ореол (Halo)', bezel: 'Ободок (Bezel)' };
 
@@ -43,12 +49,21 @@ export default function CatalogEditor() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const { draft, setDraft, saved, dirty, load, reset } = useDraft(null);
+  const [removing, setRemoving] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [leftovers, setLeftovers] = useState(null);
+  const [busyLeft, setBusyLeft] = useState(false);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     Promise.all([fetchProducts(), fetchPrices()])
       .then(([products, prices]) => load({ products, prices }))
       .catch(e => setError(e.message));
+    findLeftovers().then(setLeftovers).catch(() => setLeftovers(null));
   }, [load]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const afterChange = useCallback(() => { setRemoving(null); setAdding(false); refresh(); }, [refresh]);
 
   if (error) return <><PageHead title="Модели и цены" /><ErrorNote>{error}</ErrorNote></>;
   if (!draft) return <><PageHead title="Модели и цены" /><Loading /></>;
@@ -66,7 +81,7 @@ export default function CatalogEditor() {
         next = { ...next, products: await saveProducts(draft.products, getToken()) };
       }
       if (JSON.stringify(draft.prices) !== JSON.stringify(saved.prices)) {
-        next = { ...next, prices: await savePrices(draft.prices, getToken()) };
+        next = { ...next, prices: await savePrices(prunePrices(draft.prices, draft.products), getToken()) };
       }
       load(next);
       toast('Сохранено — на сайте уже новые цены и названия');
@@ -75,6 +90,26 @@ export default function CatalogEditor() {
     } finally {
       setSaving(false);
     }
+  }
+
+  // Удаление и добавление пишут на сервер сразу — несохранённые правки на
+  // экране при этом потерялись бы. Сначала сохранить или отменить.
+  const guard = () => {
+    if (!dirty) return true;
+    toast('Сначала сохраните или отмените правки на этой странице', 'error');
+    return false;
+  };
+  function askRemove(shank) {
+    if (!guard()) return;
+    setRemoving({ shank, loading: true });
+    planRemoval(shank).then(setRemoving).catch(e => { setRemoving(null); toast(e.message, 'error'); });
+  }
+  function askAdd() { if (guard()) setAdding(true); }
+  async function wipeLeftovers() {
+    setBusyLeft(true);
+    try { await clearLeftovers(leftovers); toast('Следы удалённых моделей стёрты'); refresh(); }
+    catch (e) { toast(e.message, 'error'); }
+    finally { setBusyLeft(false); }
   }
 
   const example = (prices.baseByShank?.Sirius ?? 0) + (prices.caratPrice ?? 0) * 1 + (prices.purity750surcharge ?? 0);
@@ -86,8 +121,9 @@ export default function CatalogEditor() {
       <div className="st-grid st-grid--catalog">
         <div className="st-stack">
           <Card title="Базовая цена модели" aside={<span className="st-muted st-muted--s">1 ct, белый бриллиант, 585 проба</span>}>
-            {SHANK_LABELS.map(shank => (
-              <PriceRow key={shank} label={shank} value={prices.baseByShank?.[shank] ?? 0}
+            {modelShanks(products).map(shank => (
+              <PriceRow key={shank} label={mainName(products, shank)} hint={mainName(products, shank) !== shank ? `шинка ${shank}` : undefined}
+                        value={prices.baseByShank?.[shank] ?? 0}
                         onChange={v => setPrices(p => ({ ...p, baseByShank: { ...p.baseByShank, [shank]: v } }))} />
             ))}
           </Card>
@@ -114,19 +150,40 @@ export default function CatalogEditor() {
             <p className="st-note" style={{ marginTop: 0 }}>
               Модели с ореолом (кроме Halo Luxe) в ленте не стоят — их открывают переключателем «С ореолом» на странице модели без
               ореола. Название из этого списка показывается везде: в ленте, на странице модели, в «Других моделях» и в сообщении WhatsApp.
-              Выключенная модель пропадает из ленты, а её ореол — из переключателя.
+              Выключенная модель пропадает из ленты, а её ореол — из переключателя. «В ленте» — своя карточка в ленте
+              (у ореола обычно нет: его включают на странице модели).
             </p>
-            {products.rings.map(r => (
-              <div key={`${r.shank}|${r.cast}`} className={`st-itemrow${r.enabled ? '' : ' is-off'}`}>
-                <span className="st-itemrow__main">
-                  <input className="st-input st-input--bare" value={r.name} maxLength={40}
-                         onChange={e => setProducts(p => ({ ...p, rings: p.rings.map(x => (x === r ? { ...x, name: e.target.value } : x)) }))} />
-                  <small className="st-mono">{r.shank} · {r.cast}</small>
-                </span>
-                <Toggle on={r.enabled} label={`Показывать ${r.name}`}
-                        onChange={v => setProducts(p => ({ ...p, rings: p.rings.map(x => (x === r ? { ...x, enabled: v } : x)) }))} />
+            {leftovers && (
+              <div className="st-leftovers">
+                <span>Остались следы удалённых моделей ({leftovers.names.join(', ')}): цены, тексты или фото. На сайте их не видно.</span>
+                <Button size="s" variant="secondary" busy={busyLeft} onClick={wipeLeftovers}>Стереть</Button>
+              </div>
+            )}
+            {modelShanks(products).map(shank => (
+              <div key={shank} className="st-model">
+                <div className="st-model__head">
+                  <span className="st-eyebrow">{shank}</span>
+                  <Button variant="ghost" size="s" onClick={() => askRemove(shank)}><Svg name="trash" size={15} />Удалить</Button>
+                </div>
+                {products.rings.filter(r => r.shank === shank).map(r => (
+                  <div key={`${r.shank}|${r.cast}`} className={`st-itemrow${r.enabled ? '' : ' is-off'}`}>
+                    <span className="st-itemrow__main">
+                      <input className="st-input st-input--bare" value={r.name} maxLength={40} aria-label={`Название: ${CAST_NAMES[r.cast]}`}
+                             onChange={e => setProducts(p => ({ ...p, rings: p.rings.map(x => (x === r ? { ...x, name: e.target.value } : x)) }))} />
+                      <small>{CAST_NAMES[r.cast]}</small>
+                    </span>
+                    <button type="button" className={`st-chip st-model__feed${r.feed ? ' is-on' : ''}`} aria-pressed={r.feed}
+                            title="Своя карточка в ленте"
+                            onClick={() => setProducts(p => ({ ...p, rings: p.rings.map(x => (x === r ? { ...x, feed: !x.feed } : x)) }))}>
+                      В ленте
+                    </button>
+                    <Toggle on={r.enabled} label={`Показывать ${r.name}`}
+                            onChange={v => setProducts(p => ({ ...p, rings: p.rings.map(x => (x === r ? { ...x, enabled: v } : x)) }))} />
+                  </div>
+                ))}
               </div>
             ))}
+            <Button variant="secondary" className="st-models__add" onClick={askAdd}><Svg name="plus" size={16} />Добавить модель</Button>
           </Card>
 
           <Card title="Огранки" aside={<span className="st-muted st-muted--s">выбор на странице модели</span>}>
@@ -149,6 +206,115 @@ export default function CatalogEditor() {
       </div>
 
       <SaveBar dirty={dirty} saving={saving} onSave={save} onReset={reset} />
+
+      {removing && <RemoveDialog plan={removing} onClose={() => setRemoving(null)} onDone={afterChange} />}
+      {adding && <AddDialog onClose={() => setAdding(false)} onDone={afterChange} />}
     </div>
+  );
+}
+
+/** Имя модели в списках: вариант без ореола (или в ободке), а нет его — шинка. */
+function mainName(products, shank) {
+  const rings = products.rings.filter(r => r.shank === shank);
+  return (rings.find(r => r.cast !== 'halo') ?? rings[0])?.name || shank;
+}
+
+function RemoveDialog({ plan, onClose, onDone }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  if (plan.loading) {
+    return <Modal title={`Удалить ${plan.shank}?`} onClose={onClose}><Loading label="Смотрим, где она есть…" /></Modal>;
+  }
+  async function go() {
+    setBusy(true);
+    try {
+      const res = await removeModelEverywhere(plan.shank);
+      const extra = [res.photosDeleted && `фото: ${res.photosDeleted}`, res.guidesFixed && `ссылки в гидах: ${res.guidesFixed}`].filter(Boolean).join(', ');
+      toast(`${plan.names.join(' и ')} — удалена отовсюду${extra ? ` (${extra})` : ''}`);
+      onDone();
+    } catch (e) {
+      toast(e.message, 'error');
+      setBusy(false);
+    }
+  }
+  const list = [
+    `${plan.names.length > 1 ? 'Модели' : 'Модель'} ${plan.names.join(' и ')} — из ленты, «Других моделей», ссылок и WhatsApp`,
+    plan.pages && `Страницы модели на сайте (${plan.pages}) — по старым ссылкам человек попадёт в ленту`,
+    plan.price && 'Базовая цена',
+    plan.feedText && 'Текст карточки в ленте',
+    plan.photos && `Загруженные фото (${plan.photos}) — из хранилища`,
+    plan.linked.length && `Карточки и ссылки на неё в гидах: ${plan.linked.map(t => `«${t}»`).join(', ')}`,
+  ].filter(Boolean);
+  return (
+    <Modal title={`Удалить ${plan.names[0]} насовсем?`} onClose={onClose}
+           actions={<>
+             <Button variant="ghost" onClick={onClose} disabled={busy}>Отмена</Button>
+             <Button variant="danger" onClick={go} busy={busy} disabled={plan.lastOne}>Удалить</Button>
+           </>}>
+      <p>Сотрём всё, что с ней связано:</p>
+      <ul>{list.map(x => <li key={x}>{x}</li>)}</ul>
+      {plan.mentioned.length > 0 && (
+        <p className="st-modal__warn">Название упоминается в тексте гидов: {plan.mentioned.map(t => `«${t}»`).join(', ')}. Текст мы не трогаем — поправьте его в разделе «Гиды».</p>
+      )}
+      {plan.lastOne
+        ? <p className="st-modal__warn">Это последняя модель — без неё сайту нечего показать.</p>
+        : <p className="st-muted st-muted--s">Вернуть можно только добавив модель заново. 3D-шинка в iJewel остаётся — её мы не трогаем.</p>}
+    </Modal>
+  );
+}
+
+function AddDialog({ onClose, onDone }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState({ name: '', shank: '', mount: 'prongs', halo: true, haloName: '', price: 0 });
+  const set = (k) => (v) => setForm(f => ({ ...f, [k]: v }));
+  async function go() {
+    setBusy(true);
+    try {
+      await addModelToSite(form);
+      toast(`${form.name || form.shank} добавлена. Загрузите фото в «Ленте» — без фото карточки в ленте не будет`);
+      onDone();
+    } catch (e) {
+      toast(e.message, 'error');
+      setBusy(false);
+    }
+  }
+  return (
+    <Modal title="Новая модель" onClose={onClose}
+           actions={<>
+             <Button variant="ghost" onClick={onClose} disabled={busy}>Отмена</Button>
+             <Button onClick={go} busy={busy} disabled={!form.shank.trim()}>Добавить</Button>
+           </>}>
+      <Field label="Название на сайте" hint="Как её увидит покупатель">
+        <input className="st-input" value={form.name} maxLength={40} placeholder="Aurora" onChange={e => set('name')(e.target.value)} />
+      </Field>
+      <Field label="Шинка в 3D" hint="Точное имя вариации шинки в iJewel, латиницей. Сначала добавьте шинку в сцену iJewel — без неё 3D на странице модели не покажет кольцо">
+        <input className="st-input" value={form.shank} maxLength={30} placeholder="Aurora" autoCapitalize="off" autoCorrect="off" spellCheck={false}
+               onChange={e => set('shank')(e.target.value)} />
+      </Field>
+      <div className="st-field">
+        <span className="st-field__label">Как держится камень</span>
+        <div className="st-chips">
+          {[['prongs', 'На лапках'], ['bezel', 'В ободке']].map(([v, l]) => (
+            <button key={v} type="button" className={`st-chip${form.mount === v ? ' is-on' : ''}`} aria-pressed={form.mount === v} onClick={() => set('mount')(v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+      {form.mount === 'prongs' && (
+        <div className="st-switchrow">
+          <div><b>Есть вариант с ореолом</b><small>Переключатель «С ореолом» на странице модели</small></div>
+          <Toggle on={form.halo} onChange={set('halo')} label="Есть вариант с ореолом" />
+        </div>
+      )}
+      {form.mount === 'prongs' && form.halo && (
+        <Field label="Название с ореолом">
+          <input className="st-input" value={form.haloName} maxLength={40} placeholder={`${form.name || form.shank || 'Aurora'} Halo`} onChange={e => set('haloName')(e.target.value)} />
+        </Field>
+      )}
+      <div className="st-field">
+        <span className="st-field__label">Базовая цена</span>
+        <PriceRow label="1 ct, белый бриллиант, 585 проба" value={form.price} onChange={set('price')} />
+      </div>
+    </Modal>
   );
 }
