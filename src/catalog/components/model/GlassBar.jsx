@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
+import { WA_ICON } from './whatsapp.jsx';
 
-// Имя кольца и цена в липкой панели из «жидкого стекла». Цена меняется на
-// глазах при каждом выборе. Когда под панелью тёмный блок (примерка, финал,
+// Липкая панель из «жидкого стекла»: цена и кнопка написать в WhatsApp.
+// Имя кольца стоит под 3D, а здесь — то, что нужно, когда человек ушёл вниз
+// по странице: сколько стоит выбранное и куда нажать. Цена меняется на
+// глазах при каждом выборе.
+//
+// «Обсудить в WhatsApp», а не «Оставить заявку»: заявка звучит как форма и
+// ожидание звонка, а здесь человек сразу попадает в чат и пишет сам. Когда под панелью тёмный блок (примерка, финал,
 // подвал), стекло темнеет и текст становится белым — иначе тёмный текст на
 // тёмном не читается. Тёмные блоки помечены data-dark, подвал — тегом footer.
 
-export default function GlassBar({ name, price }) {
+export default function GlassBar({ price, onWa }) {
   const ref = useRef(null);
   const [dark, setDark] = useState(false);
 
@@ -33,9 +39,9 @@ export default function GlassBar({ name, price }) {
   }, []);
 
   return (
-    <div ref={ref} className={`mp-glass${dark ? ' is-dark' : ''}`} aria-live="polite">
-      <span className="mp-glass__n">{name}</span>
-      {price && <span className="mp-glass__p">{price}</span>}
+    <div ref={ref} className={`mp-glass${dark ? ' is-dark' : ''}`}>
+      <span className="mp-glass__p" aria-live="polite">{price}</span>
+      <button type="button" className="mp-glass__wa" onClick={onWa}>{WA_ICON}Обсудить в WhatsApp</button>
     </div>
   );
 }

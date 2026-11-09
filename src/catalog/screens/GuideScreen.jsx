@@ -1,39 +1,39 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { guideBySlug, minutesLabel, otherGuides } from '../data/guides.js';
-import { GuideCover } from '../guides/covers.jsx';
+import { guideBySlug, guideList } from '../data/guides.js';
+import { useContent } from '../data/content.js';
+import GuideArticle from '../guides/GuideArticle.jsx';
 import { GuideCtx } from '../guides/guideCtx.js';
 import { GuideCard } from '../components/GuidesStrip.jsx';
 import { useWhatsApp, WA_ICON } from '../components/model/whatsapp.jsx';
 import { track, EVENTS } from '../lib/track.js';
 import { useQuoteFont } from '../lib/useQuoteFont.js';
-import { typo } from '../data/feed.js';
-import Guide1 from '../guides/Guide1.jsx';
-import Guide2 from '../guides/Guide2.jsx';
-import Guide3 from '../guides/Guide3.jsx';
-import '../guides/guides.css';
 
 // Страница гида — посадочная для рекламы: человек пришёл читать, а не
 // покупать. Поэтому первый экран — заголовок, вступление и обложка, без
 // кнопок. Когда обложка ушла вверх, снизу появляется панель «Смотреть кольца»
 // и WhatsApp; у финального блока она прячется — там те же кнопки крупно.
 //
+// Текст — из админки (/api/content/guides), а пока его нет — из кода.
+//
 // Что считаем: открыл гид (guide_view), дочитал до финала (guide_read),
 // перешёл в каталог (guide_cta), написал из гида (wa_click с полем guide).
-
-const BODIES = { 'kak-ugadat-kolco': Guide1, 'kolco-za-5-minut': Guide2, 'predlozhenie-bez-stressa': Guide3 };
 
 const DEFAULT_TITLE = typeof document !== 'undefined' ? document.title : '';
 
 export default function GuideScreen() {
   const { slug } = useParams();
-  const guide = guideBySlug(slug);
-  const Body = BODIES[slug];
-  if (!guide || !Body) return <Navigate to="/catalog" replace />;
-  return <Guide key={slug} guide={guide} Body={Body} />;
+  const { data, ready } = useContent('guides');
+  const list = guideList(data);
+  const guide = guideBySlug(list, slug);
+  // Пока не знаем, что в админке, — пустое место, а не текст из кода, который
+  // через миг сменится.
+  if (!ready) return <div style={{ minHeight: '100dvh' }} />;
+  if (!guide) return <Navigate to="/catalog" replace />;
+  return <Guide key={slug} guide={guide} others={list.filter(g => g.slug !== slug)} />;
 }
 
-function Guide({ guide, Body }) {
+function Guide({ guide, others }) {
   useQuoteFont();
   const wa = useWhatsApp();
   const { open: openWa } = wa;
@@ -53,7 +53,7 @@ function Guide({ guide, Body }) {
     const meta = document.querySelector('meta[name="description"]');
     const prevDesc = meta?.getAttribute('content');
     document.title = `${guide.title} — Neo Diamond`;
-    meta?.setAttribute('content', guide.description);
+    if (guide.description) meta?.setAttribute('content', guide.description);
     return () => {
       document.title = DEFAULT_TITLE;
       if (meta && prevDesc) meta.setAttribute('content', prevDesc);
@@ -117,25 +117,16 @@ function Guide({ guide, Body }) {
           <div className="gd-progress" ref={barRef} aria-hidden="true" />
         </header>
 
-        <div className="gd-inner" ref={rootRef}>
-          <div className="gd-col gd-s gd-s--first">
-            <div className="gd-meta"><span>Гид для мужчин</span><span>{minutesLabel(guide.minutes)} чтения</span></div>
-            <h1 className="gd-h1">{typo(guide.title)}</h1>
-            <p className="gd-lead">{typo(guide.lead)}</p>
-          </div>
-          <div className="gd-wide" style={{ marginTop: 24 }} ref={coverRef}>
-            <GuideCover kind={guide.cover} eager />
-          </div>
-
-          <Body />
-
-          <section className="gd-also" aria-labelledby="gd-also-t">
-            <div className="gd-col"><h2 className="gd-h2" id="gd-also-t">Читайте также</h2></div>
-            <div className="gstrip__row">
-              {otherGuides(guide.slug).map(g => <GuideCard key={g.slug} guide={g} from={`guide:${guide.slug}`} small />)}
-            </div>
-          </section>
-        </div>
+        <GuideArticle guide={guide} ref={rootRef} coverRef={coverRef}>
+          {others.length > 0 && (
+            <section className="gd-also" aria-labelledby="gd-also-t">
+              <div className="gd-col"><h2 className="gd-h2" id="gd-also-t">Читайте также</h2></div>
+              <div className="gstrip__list">
+                {others.map(g => <GuideCard key={g.slug} guide={g} from={`guide:${guide.slug}`} />)}
+              </div>
+            </section>
+          )}
+        </GuideArticle>
 
         <div className={`gd-sticky${sticky ? ' is-on' : ''}`} aria-hidden={!sticky}>
           <div className="gd-sticky__in">

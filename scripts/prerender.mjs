@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 // Адреса, телефоны и условия берутся из того же файла, что и видимый футер, —
 // чтобы текст на странице и разметка для машин не разошлись.
 import { ORG, SHOWROOMS, HOURS_NOTE, INSTAGRAM_HANDLE, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
-import { GUIDES, guidePath, minutesLabel } from '../src/catalog/data/guides.js';
+import { guideList, guidePath, minutesLabel, outlineOf } from '../src/catalog/data/guides.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -431,6 +431,15 @@ async function main() {
   }
   const ogImage = (key) => (ogDone.has(key) ? `${SITE}/assets/og/${key}.jpg` : undefined);
 
+  // Гиды — какими их сохранили в админке; без связи — как в коде.
+  let guidesDoc = null;
+  try {
+    const res = await fetch(`${SITE}/api/content/guides?fresh`, { signal: AbortSignal.timeout(10000) });
+    if (res.ok) guidesDoc = await res.json();
+  } catch { /* гиды из кода */ }
+  const GUIDES = guideList(guidesDoc);
+  console.log(`  гиды: ${GUIDES.length}${guidesDoc ? ' — из админки' : ' — из кода'}`);
+
   let guideOg = new Set();
   try {
     guideOg = await generateGuideCards({ dist: DIST, guides: GUIDES, minutesLabel });
@@ -544,8 +553,8 @@ async function main() {
       bodyHtml: `
       <article>
         <h1>${esc(g.title)}</h1>
-        <p>${esc(g.lead)}</p>
-        <ul>${g.outline.map(h => `<li>${esc(h)}</li>`).join('')}</ul>
+        <p>${esc(g.lead ?? '')}</p>
+        <ul>${outlineOf(g).map(h => `<li>${esc(h)}</li>`).join('')}</ul>
         <p><a href="/catalog">Смотреть помолвочные кольца с ценами</a></p>
       </article>`,
     });

@@ -74,12 +74,19 @@ function Tomorrow() {
 
 const COVERS = { secret: Secret, anatomy: Anatomy, tomorrow: Tomorrow };
 
-/** eager — для обложки в начале статьи: она на первом экране. */
-export function GuideCover({ kind, eager = false }) {
-  const Inner = COVERS[kind];
+/**
+ * kind — одна из нарисованных обложек или photo — своё фото из админки.
+ * eager — для обложки в начале статьи: она на первом экране.
+ */
+export function GuideCover({ kind, photo, eager = false }) {
+  const loading = eager ? 'eager' : 'lazy';
+  if (kind === 'photo') {
+    return <div className="gc gc--photo" aria-hidden="true">{photo && <img src={photo} alt="" loading={loading} decoding="async" />}</div>;
+  }
+  const Inner = COVERS[kind] ?? Secret;
   return (
     <div className={`gc gc--${kind}`} aria-hidden="true">
-      {Inner && <Inner loading={eager ? 'eager' : 'lazy'} />}
+      <Inner loading={loading} />
     </div>
   );
 }

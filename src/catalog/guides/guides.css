@@ -482,3 +482,64 @@
 @media (min-width: 600px) {
   .gd-s { margin-top: 72px; }
 }
+
+/* ─── Блоки статьи (blocks.jsx) ──────────────────────────────────────────
+   Отступ — у обёртки блока. Раздел начинается с заголовка (56 px), абзацы
+   и иллюстрации внутри раздела — плотнее. Две широкие карточки подряд —
+   12 px, как в ленте. */
+.gd-body > .gd-blk { margin-top: 20px; }
+.gd-body > .gd-blk:first-child { margin-top: 56px; }
+.gd-body > .gd-blk--h2 { margin-top: 56px; }
+.gd-body > .gd-blk--h3 { margin-top: 32px; }
+.gd-body > .gd-blk--h2 + .gd-blk--p, .gd-body > .gd-blk--h2 + .gd-blk--list { margin-top: 12px; }
+.gd-body > .gd-blk--h3 + .gd-blk--p { margin-top: 6px; }
+.gd-body > .gd-blk--p + .gd-blk--p { margin-top: 14px; }
+.gd-body > .gd-blk--quote { margin-top: 28px; }
+.gd-body > .gd-blk--quote + .gd-blk--p { margin-top: 18px; }
+.gd-body > .gd-w + .gd-w { margin-top: 12px; }
+.gd-body > .gd-blk--final { margin-top: 56px; }
+.gd-blk > .gd-col > .gd-quote:first-child, .gd-blk > .gd-col > .gd-p:first-child { margin-top: 0; }
+.gd-blk > .gd-col > .gd-list:first-child { margin-top: 0; }
+.gd-blk--facts .gd-h3 { margin-top: 12px; }
+
+.gd-b-title { display: block; font-size: 15.5px; font-weight: 700; color: var(--ink-800); }
+.gd-sub { margin-top: 2px; font-size: 13.5px; color: #52615B; }
+.gd-p--card { margin-top: 6px; font-size: 14.5px; line-height: 1.55; }
+.gd-card--soft .gd-b-title { font-size: 16px; }
+.gd-quote--card { margin-top: 14px; font-size: 23px; line-height: 1.2; }
+.gd-kinds__note { margin: 14px 2px 0 !important; font-size: 14px; }
+.gd-fig { margin: 0; }
+.gd-fig img { width: 100%; display: block; border-radius: 24px; background: var(--paper-100); }
+.gd-fig figcaption { margin: 8px 12px 0; font-size: 13px; line-height: 1.45; color: #52615B; }
+.gd-vs__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.gd-vs__top small { font-size: 12px; font-weight: 700; color: var(--ink-800); }
+.gd-vs__n { font-family: var(--font-display); font-weight: 300; font-size: 24px; color: var(--ink-800); }
+.gd-vs__p { margin: 8px 0 0; font-size: 13.5px; line-height: 1.5; }
+.gd-eq__metal { width: 56px; height: 56px; border-radius: 50% !important; box-shadow: inset 0 -3px 6px rgba(6, 27, 27, 0.14); }
+.gd-blk--cta .gd-btn, .gd-blk--cta .mp-wa { margin-top: 4px; }
+.gd-steps { margin: 0; list-style: none; }
+
+/* ─── Карточки гидов в ленте и в «Читайте также» ─────────────────────────
+   Меньше карточки кольца: обложка миниатюрой слева, заголовок рядом, ниже —
+   что человек узнает, и своя кнопка. */
+.gstrip__list { margin-top: 20px; padding: 0 12px; display: flex; flex-direction: column; gap: 10px; }
+.gcard2 {
+  display: block; padding: 14px 14px 16px; border-radius: 24px; background: #FFFFFF; border: 1.5px solid var(--paper-300);
+  color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent;
+}
+.gcard2:focus-visible { outline: 2px solid var(--ink-800); outline-offset: 2px; }
+.gcard2__top { display: flex; gap: 14px; align-items: center; }
+.gcard2__cover { flex: 0 0 112px; }
+.gcard2__cover .gc { border-radius: 14px; }
+.gcard2__m { font-size: 12.5px; color: #52615B; }
+.gcard2__t {
+  margin: 4px 0 0; font-family: var(--font-display); font-weight: 300; letter-spacing: -0.02em;
+  font-size: 16px; line-height: 1.28; color: var(--ink-800); text-wrap: balance;
+}
+.gcard2__p { margin: 12px 2px 0; font-size: 14px; line-height: 1.55; color: var(--ink-600); text-wrap: pretty; }
+.gcard2__btn {
+  margin-top: 14px; display: flex; align-items: center; justify-content: center; min-height: 46px; border-radius: 50px;
+  border: 1.5px solid var(--ink-800); font-weight: 700; font-size: 14.5px; color: var(--ink-800);
+}
+.gcard2:active .gcard2__btn { background: var(--paper-100); }
+.gc--photo img { width: 100%; height: 100%; object-fit: cover; }

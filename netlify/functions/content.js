@@ -3,6 +3,8 @@
 // GET /api/content/feed     — лента: порядок моделей, фото, цвет плашки, тексты,
 //                             кадры «на руке», заголовок ленты.
 // GET /api/content/reviews  — цитаты из отзывов 2ГИС.
+// GET /api/content/guides   — гиды для мужчин: тексты и блоки (схема —
+//                             src/catalog/data/guideSchema.js).
 // PUT /api/content/:name    — сохранить (только админ).
 //
 // Пустой ответ (null) значит «ещё не правили»: сайт показывает то, что зашито
@@ -13,6 +15,7 @@
 
 import { getStore } from '@netlify/blobs';
 import { cachedJson, isAdmin, json, preflight, purge } from '../lib/http.js';
+import { cleanGuides } from '../../src/catalog/data/guideSchema.js';
 
 const HISTORY = 20;
 
@@ -76,7 +79,9 @@ export function cleanReviews(body) {
   return { version: 1, items };
 }
 
-const DOCS = { feed: cleanFeed, reviews: cleanReviews };
+export { cleanGuides };
+
+const DOCS = { feed: cleanFeed, reviews: cleanReviews, guides: cleanGuides };
 
 export default async (req, context) => {
   if (req.method === 'OPTIONS') return preflight();

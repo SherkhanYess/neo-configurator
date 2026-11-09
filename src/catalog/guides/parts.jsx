@@ -3,26 +3,7 @@ import { track, EVENTS } from '../lib/track.js';
 import { WA_ICON } from '../components/model/whatsapp.jsx';
 import { useGuide } from './guideCtx.js';
 
-// Детали, из которых собраны статьи. Разметка повторяет макет на холсте:
-// текст — колонкой с полями 24 px, иллюстрации и карточки — шире, с полями
-// 12 px, как карточки ленты.
-
-
-export const Col  = ({ children, className = '' }) => <div className={`gd-col ${className}`}>{children}</div>;
-export const Wide = ({ children, className = '' }) => <div className={`gd-wide ${className}`}>{children}</div>;
-
-/** Раздел статьи: отступ сверху, заголовок и текст колонкой. */
-export function Sec({ title, children, first = false }) {
-  return (
-    <section className={`gd-col gd-s${first ? ' gd-s--first' : ''}`}>
-      {title && <h2 className="gd-h2">{title}</h2>}
-      {children}
-    </section>
-  );
-}
-
-export const P = ({ children, muted, className = '' }) => <p className={`gd-p${muted ? ' gd-p--muted' : ''} ${className}`}>{children}</p>;
-export const Quote = ({ children, light }) => <p className={`gd-quote${light ? ' gd-quote--light' : ''}`}>{children}</p>;
+// Общие детали блоков гида: список с отметками, карточка, иконки и кнопки.
 
 /** Список с отметкой: plus, minus, check, x, dot. */
 export function List({ kind = 'dot', items, small }) {
@@ -45,8 +26,11 @@ const ICONS = {
   pen:    <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></>,
   spark:  <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18" />,
   phone:  <><rect x="6.5" y="2.5" width="11" height="19" rx="2.5" /><path d="M10.5 18.5h3" /></>,
+  heart:  <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z" />,
+  gift:   <><rect x="3.5" y="8" width="17" height="4" rx="1" /><path d="M5 12v8.5h14V12M12 8v12.5" /><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zM12 8c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z" /></>,
+  shield: <><path d="M12 3l7 3v5.5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5V6z" /><path d="M9 12l2 2 4-4" /></>,
 };
-export const Icon = ({ name }) => <svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[name]}</svg>;
+export const Icon = ({ name }) => <svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[name] ?? ICONS.spark}</svg>;
 
 /** Кнопка в каталог. Клик считаем — так видно, какой гид приводит к моделям. */
 export function CatalogButton({ children, to = '/catalog', variant = 'ink', place }) {
@@ -70,21 +54,5 @@ export function WaCta({ type = 'price', children, place }) {
     <button type="button" className="mp-wa" onClick={() => wa?.open(type, {}, { place: place ?? 'guide', guide: slug })}>
       {WA_ICON}{children}
     </button>
-  );
-}
-
-/** Финальный тёмный блок: заголовок, текст и две кнопки. */
-export function Final({ title, children, primary, waText, waType = 'price' }) {
-  return (
-    <Wide className="gd-s">
-      <div className="gd-dark" data-final="">
-        <h2 className="gd-h2 gd-h2--light">{title}</h2>
-        {children}
-        <div className="gd-btns">
-          <CatalogButton variant="white" place="final">{primary}</CatalogButton>
-          <WaCta type={waType} place="guide_final">{waText}</WaCta>
-        </div>
-      </div>
-    </Wide>
   );
 }

@@ -24,9 +24,9 @@
 
 ## Гиды
 
-`/catalog/guides/:slug` — статьи для мужчин, `src/catalog/guides/`. Новый гид:
-запись в `data/guides.js`, файл с текстом в `guides/` и строка в `BODIES`
-(`screens/GuideScreen.jsx`). Подробности — DESIGN.md, «Гиды».
+`/catalog/guides/:slug` — статьи для мужчин. Тексты и блоки правятся в
+админке («Гиды»); схема блоков — `src/catalog/data/guideSchema.js`, тексты по
+умолчанию — `data/guidesDefault.js`. Подробности — DESIGN.md, «Гиды».
 
 ## Админка
 

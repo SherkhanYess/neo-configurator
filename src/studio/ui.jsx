@@ -155,6 +155,7 @@ export const Icon = {
   feed: <path d="M4 5h16M4 12h16M4 19h10" />,
   hints: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M8 9h8M8 13h5" /></>,
   reviews: <path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" />,
+  guides: <><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" /><path d="M4 19V5M9 7h6M9 11h6" /></>,
   stats: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></>,
   catalog: <><circle cx="12" cy="13" r="6" /><path d="M9 3h6l-3 4z" /></>,
   links: <><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></>,

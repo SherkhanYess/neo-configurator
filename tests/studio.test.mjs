@@ -1,6 +1,7 @@
 // Админка витрины: что сервер пропускает в документы ленты и отзывов и как
 // статистика раскладывает обращения по моделям.
-import { cleanFeed, cleanReviews } from '../netlify/functions/content.js';
+import { cleanFeed, cleanReviews, cleanGuides } from '../netlify/functions/content.js';
+import { DEFAULT_GUIDES } from '../src/catalog/data/guidesDefault.js';
 import { rollUp, mergeDays } from '../netlify/functions/stats.js';
 
 let pass = 0, fail = 0;
@@ -96,6 +97,23 @@ eq('гид 1: открыли 1, читали 2, дочитали 1, написа
 eq('гид 2: в каталог 1, чек-лист не считается переходом', gday.perGuide['kolco-za-5-minut'].cta, 1);
 eq('WhatsApp без гида в гиды не попадает', Object.keys(gday.perGuide).length, 2);
 eq('дни по гидам складываются', mergeDays([gday, gday]).perGuide['kak-ugadat-kolco'].view, 4);
+
+console.log('гиды в админке:');
+const texts = (x) => JSON.stringify(x).match(/"(?:text|title|items|def|term|caption|quote|note)":("[^"]*"|\[[^\]]*\])/g) ?? [];
+const roundTrip = cleanGuides({ items: DEFAULT_GUIDES }).items;
+eq('гиды из кода проходят чистку без потерь текста', texts(roundTrip).length >= texts(DEFAULT_GUIDES).length, true);
+eq('и блоки все до одного', roundTrip.map(g => g.blocks.length), DEFAULT_GUIDES.map(g => g.blocks.length));
+const dirty = cleanGuides({ items: [
+  { slug: 'Плохой адрес', title: 'x', blocks: [] },
+  { slug: 'ok-gid', title: 'Гид', blocks: [
+    { type: 'p', text: 'Абзац' }, { type: 'script', text: 'alert(1)' },
+    { type: 'image', src: 'https://evil.example/x.jpg' }, { type: 'cta', action: 'page', to: 'https://evil.example' },
+  ] },
+  { slug: 'ok-gid', title: 'Повтор', blocks: [] },
+] });
+eq('неверный адрес и повтор отброшены', dirty.items.map(g => g.slug), ['ok-gid']);
+eq('неизвестный блок отброшен', dirty.items[0].blocks.map(b => b.type), ['p', 'image', 'cta']);
+eq('чужая картинка и чужая ссылка не сохраняются', [dirty.items[0].blocks[1].src, dirty.items[0].blocks[2].to], ['', '']);
 
 console.log(`\nитого: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

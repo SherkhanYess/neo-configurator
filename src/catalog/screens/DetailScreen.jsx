@@ -274,6 +274,13 @@ export default function DetailScreen({ ijewel }) {
 
   return (
     <div className="mp">
+      {/* Имя и цена — сразу под 3D: что это за кольцо и сколько оно стоит,
+          видно до любого выбора. Цена меняется вместе с выбором. */}
+      <div className="mp-title">
+        <h1 className="mp-title__n">{productName}</h1>
+        {price ? <span className="mp-title__p" aria-live="polite">{formatPrice(price)}</span> : null}
+      </div>
+
       {fromHint && (
         <div className="mp-plaque"><b>Вам показали это кольцо.</b> Она поделилась с нами своим размером — напишите нам в WhatsApp, чтобы узнать размер и обсудить детали кольца.</div>
       )}
@@ -384,7 +391,7 @@ export default function DetailScreen({ ijewel }) {
       <Questions />
       <Final onWa={() => wa.open('help', ctx, props)} />
 
-      <GlassBar name={productName} price={formatPrice(price)} />
+      <GlassBar price={price ? formatPrice(price) : ''} onWa={() => wa.open(fromHint ? 'hint' : 'price', ctx, { ...props, place: 'sticky' })} />
 
       {wa.sheet}
       {hintOpen && (

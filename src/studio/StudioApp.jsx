@@ -9,6 +9,7 @@ import ReviewsEditor from './sections/ReviewsEditor.jsx';
 import AnalyticsView from './sections/AnalyticsView.jsx';
 import CatalogEditor from './sections/CatalogEditor.jsx';
 import LinksView from './sections/LinksView.jsx';
+import GuidesEditor from './sections/GuidesEditor.jsx';
 import '../catalog/index.css';
 import './studio.css';
 
@@ -27,6 +28,7 @@ const NAV = [
   { to: 'feed',    label: 'Лента',     icon: 'feed' },
   { to: 'hints',   label: 'Намёки',    icon: 'hints' },
   { to: 'reviews', label: 'Отзывы',    icon: 'reviews' },
+  { to: 'guides',  label: 'Гиды',      icon: 'guides' },
   { to: 'stats',   label: 'Аналитика', icon: 'stats' },
   { to: 'catalog', label: 'Модели и цены', short: 'Цены', icon: 'catalog' },
   { to: 'links',   label: 'Ссылки',    icon: 'links' },
@@ -57,7 +59,7 @@ function Login({ onDone }) {
       <form className="st-login__card" onSubmit={submit}>
         <img src="/assets/aena/sign-bronze.png" alt="aena" className="st-login__logo" />
         <h1 className="st-h1">Админка витрины</h1>
-        <p className="st-sub">Лента, фото, намёки, отзывы и цены — всё, что видит покупатель на сайте.</p>
+        <p className="st-sub">Лента, фото, гиды, намёки, отзывы и цены — всё, что видит покупатель на сайте.</p>
         <input
           className="st-input"
           type="password"
@@ -121,6 +123,7 @@ function Shell({ onLogout }) {
           <Route path={`${BASE}/feed`} element={<FeedEditor />} />
           <Route path={`${BASE}/hints`} element={<HintsView onChange={refreshHints} />} />
           <Route path={`${BASE}/reviews`} element={<ReviewsEditor />} />
+          <Route path={`${BASE}/guides`} element={<GuidesEditor />} />
           <Route path={`${BASE}/stats`} element={<AnalyticsView />} />
           <Route path={`${BASE}/catalog`} element={<CatalogEditor />} />
           <Route path={`${BASE}/links`} element={<LinksView />} />
