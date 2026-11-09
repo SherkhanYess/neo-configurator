@@ -52,7 +52,7 @@ export const DEFAULT_HERO = {
   cta: 'Смотреть каталог',
   cta2: 'Обсудить свой дизайн',
   photo: '/assets/aena/hero-oval.webp',
-  focus: { x: 50, y: 40 },
+  focus: { x: 50, y: 62 },
 };
 
 /** Обложка: что сохранено в админке, а пустое — по умолчанию. */
