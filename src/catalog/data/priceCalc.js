@@ -1,4 +1,14 @@
 /**
+ * Цена «от» — модель с камнем 1 ct, 585 проба, белый: база шинки плюс
+ * доплата за оправу (ореол, ободок). Её показывают лента, «Другие модели»,
+ * админка и пререндер — одна формула на всех.
+ */
+export function fromPrice(prices, shank, cast) {
+  if (!prices) return null;
+  return (prices.baseByShank?.[shank] ?? 0) + (cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0);
+}
+
+/**
  * Calculate estimated ring price based on user choices and admin price config.
  * All values in KZT (₸).
  *

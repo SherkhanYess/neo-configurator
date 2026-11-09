@@ -1,6 +1,6 @@
 // Фото огранок кешируются браузером навсегда (immutable). Заменили картинки —
 // поднимите версию, иначе у вернувшихся посетителей останутся старые.
-export const SHAPES_VERSION = 2;
+export const SHAPES_VERSION = 3;
 export const shapeImage = (file) => `/assets/shapes/${file}?v=${SHAPES_VERSION}`;
 
 export const SHAPES = [
@@ -63,10 +63,6 @@ const MODEL_NAMES = {
 
 export function modelName(shankId, castId) {
   return MODEL_NAMES[`${shankId}|${castId}`] ?? shankId;
-}
-
-export function cardName(shankId, castId, shapeLabel) {
-  return [modelName(shankId, castId), shapeLabel].filter(Boolean).join(' ');
 }
 
 // Студийные рендеры public/assets/rings/<файл>-<огранка>.webp — по паре

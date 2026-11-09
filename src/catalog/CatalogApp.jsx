@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 're
 import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { SHAPES } from './data/config.js';
 import { useProductsState } from './data/products.js';
-import { ringOf, shankFromSlug } from './data/models.js';
+import { productPath, ringOf, shankFromSlug } from './data/models.js';
 import FeedScreen         from './screens/FeedScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
 import SiteFooter         from './components/SiteFooter.jsx';
@@ -36,9 +36,8 @@ function BookingRedirect() {
   const location = useLocation();
   const cfg = decodeBooking(location.search);
   if (!cfg?.shank || cfg.type === 'pusety') return <Navigate to="/" replace />;
-  const slug = cfg.shank.toLowerCase().replace(/\s+/g, '-');
   const q = cfg.carat ? `?ct=${cfg.carat}` : '';
-  return <Navigate to={`/product/${slug}/${cfg.cast}/${cfg.shape}${q}`} replace />;
+  return <Navigate to={productPath(cfg.shank, cfg.cast, cfg.shape) + q} replace />;
 }
 
 /** Старые адреса с /catalog — с тех пор, как витрина жила в подпапке. Сервер
@@ -53,9 +52,9 @@ function CatalogMain() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const onRingProduct  = location.pathname.startsWith('/product');
-
-  const showViewer = onRingProduct;
+  // 3D-просмотр живёт здесь, а не на странице модели: переходя от модели к
+  // модели, человек не ждёт загрузку сцены заново.
+  const showViewer = location.pathname.startsWith('/product');
 
   // 3D — только там, где оно есть: на странице модели скрипты подключаются,
   // на ленте — тихо скачиваются в кэш, пока человек листает.
@@ -64,12 +63,7 @@ function CatalogMain() {
     else prefetchIjewel();
   }, [showViewer]);
 
-  // Which iJewel model to load. On the booking screen the route says nothing
-  // about the category, so the answer comes from the shared configuration —
-  // Категория одна — кольца, поэтому выбирать файл модели больше не из чего.
-  const fileId = RING_FILE_ID;
-
-  const ijewel        = useIjewel(fileId);
+  const ijewel        = useIjewel(RING_FILE_ID);
   const viewerRef     = useRef(null);
   const viewerInitRef = useRef(false);
 
@@ -90,38 +84,32 @@ function CatalogMain() {
 
   // Reset isConfigured synchronously before paint when entering a product page
   useLayoutEffect(() => {
-    if (onRingProduct) ijewel.resetConfigured();
+    if (showViewer) ijewel.resetConfigured();
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // When fileId changes (category switch), force re-init on next showViewer
-  const prevFileIdRef = useRef(fileId);
+  // Сцена создаётся один раз — при первом заходе на страницу модели, как
+  // только догрузились скрипты 3D. Ушли со страницы раньше — ждать перестаём
+  // (и начнём заново при следующем заходе); скрипт так и не пришёл — через
+  // минуту тоже перестаём, надпись «Не удалось загрузить 3D» уже стоит.
   useEffect(() => {
-    if (prevFileIdRef.current !== fileId) {
-      prevFileIdRef.current = fileId;
-      viewerInitRef.current = false;
-    }
-  }, [fileId]);
-
-  // Init viewer when entering a product page; re-init when category changes
-  useEffect(() => {
-    if (!showViewer || !viewerRef.current) return;
-    if (viewerInitRef.current) return;
-
+    if (!showViewer || !viewerRef.current || viewerInitRef.current) return;
+    let timer, tries = 0;
     const tryInit = () => {
       if (window.ijewelViewer) {
         viewerInitRef.current = true;
         ijewel.init(viewerRef.current);
-      } else {
-        setTimeout(tryInit, 200);
+      } else if (++tries < 300) {
+        timer = setTimeout(tryInit, 200);
       }
     };
     tryInit();
-  }, [showViewer, fileId]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => clearTimeout(timer);
+  }, [showViewer]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <div
-        className={`cfg-viewer-panel${onRingProduct ? ' mp-viewer' : ''}`}
+        className={`cfg-viewer-panel${showViewer ? ' mp-viewer' : ''}`}
         style={{ display: showViewer ? undefined : 'none', position: 'relative', flexShrink: 0 }}
       >
         <div
@@ -143,7 +131,10 @@ function CatalogMain() {
         )}
 
         {showViewer && (
-          <button type="button" className="mp-back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}>
+          // «Назад» — в ленту, если на сайт пришли прямо на модель (из рекламы,
+          // по ссылке): history.length считает и чужие сайты, и человек ушёл бы
+          // обратно в Instagram. location.key 'default' — первая страница визита.
+          <button type="button" className="mp-back" onClick={() => (location.key !== 'default' ? navigate(-1) : navigate('/'))}>
             <svg width="7" height="12" viewBox="0 0 8 12" aria-hidden="true"><path d="M7 1L2 6l5 5" fill="none" stroke="#FFFFFF" strokeWidth="1.5"/></svg>
             Назад
           </button>

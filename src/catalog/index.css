@@ -42,8 +42,7 @@
   /* Fonts */
   --font-display: 'Unbounded', -apple-system, sans-serif;
   --font-body:    'Manrope', -apple-system, sans-serif;
-  --font-quote:   'Cormorant', Georgia, serif;
-  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+  --font-mono:    ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
 
 /* ── Reset ──────────────────────────────────────── */
@@ -143,17 +142,6 @@ img { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
 }
-
-.feed-head {
-  height: 56px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid var(--paper-200, #E9E1D3);
-}
-.feed-logo { height: 30px; width: auto; display: block; }
-
 .feed-intro {
   padding: 24px 24px 20px;
   text-align: center;
@@ -168,15 +156,6 @@ img { display: block; max-width: 100%; }
   color: var(--ink-800, #061B1B);
   text-wrap: balance;
 }
-.feed-sub {
-  margin: 8px 0 0;
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--ink-400, #5F6E68);
-  text-wrap: balance;
-}
-
 .feed-list {
   display: flex;
   flex-direction: column;
@@ -331,7 +310,7 @@ img { display: block; max-width: 100%; }
 }
 .feed-hero:not(.has-photo)::before {
   content: ''; position: absolute; inset: -10% -30%; z-index: -1;
-  background: url('/assets/taena/sign-pearl.png') center 42% / 78% auto no-repeat; opacity: 0.045;
+  background: url('/assets/taena/sign-pearl.webp') center 42% / 78% auto no-repeat; opacity: 0.045;
 }
 .feed-hero__photo {
   /* Фото — верхние три четверти: кольцо над текстом, а не под ним. */

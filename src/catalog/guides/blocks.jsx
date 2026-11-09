@@ -5,6 +5,7 @@ import { useProducts } from '../data/products.js';
 import { calcPrice, formatPrice } from '../data/priceCalc.js';
 import { SHOWROOMS } from '../data/org.js';
 import { SHAPE_IDS } from '../data/guideSchema.js';
+import { shapeImage } from '../data/config.js';
 import { typo } from '../data/feed.js';
 import { track, EVENTS } from '../lib/track.js';
 import { List, Card, Icon, CatalogButton, WaCta } from './parts.jsx';
@@ -19,7 +20,8 @@ import { useGuide } from './guideCtx.js';
 const t = (s) => typo(s ?? '');
 /** Перенос строки в поле админки — перенос и на сайте. */
 const lines = (s) => t(s).split('\n').map((l, i, all) => <Fragment key={i}>{l}{i < all.length - 1 && <br />}</Fragment>);
-const SHAPE = (id) => `/assets/shapes/${id}.webp`;
+// Через shapeImage — с версией: файлы огранок кэшируются навсегда.
+const SHAPE = (id) => shapeImage(`${id}.webp`);
 const SHAPE_NAME = Object.fromEntries(SHAPE_IDS);
 const RING = (n) => `/assets/rings/${n}.webp`;
 

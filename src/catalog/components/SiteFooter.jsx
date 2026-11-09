@@ -1,14 +1,9 @@
-import { useEffect, useState } from 'react';
 import { ORG, SHOWROOMS, INSTAGRAM_HANDLE } from '../data/org.js';
 import { waMessage } from '../lib/waMessage.js';
 import { leadCode } from '../lib/leadCode.js';
-import { track, EVENTS } from '../lib/track.js';
-import { useQuoteFont } from '../lib/useQuoteFont.js';
+import { track, EVENTS, readUtm } from '../lib/track.js';
+import { useReputation } from '../lib/reputation.js';
 
-function readUtm() {
-  try { return JSON.parse(sessionStorage.getItem('nd_utm') ?? '{}') ?? {}; }
-  catch { return {}; }
-}
 
 // Футер taena. Бренд дочерний: шоурумы, телефоны и отзывы — компании Neo
 // Diamond, поэтому её имя стоит рядом со знаком и в строке рейтинга.
@@ -141,17 +136,7 @@ function StarIcon() {
  * файла нет или запрос к 2ГИС не удался, строка просто не появляется.
  */
 function Reputation() {
-  const [rep, setRep] = useState(null);
-
-  useEffect(() => {
-    let alive = true;
-    fetch('/reputation.json')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (alive && d?.line) setRep(d); })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
-
+  const rep = useReputation();
   if (!rep) return null;
 
   return (
@@ -174,7 +159,6 @@ function Reputation() {
 }
 
 export default function SiteFooter() {
-  useQuoteFont();
   return (
     <footer
       style={{
@@ -193,8 +177,8 @@ export default function SiteFooter() {
             адреса, телефоны и отзывы в 2ГИС у них общие. */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src="/assets/taena/sign-pearl.png" alt="" width="41" height="32" style={{ display: 'block' }} />
-            <img src="/assets/taena/word-pearl.png" alt="taena" width="108" height="32" style={{ display: 'block' }} />
+            <img src="/assets/taena/sign-pearl.webp" alt="" width="41" height="32" style={{ display: 'block' }} />
+            <img src="/assets/taena/word-pearl.webp" alt="taena" width="108" height="32" style={{ display: 'block' }} />
           </div>
           <div style={{
             marginTop: 14, fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontWeight: 300,

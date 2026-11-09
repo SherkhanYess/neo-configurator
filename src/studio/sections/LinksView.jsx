@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Field, PageHead, Svg, useToast } from '../ui.jsx';
 import { ADS_URL_PARAMS, BASE, UTM_PRESETS, buildUtmUrl } from '../utm.js';
 import { useProducts } from '../../catalog/data/products.js';
-import { guideList, guidePath } from '../../catalog/data/guides.js';
+import { guideCards, guidePath } from '../../catalog/data/guides.js';
+import { productPath } from '../../catalog/data/models.js';
 import { api } from '../api.js';
 
 // Раздел «Ссылки»: готовые ссылки с метками для мест, откуда идут люди.
@@ -20,14 +21,13 @@ function useCopy() {
   };
 }
 
-const slugOf = (shank) => shank.toLowerCase().replace(/\s+/g, '-');
 const latin = (v) => v.toLowerCase().replace(/[^a-z0-9_-]/g, '');
 
 /** Гиды — какими их сохранили в админке, а без этого — из кода. */
 function useGuides() {
   const [doc, setDoc] = useState(null);
   useEffect(() => { api('/api/content/guides?fresh').then(setDoc).catch(() => {}); }, []);
-  return guideList(doc);
+  return guideCards(doc);
 }
 
 /** Куда ведёт ссылка: лента, страница модели или гид. */
@@ -37,7 +37,7 @@ function TargetSelect({ value, onChange, models, guides }) {
       <option value="">Лента — все модели</option>
       <optgroup label="Модели">
         {models.map(m => (
-          <option key={m.key} value={`/product/${slugOf(m.shank)}/${m.cast}/round`}>{m.model}</option>
+          <option key={m.key} value={productPath(m.shank, m.cast)}>{m.model}</option>
         ))}
       </optgroup>
       <optgroup label="Гиды">

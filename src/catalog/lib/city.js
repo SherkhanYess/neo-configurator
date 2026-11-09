@@ -14,7 +14,7 @@ export function currentCity() {
   try {
     const saved = sessionStorage.getItem(KEY);
     if (saved && CITIES.includes(saved)) return saved;
-  } catch (_) { /* приватный режим */ }
+  } catch { /* приватный режим */ }
   return CITIES[0];
 }
 
@@ -25,7 +25,7 @@ export function hasChosenCity() {
 }
 
 export function rememberCity(city) {
-  try { sessionStorage.setItem(KEY, city); } catch (_) { /* приватный режим */ }
+  try { sessionStorage.setItem(KEY, city); } catch { /* приватный режим */ }
 }
 
 /** Номер шоурума. Неизвестный город отвечает из Алматы — там головной офис. */

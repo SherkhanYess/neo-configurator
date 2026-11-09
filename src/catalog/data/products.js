@@ -75,14 +75,13 @@ export function enabledShapes(products) {
     .map(s => ({ ...s, label: products.shapes.find(p => p.id === s.id)?.label || s.label }));
 }
 
+/** Огранка, с которой открывается страница модели: первая включённая в админке. */
+export const firstShape = (products) => enabledShapes(products)[0]?.id ?? 'round';
+
 export function shapeLabel(products, shapeId) {
   return products.shapes.find(s => s.id === shapeId)?.label
       ?? SHAPES.find(s => s.id === shapeId)?.label
       ?? shapeId;
-}
-
-export function enabledRings(products) {
-  return products.rings.filter(r => r.enabled);
 }
 
 // Admin can rename a model; falls back to the built-in name.

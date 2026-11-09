@@ -7,6 +7,8 @@ import { PhotoButtons, PhotoStage, TonePicker, retone, useUpload } from './feed/
 import { FeedCard, FeedBreak } from '../../catalog/components/FeedCard.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
 import { fetchPrices } from '../../catalog/data/prices.js';
+import { fromPrice } from '../../catalog/data/priceCalc.js';
+import { mergeProducts, pruneFeed, shankSlug } from '../../catalog/data/models.js';
 import { DEFAULT_HERO, DEFAULT_LIST_TITLE, feedHero, typo } from '../../catalog/data/feed.js';
 import { Hero } from '../../catalog/screens/FeedScreen.jsx';
 import { FieldInput } from './guides/FieldEditor.jsx';
@@ -18,10 +20,6 @@ import { FieldInput } from './guides/FieldEditor.jsx';
 const TEXT_SOFT = 75;   // две строки на телефоне
 const TEXT_HARD = 90;   // дальше конец строки обрежется многоточием
 
-function basePrice(prices, shank, cast) {
-  if (!prices) return null;
-  return (prices.baseByShank?.[shank] ?? 0) + (cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0);
-}
 
 // ─── Список ──────────────────────────────────────────────────────────────────
 
@@ -105,7 +103,7 @@ function ModelList({ draft, setDraft, sel, setSel }) {
 function ModelEditor({ m, index, count, update, move, price }) {
   const { busy, upload, recrop } = useUpload((fields) => update(fields));
   const item = previewItem(m);
-  const slug = m.shank.toLowerCase().replace(/\s+/g, '-');
+  const slug = shankSlug(m.shank);
 
   return (
     <div className="st-editor">
@@ -321,7 +319,7 @@ function PhonePreview({ draft, products, prices, onPick }) {
               const pause = breaks.find(b => b.after === i + 1);
               return (
                 <div key={item.key} className="feed-slot">
-                  <FeedCard item={item} price={basePrice(prices, item.shank, item.cast)}
+                  <FeedCard item={item} price={fromPrice(prices, item.shank, item.cast)}
                             onClick={() => onPick({ type: 'model', key: item.key })} />
                   {pause && <div onClick={() => onPick({ type: 'break', id: pause.id })}><FeedBreak item={pause} /></div>}
                 </div>
@@ -375,14 +373,21 @@ export default function FeedEditor() {
   async function save() {
     setSaving(true);
     try {
-      const nextProducts = toProducts(draft, products);
-      const productsChanged = JSON.stringify(nextProducts.rings) !== JSON.stringify(products.rings);
+      // Список моделей — свежий с сервера, а не тот, что был при открытии:
+      // если модель тем временем удалили или добавили в «Модели и цены»,
+      // сохранение ленты её не воскресит и не потеряет. Правки ленты (имя,
+      // видимость, фото, текст, порядок) ложатся поверх.
+      const current = mergeProducts(await api('/api/get-products?fresh'));
+      const nextProducts = toProducts(draft, current);
+      const productsChanged = JSON.stringify(nextProducts.rings) !== JSON.stringify(current.rings);
       if (productsChanged) {
         if (!nextProducts.rings.some(r => r.enabled)) throw new Error('Хотя бы одна модель должна остаться на сайте');
         setProducts(await saveProducts(nextProducts, getToken()));
+      } else if (JSON.stringify(current.rings) !== JSON.stringify(products.rings)) {
+        setProducts(current);
       }
-      const saved = await api('/api/content/feed', { method: 'PUT', body: toContent(draft) });
-      const fresh = toDraft(saved, productsChanged ? nextProducts : products);
+      const saved = await api('/api/content/feed', { method: 'PUT', body: pruneFeed(toContent(draft), nextProducts) });
+      const fresh = toDraft(saved, nextProducts);
       load(fresh);
       toast('Сохранено — лента на сайте уже обновилась');
     } catch (e) {
@@ -400,7 +405,7 @@ export default function FeedEditor() {
         m={model}
         index={visible.indexOf(model) + 1}
         count={visible.length}
-        price={basePrice(prices, model.shank, model.cast)}
+        price={fromPrice(prices, model.shank, model.cast)}
         update={(p) => updateModel(model.key, p)}
         move={(dir) => setDraft(d => ({ ...d, models: moveItem(d.models, i, i + dir) }))}
       />

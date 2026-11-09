@@ -1,7 +1,7 @@
 import { api, getToken } from './api.js';
 import { saveProducts } from '../catalog/data/products.js';
 import { savePrices } from '../catalog/data/prices.js';
-import { guideList } from '../catalog/data/guides.js';
+import { guideList } from '../catalog/data/guidesDefault.js';
 import { addModel, keyOf, mergeProducts, modelShanks, prunePrices, pruneFeed, removeModel, shankSlug } from '../catalog/data/models.js';
 
 // Добавление и удаление моделей из админки («Модели и цены»).
@@ -19,7 +19,7 @@ const MEDIA = /^\/api\/media\/([a-z0-9-]+\.(?:webp|jpg|png|avif))$/;
 async function loadDocs() {
   const [products, prices, feed, guides] = await Promise.all([
     api('/api/get-products?fresh'),
-    api('/api/get-prices'),
+    api('/api/get-prices?fresh'),
     api('/api/content/feed?fresh'),
     api('/api/content/guides?fresh'),
   ]);

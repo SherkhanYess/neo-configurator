@@ -30,6 +30,10 @@ function catalogShellInDev() {
 export default defineConfig({
   plugins: [react(), catalogShellInDev()],
   build: {
+    // Собранные файлы (код, стили, шрифты) — в /static: в имени у них отпечаток
+    // содержимого, и netlify.toml разрешает хранить их год. В /assets — файлы
+    // из public (фото, рендеры, знаки), их имена не меняются.
+    assetsDir: 'static',
     rollupOptions: {
       input: { catalog: 'catalog-shell.html' },
     },

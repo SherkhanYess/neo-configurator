@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { guideBySlug, guideList } from '../data/guides.js';
+import { guideBySlug } from '../data/guides.js';
+import { guideList } from '../data/guidesDefault.js';
 import { useContent } from '../data/content.js';
 import GuideArticle from '../guides/GuideArticle.jsx';
 import { GuideCtx } from '../guides/guideCtx.js';
 import { GuideCard } from '../components/GuidesStrip.jsx';
 import { useWhatsApp, WA_ICON } from '../components/model/whatsapp.jsx';
 import { track, EVENTS } from '../lib/track.js';
-import { useQuoteFont } from '../lib/useQuoteFont.js';
 
 // Страница гида — посадочная для рекламы: человек пришёл читать, а не
 // покупать. Поэтому первый экран — заголовок, вступление и обложка, без
@@ -19,7 +19,6 @@ import { useQuoteFont } from '../lib/useQuoteFont.js';
 // Что считаем: открыл гид (guide_view), дочитал до финала (guide_read),
 // перешёл в каталог (guide_cta), написал из гида (wa_click с полем guide).
 
-const DEFAULT_TITLE = typeof document !== 'undefined' ? document.title : '';
 
 export default function GuideScreen() {
   const { slug } = useParams();
@@ -34,7 +33,6 @@ export default function GuideScreen() {
 }
 
 function Guide({ guide, others }) {
-  useQuoteFont();
   const wa = useWhatsApp();
   const { open: openWa } = wa;
   const ctx = useMemo(() => ({ slug: guide.slug, wa: { open: openWa } }), [guide.slug, openWa]);
@@ -54,10 +52,8 @@ function Guide({ guide, others }) {
     const prevDesc = meta?.getAttribute('content');
     document.title = `${guide.title} — taena`;
     if (guide.description) meta?.setAttribute('content', guide.description);
-    return () => {
-      document.title = DEFAULT_TITLE;
-      if (meta && prevDesc) meta.setAttribute('content', prevDesc);
-    };
+    // Заголовок вкладки ставит следующая страница сама; описание — возвращаем.
+    return () => { if (meta && prevDesc) meta.setAttribute('content', prevDesc); };
   }, [guide]);
 
   useEffect(() => {
@@ -113,7 +109,7 @@ function Guide({ guide, others }) {
             <svg width="7" height="12" viewBox="0 0 8 12" aria-hidden="true"><path d="M7 1L2 6l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
             Кольца
           </Link>
-          <Link to="/" aria-label="taena — каталог"><img src="/assets/taena/sign-bronze.png" alt="taena" /></Link>
+          <Link to="/" aria-label="taena — каталог"><img src="/assets/taena/sign-bronze.webp" alt="taena" /></Link>
           <div className="gd-progress" ref={barRef} aria-hidden="true" />
         </header>
 

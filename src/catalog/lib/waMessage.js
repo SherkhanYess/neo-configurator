@@ -52,7 +52,8 @@ export function waMessage(type, ctx = {}, utm = {}) {
       if (!ctx.model) return `Здравствуйте! Хочу узнать про помолвочные кольца. Шоурум ${ctx.city ?? 'Алматы'}. ${code}`;
       return `Здравствуйте! Понравилось кольцо ${piece(ctx)}. Подскажите по наличию и деталям? ${code}`;
     case 'fitting':
-      return `Здравствуйте! Хотим примерить ${[ctx.model, ctx.shape].filter(Boolean).join(' ')} в шоуруме в ${cityIn(ctx.city)}. Когда можно приехать? ${code}`;
+      // Без модели (кнопка в ленте) — «кольца», а не пустое место.
+      return `Здравствуйте! Хотим примерить ${[ctx.model, ctx.shape].filter(Boolean).join(' ') || 'кольца'} в шоуруме в ${cityIn(ctx.city)}. Когда можно приехать? ${code}`;
     case 'help':
       return `Здравствуйте! Выбираем помолвочное кольцо и не знаем, какое подойдёт. Поможете? ${code}`;
     case 'custom':

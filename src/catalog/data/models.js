@@ -14,6 +14,8 @@ import { SHAPES, VALID_COMBOS, PUSETЫ_SHAPES_BY_CAST, PUSETЫ_CASTS, modelName 
 
 export const keyOf = (shank, cast) => `${shank}|${cast}`;
 export const shankSlug = (shank) => String(shank).toLowerCase().replace(/\s+/g, '-');
+/** Адрес страницы модели: /product/sirius-luxe/halo/oval. */
+export const productPath = (shank, cast, shape = 'round') => `/product/${shankSlug(shank)}/${cast}/${shape}`;
 
 /** Имя шинки в iJewel: латиница, цифры и пробелы — оно же ключ цен и ленты. */
 export const SHANK_RE = /^[A-Za-z][A-Za-z0-9 ]{1,29}$/;

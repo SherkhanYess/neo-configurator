@@ -66,7 +66,7 @@ function getSessionId() {
       sessionStorage.setItem(SESSION_KEY, id);
     }
     return id;
-  } catch (_) {
+  } catch {
     return 'no-storage';
   }
 }
@@ -86,7 +86,7 @@ function getVisitor() {
       sessionStorage.setItem(FIRST_VISIT_KEY, '1');   // первый визит этого браузера
     }
     return { visitorId: id, firstVisit: sessionStorage.getItem(FIRST_VISIT_KEY) === '1' };
-  } catch (_) {
+  } catch {
     return { visitorId: null, firstVisit: false };
   }
 }
@@ -95,12 +95,13 @@ function getVisitor() {
 // разработчик. Его заходы не попадают ни в статистику, ни в рекламу.
 export const STAFF_KEY = 'nd_staff';
 function isStaff() {
-  try { return localStorage.getItem(STAFF_KEY) === '1'; } catch (_) { return false; }
+  try { return localStorage.getItem(STAFF_KEY) === '1'; } catch { return false; }
 }
 
-function getUtm() {
+/** Метки рекламы этого визита (их запоминает catalog-main.jsx при входе). */
+export function readUtm() {
   try { return JSON.parse(sessionStorage.getItem(UTM_KEY) ?? '{}') ?? {}; }
-  catch (_) { return {}; }
+  catch { return {}; }
 }
 
 // Guards against double-sends from React effects running twice in development
@@ -126,7 +127,7 @@ export function track(event, props = {}, { once = false } = {}) {
     event,
     props,
     path: window.location.pathname,
-    utm: getUtm(),
+    utm: readUtm(),
     ts: Date.now(),
   });
 
@@ -143,7 +144,7 @@ export function track(event, props = {}, { once = false } = {}) {
       body: payload,
       keepalive: true,
     }).catch(() => {});
-  } catch (_) {
+  } catch {
     // Analytics must never break the page.
   }
 }

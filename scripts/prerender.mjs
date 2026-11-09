@@ -19,9 +19,11 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // Адреса, телефоны и условия берутся из того же файла, что и видимый футер, —
 // чтобы текст на странице и разметка для машин не разошлись.
-import { ORG, SHOWROOMS, HOURS_NOTE, INSTAGRAM_HANDLE, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
-import { guideList, guidePath, minutesLabel, outlineOf } from '../src/catalog/data/guides.js';
-import { mergeProducts } from '../src/catalog/data/models.js';
+import { HOME_TITLE, ORG, SHOWROOMS, HOURS_NOTE, INSTAGRAM_HANDLE, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
+import { guidePath, minutesLabel, outlineOf } from '../src/catalog/data/guides.js';
+import { guideList } from '../src/catalog/data/guidesDefault.js';
+import { mergeProducts, shankSlug as slug } from '../src/catalog/data/models.js';
+import { fromPrice as basePrice } from '../src/catalog/data/priceCalc.js';
 import { renderSlug } from '../src/catalog/data/config.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -55,7 +57,6 @@ const PRICE_FALLBACK = {
 };
 
 const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
-const slug = (s) => s.toLowerCase().replace(/\s+/g, '-');
 const money = (n) => `${n.toLocaleString('ru-KZ')} ₸`;
 
 async function loadPrices() {
@@ -113,8 +114,6 @@ const reputationLine = (r) =>
   `Рейтинг ${r.rating} из 5 в 2ГИС — ${r.ratings} оценок` +
   (r.reviews ? `, ${r.reviews} отзывов` : '');
 
-const basePrice = (prices, shank, cast) =>
-  (prices.baseByShank?.[shank] ?? 0) + (cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0);
 
 // Каратность, из которой собран прайс. Базовая цена уже включает 1 карат,
 // доплата идёт только сверх него — те же правила, что в src/catalog/data/priceCalc.js.
@@ -147,7 +146,7 @@ function configuredUrl({ shank, cast, shape, carat, purity = '585', color = 'whi
 }
 
 // ─── page assembly ───────────────────────────────────────────────────────────
-function page(shell, { path, title, description, bodyHtml, jsonLd, image }) {
+function page(shell, { path, title, description, bodyHtml, jsonLd, image, preload = [] }) {
   const url = `${SITE}${path}`;
   const imageTags = image ? [
     `<meta property="og:image" content="${esc(image)}" />`,
@@ -169,10 +168,14 @@ function page(shell, { path, title, description, bodyHtml, jsonLd, image }) {
     `<meta property="og:locale" content="ru_KZ" />`,
     SANDBOX ? `<meta name="robots" content="noindex, nofollow" />` : '',
     ...imageTags,
+    // Главная картинка первого экрана — качается сразу, с высоким приоритетом.
+    ...preload.map(href => `<link rel="preload" as="image" href="${esc(href)}" fetchpriority="high" />`),
     jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>` : '',
   ].filter(Boolean).join('\n    ');
 
   return shell
+    // Своё описание у каждой страницы — общее из шапки убираем, чтобы не было двух.
+    .replace(/\n\s*<meta name="description"[^>]*>/, '')
     .replace(/<title>.*?<\/title>/s, head)
     // React clears #root on mount, so this copy is for crawlers only.
     .replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`);
@@ -436,6 +439,12 @@ async function main() {
   // без кода конструктора и без 3D в шапке. index.html — для конструктора.
   const shell = readFileSync(join(DIST, 'catalog-shell.html'), 'utf8');
   await loadModels();
+  // Фото обложки ленты — его стоит качать раньше всего на главной.
+  let heroPhoto = '/assets/taena/hero-oval.webp';
+  try {
+    const res = await fetch(`${SITE}/api/content/feed?fresh`, { signal: AbortSignal.timeout(10000) });
+    if (res.ok) heroPhoto = (await res.json())?.hero?.photo || heroPhoto;
+  } catch { /* обложка по умолчанию */ }
   const prices = await loadPrices();
   const rep = await loadReputation();
 
@@ -540,7 +549,8 @@ async function main() {
 
   pages.push({
     path: '/',
-    title: 'Помолвочные кольца с бриллиантами в Алматы и Астане — taena',
+    preload: [heroPhoto],
+    title: HOME_TITLE,
     description: 'Помолвочные кольца с бриллиантами: цена сразу, срок изготовления 5–10 дней, сертификат IGI. Примерка в шоурумах Алматы и Астаны.',
     jsonLd: organization,
     image: ogImage('default'),

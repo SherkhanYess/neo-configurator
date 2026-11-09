@@ -1,4 +1,5 @@
 import { SHANKS, SHAPES } from '../data/config.js';
+import { shankSlug } from '../data/models.js';
 
 // Puts the chosen configuration into the booking URL, and reads it back.
 //
@@ -10,9 +11,7 @@ import { SHANKS, SHAPES } from '../data/config.js';
 // Price is deliberately NOT in the URL. It is recomputed from the current
 // server prices, so a link shared today cannot quote yesterday's figure.
 
-export function shankToSlug(id) {
-  return String(id ?? '').toLowerCase().replace(/\s+/g, '-');
-}
+export const shankToSlug = (id) => shankSlug(id ?? '');
 
 export function slugToShank(slug) {
   return SHANKS.find(s => shankToSlug(s.id) === slug)?.id ?? null;

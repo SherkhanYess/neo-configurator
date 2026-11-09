@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { SHAPES, SHAPE_IJEWEL, CAST_IJEWEL, shapeImage } from '../data/config.js';
 import { ringOf, shankFromSlug } from '../data/models.js';
@@ -10,7 +10,8 @@ import { track, EVENTS } from '../lib/track.js';
 import { waMessage } from '../lib/waMessage.js';
 import { leadCode, sourceLatin } from '../lib/leadCode.js';
 import { currentCity } from '../lib/city.js';
-import { useWhatsApp, readUtm } from '../components/model/whatsapp.jsx';
+import { useWhatsApp } from '../components/model/whatsapp.jsx';
+import { readUtm } from '../lib/track.js';
 import HintSheet from '../components/model/HintSheet.jsx';
 import GlassBar from '../components/model/GlassBar.jsx';
 import { Engraving, Like, Pair, Service, Fitting, Proof, Others, Questions, Final } from '../components/model/Sections.jsx';
@@ -98,6 +99,12 @@ export default function DetailScreen({ ijewel }) {
   const productCfg = useProducts();
   const shankId    = shankFromSlug(productCfg, shankSlug) ?? shankSlug;
   const cardKey    = `${shankSlug}/${castParam}/${shapeParam}`;
+
+  // Новая модель открывается с начала — сразу, до отрисовки, а не когда
+  // догрузится 3D: иначе первые секунды страница стоит там, где человек был в
+  // ленте, а потом прыгает наверх посреди чтения. Ореол меняет адрес мимо
+  // роутера (replaceState) — cardKey тот же, прокрутки нет.
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, [cardKey]);
   // Stable boolean: false→true once, never reverts — safe dep without reference churn
   const hasVariations = ijewel.shankVariations.length > 0;
 
@@ -139,7 +146,6 @@ export default function DetailScreen({ ijewel }) {
   // applyInitial concurrently. hasVariations (boolean) only changes false→true once.
   useEffect(() => {
     if (!ijewel.isReady || !hasVariations) return;
-    window.scrollTo({ top: 0, behavior: 'instant' });
 
     const sv = ijewel.shankVariations.find(v => v.id === shankId) ??
                ijewel.shankVariations.find(v => v.id.toLowerCase() === shankId.toLowerCase());
@@ -217,7 +223,7 @@ export default function DetailScreen({ ijewel }) {
     if (!m && shankColor) m = ijewel.castMetalOptions.find(o => LABEL_COLORS[o.label] === shankColor);
     if (!m) m = ijewel.castMetalOptions.find(o => o.label?.toLowerCase().startsWith(label?.split(' ')[0]?.toLowerCase()));
     return m?.uuid ?? null;
-  }, [ijewel.castMetalOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ijewel.castMetalOptions]);
 
   // Адрес страницы следует за выбором: ссылкой можно поделиться, а «назад»
   // и обновление страницы откроют то же кольцо. Меняем адрес мимо роутера —

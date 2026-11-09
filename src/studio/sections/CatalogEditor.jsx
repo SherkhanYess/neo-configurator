@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getToken } from '../api.js';
+import { api, getToken } from '../api.js';
 import { Button, Card, ErrorNote, Field, Loading, Modal, PageHead, SaveBar, Svg, Toggle, useDraft, useToast } from '../ui.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
 import { fetchPrices, savePrices } from '../../catalog/data/prices.js';
 import { SHAPES, shapeImage } from '../../catalog/data/config.js';
-import { modelShanks, prunePrices } from '../../catalog/data/models.js';
+import { mergeProducts, modelShanks, prunePrices } from '../../catalog/data/models.js';
 import { formatPrice } from '../../catalog/data/priceCalc.js';
 import { addModelToSite, clearLeftovers, findLeftovers, planRemoval, removeModelEverywhere } from '../models.js';
 
@@ -77,6 +77,13 @@ export default function CatalogEditor() {
     try {
       let next = { ...draft };
       if (JSON.stringify(draft.products) !== JSON.stringify(saved.products)) {
+        // Список моделей могли поменять, пока страница была открыта (другая
+        // вкладка, другой человек). Сохранить поверх — значит вернуть удалённую
+        // модель или стереть добавленную. Лучше остановиться.
+        const keys = (p) => p.rings.map(r => `${r.shank}|${r.cast}`).join(',');
+        if (keys(mergeProducts(await api('/api/get-products?fresh'))) !== keys(saved.products)) {
+          throw new Error('Пока страница была открыта, список моделей изменили. Обновите страницу и повторите правку.');
+        }
         if (!draft.products.shapes.some(s => s.enabled)) throw new Error('Хотя бы одна огранка должна остаться');
         next = { ...next, products: await saveProducts(draft.products, getToken()) };
       }

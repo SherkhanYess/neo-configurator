@@ -36,7 +36,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-gradient);
+  background: var(--studio-bg);
   background-attachment: fixed;
   z-index: 10;
   border-radius: inherit;

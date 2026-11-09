@@ -23,36 +23,10 @@ const T = {
   surface:   '#FFFFFF',
 };
 
-const mono = { fontFamily: '"JetBrains Mono","Courier New",monospace', fontVariantNumeric: 'tabular-nums' };
+const mono = { fontFamily: 'ui-monospace,"SF Mono",Menlo,Consolas,monospace', fontVariantNumeric: 'tabular-nums' };
 
 function fmt(n) {
   return Number(n).toLocaleString('ru-KZ');
-}
-
-// ─── Stat tile ───────────────────────────────────────────────────────────────
-// The number IS the chart. A one-bar bar chart would say less.
-export function StatTile({ label, value, hint, accent }) {
-  return (
-    <div style={{
-      background: T.surface, border: '1.5px solid #DDD3C3', borderRadius: 18,
-      padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 6,
-    }}>
-      <div style={{
-        fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.13em',
-        textTransform: 'uppercase', color: T.muted,
-      }}>
-        {label}
-      </div>
-      {/* Proportional figures: tabular-nums makes a large number look loose. */}
-      <div style={{
-        fontFamily: 'Manrope, sans-serif', fontSize: '2rem', fontWeight: 700,
-        lineHeight: 1.05, color: accent ?? T.primary, letterSpacing: '-0.02em',
-      }}>
-        {value}
-      </div>
-      {hint && <div style={{ fontSize: '0.76rem', color: T.muted, lineHeight: 1.45 }}>{hint}</div>}
-    </div>
-  );
 }
 
 // ─── Horizontal bars ─────────────────────────────────────────────────────────

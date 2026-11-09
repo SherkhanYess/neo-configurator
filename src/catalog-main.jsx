@@ -1,6 +1,6 @@
 import { StrictMode, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles.css';
+import './catalog/base.css';
 import CatalogApp from './catalog/CatalogApp.jsx';
 
 // Вход витрины taena (taena.neodiamond.kz): лента в корне, модели, гиды и

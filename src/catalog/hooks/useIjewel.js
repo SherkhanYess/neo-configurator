@@ -105,6 +105,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
   const [tick, setTick]                 = useState(0);
 
   const isReadyRef = useRef(false);
+  const pollRef    = useRef(null);
   const pendingRef = useRef([]);
   const lastRef    = useRef({});
   isReadyRef.current = isReady;
@@ -123,9 +124,10 @@ export function useIjewel(fileId = RING_FILE_ID) {
     lastRef.current   = {};
     setIsReady(false);
     setIsConfigured(false);
-  }, [fileId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fileId]);
 
   const bump = useCallback(() => setTick((t) => t + 1), []);
+  useEffect(() => () => clearInterval(pollRef.current), []);
 
   // Live reads from refs — recompute whenever tick changes (same pattern as iJewel's own renderUI)
   const shankVariations   = useMemo(() => readShankVariations(ringRef.current),              [tick]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -135,7 +137,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
   const shankMetalOptions = useMemo(() => readGroupOptions(matRef.current, ['шинки', 'shank', 'band', 'ring', 'metal shank', 'metal', 'gold', 'earring', 'пусет'], false),    [tick]); // eslint-disable-line react-hooks/exhaustive-deps
   const castMetalOptions  = useMemo(() => readGroupOptions(matRef.current, ['каста', 'cast', 'head metal', 'setting', 'prong'], false),                                        [tick]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const debugInfo = useMemo(() => { // eslint-disable-line react-hooks/exhaustive-deps
+  const debugInfo = useMemo(() => {
     if (!new URLSearchParams(window.location.search).get('debug')) return null;
     const mat = matRef.current;
     return {
@@ -206,28 +208,34 @@ export function useIjewel(fileId = RING_FILE_ID) {
                 return this.animateToView(view, dur ?? 600, ease);
               }
             }
-          } catch (_) {}
+          } catch { /* не критично для просмотра */ }
           return _orig(obj, mult, dur, ease, opts);
         };
       }
 
-      const bumpAndFit = () => { bump(); };
-      if (ringRef.current) ringRef.current.addEventListener('componentProcessed', bumpAndFit);
-      if (matRef.current) {
-        matRef.current.addEventListener('deserialize', bump);
-        matRef.current.addEventListener('refreshUi',  bump);
+      // Подписки — один раз на просмотрщик. Раньше каждый заход на страницу
+      // модели добавлял ещё по обработчику: после десятка моделей каждое
+      // событие 3D перерисовывало страницу десяток раз.
+      if (!viewer.__nd_listening) {
+        viewer.__nd_listening = true;
+        ringRef.current?.addEventListener('componentProcessed', bump);
+        matRef.current?.addEventListener('deserialize', bump);
+        matRef.current?.addEventListener('refreshUi', bump);
+        try { viewer.scene?.addEventListener('addSceneObject', bump); } catch { /* в этой версии SDK нет события */ }
       }
-      try { viewer.scene?.addEventListener('addSceneObject', bump); } catch (_) {}
 
       setIsReady(true);
-      pendingRef.current.forEach((fn) => { try { fn(); } catch (_) {} });
+      pendingRef.current.forEach((fn) => { try { fn(); } catch { /* не критично для просмотра */ } });
       pendingRef.current = [];
       bump();
 
+      // Варианты в плагинах появляются не сразу — 10 секунд перечитываем их.
+      // Прошлый опрос (быстро открыли следующую модель) — останавливаем.
+      clearInterval(pollRef.current);
       let attempts = 0;
-      const poll = setInterval(() => {
+      pollRef.current = setInterval(() => {
         bump();
-        if (++attempts >= 20) clearInterval(poll);
+        if (++attempts >= 20) clearInterval(pollRef.current);
       }, 500);
     };
 
@@ -242,7 +250,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
 
     // Different model (category switch) — dispose old viewer and reload.
     if (existingViewer && window.__nd_viewer_file_id !== currentFileId) {
-      try { existingViewer.dispose?.(); } catch (_) {}
+      try { existingViewer.dispose?.(); } catch { /* не критично для просмотра */ }
       if (window.webGiViewers) window.webGiViewers.length = 0;
       containerEl.innerHTML = '';
     }
@@ -254,7 +262,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
       setupViewer(detail.viewer);
     }, { once: true });
 
-    ijewelViewer.loadModelById(currentFileId, INSTANCE, containerEl, {
+    window.ijewelViewer.loadModelById(currentFileId, INSTANCE, containerEl, {
       showConfigurator: false,
       showCard: false,
       showLogo: false,
@@ -346,7 +354,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
       await new Promise(r => setTimeout(r, 350));
       setIsConfigured(true);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // For user-triggered shape changes (shape picker).
   const applyHead = useCallback((shapeTag, castTag) => {
@@ -361,7 +369,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
       lastRef.current.head = key;
       await applyVariation(heads, v);
     });
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   const applyCarat = useCallback((carat) => {
     const tag = `size: ${carat}ct`;
@@ -388,7 +396,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
       lastRef.current.shankMetal = uuid;
       await matRef.current.applyVariation(group, uuid);
     });
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   const applyCastMetal = useCallback((uuid) => {
     if (!uuid || lastRef.current.castMetal === uuid) return;
@@ -398,7 +406,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
       lastRef.current.castMetal = uuid;
       await matRef.current.applyVariation(group, uuid);
     });
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   const applyGem = useCallback((slot, uuid) => {
     const hints = slot === 'gem1'
@@ -412,7 +420,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
       lastRef.current[key] = uuid;
       await matRef.current.applyVariation(group, uuid);
     });
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   // Restore all colors from human-readable labels (for SharePage).
   // Runs sequentially, logs everything to console for diagnostics,
@@ -444,16 +452,16 @@ export function useIjewel(fileId = RING_FILE_ID) {
             return lbl?.split(' ')[0]?.toLowerCase() === label?.split(' ')[0]?.toLowerCase();
           });
           if (!partial) return;
-          try { await mat.applyVariation(group, partial.uuid); } catch (_) {
-            try { await mat.applyVariation(group, partial); } catch (_2) {}
+          try { await mat.applyVariation(group, partial.uuid); } catch {
+            try { await mat.applyVariation(group, partial); } catch { /* не критично для просмотра */ }
           }
           return;
         }
 
         try {
           await mat.applyVariation(group, item.uuid);
-        } catch (_) {
-          try { await mat.applyVariation(group, item); } catch (_2) {}
+        } catch {
+          try { await mat.applyVariation(group, item); } catch { /* не критично для просмотра */ }
         }
       };
 
@@ -462,7 +470,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
       await applyLabel(['шинки', 'shank', 'band', 'ring', 'metal shank'], metalLabel, false);
       await applyLabel(['каста', 'cast', 'head metal', 'setting', 'prong'], castMetalLabel || metalLabel, false);
     });
-  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [run]);
 
   // Start the idle interaction hint animation via official InteractionPromptPlugin API.
   // The plugin is disabled at init via hideRotateCamera:true → plugin.disable("local").

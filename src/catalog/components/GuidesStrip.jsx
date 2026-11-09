@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { guideList, guidePath, minutesLabel } from '../data/guides.js';
+import { guideCards, guidePath, minutesLabel } from '../data/guides.js';
 import { useContent } from '../data/content.js';
 import { typo } from '../data/feed.js';
 import { GuideCover } from '../guides/covers.jsx';
 import { track, EVENTS } from '../lib/track.js';
-import '../guides/guides.css';
+import '../guides/cards.css';
 
 // Гиды в ленте — после всех моделей, перед подбором в WhatsApp. Кто долистал
 // и не выбрал, получает не ещё одно кольцо, а ответ на свои сомнения.
@@ -30,7 +30,7 @@ export function GuideCard({ guide, from }) {
 
 export default function GuidesStrip() {
   const { data } = useContent('guides');
-  const guides = guideList(data);
+  const guides = guideCards(data);
   if (!guides.length) return null;
   return (
     <section className="gstrip" aria-labelledby="gstrip-t">

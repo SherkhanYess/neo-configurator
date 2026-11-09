@@ -18,6 +18,13 @@
 
 # Картинки витрины.
 # A changed render ships under a new filename, so these can be cached for good.
+# Код, стили и шрифты сборки: имя меняется вместе с содержимым — кэш на год,
+# повторный заход не переспрашивает сервер про каждый файл.
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 [[headers]]
   for = "/assets/rings/*"
   [headers.values]

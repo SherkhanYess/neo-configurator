@@ -1,50 +1,55 @@
 <!doctype html>
 <html lang="ru">
   <head>
-    <!-- Meta Pixel Code -->
-    <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window,document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init','1510327033925046');
-      fbq('track','PageView');
-    </script>
-    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1510327033925046&ev=PageView&noscript=1"/></noscript>
-    <!-- End Meta Pixel Code -->
-    <!-- Yandex.Metrika counter -->
-    <script type="text/javascript">
-      (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-      })(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=110022375','ym');
-      ym(110022375,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:"dataLayer",referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});
-    </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/110022375" style="position:absolute;left:-9999px;" alt=""/></div></noscript>
-    <!-- /Yandex.Metrika counter -->
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/assets/taena/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Помолвочные кольца с бриллиантами в Алматы и Астане — taena</title>
     <meta name="description" content="Помолвочные кольца с бриллиантами: цена сразу, срок изготовления 5–10 дней, сертификат IGI. Примерка в шоурумах Алматы и Астаны." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Шрифт заголовков не держит отрисовку: страница показывается сразу,
-         заголовок догружается (display=swap). -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400&family=JetBrains+Mono:wght@400;500&display=swap" /></noscript>
+    <link rel="icon" type="image/png" href="/assets/taena/favicon.png" />
+
+    <!-- Что нужно первому экрану — качается сразу, вместе с кодом, а не после
+         него: шрифты обложки и заголовков и данные ленты (те же адреса, что
+         запрашивает код, — браузер берёт уже скачанное). -->
+    <link rel="preload" href="/src/assets/fonts/cormorant-300italic-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/src/assets/fonts/unbounded-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/src/assets/fonts/manrope-400-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/api/content/feed" as="fetch" crossorigin />
+    <link rel="preload" href="/api/get-products" as="fetch" crossorigin />
+    <link rel="preload" href="/api/get-prices" as="fetch" crossorigin />
     <!-- 3D (iJewel, ~4 МБ) здесь не подключается: каталог грузит его сам,
          только когда открыта страница модели. См. src/catalog/lib/ijewelLoader.js -->
     <link rel="preconnect" href="https://releases.ijewel3d.com" crossorigin />
+
+    <!-- Meta Pixel и Яндекс.Метрика. Очередь событий (fbq, ym) создаётся сразу —
+         ни одно событие не теряется, — а сами скрипты (~250 КБ) подключаются
+         после загрузки страницы и не спорят с ней за сеть и процессор. -->
+    <script>
+      (function (w, d) {
+        function later(src) {
+          var add = function () { var s = d.createElement('script'); s.async = true; s.src = src; d.head.appendChild(s); };
+          if (d.readyState === 'complete') add(); else w.addEventListener('load', add);
+        }
+        if (!w.fbq) {
+          var n = w.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+          if (!w._fbq) w._fbq = n;
+          n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
+          later('https://connect.facebook.net/en_US/fbevents.js');
+        }
+        fbq('init', '1510327033925046');
+        fbq('track', 'PageView');
+
+        w.ym = w.ym || function () { (w.ym.a = w.ym.a || []).push(arguments); };
+        w.ym.l = 1 * new Date();
+        later('https://mc.yandex.ru/metrika/tag.js?id=110022375');
+        ym(110022375, 'init', { ssr: true, webvisor: true, clickmap: true, ecommerce: 'dataLayer', referrer: d.referrer, url: location.href, accurateTrackBounce: true, trackLinks: true });
+      })(window, document);
+    </script>
   </head>
   <body>
+    <noscript>
+      <img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id=1510327033925046&ev=PageView&noscript=1" />
+      <div><img src="https://mc.yandex.ru/watch/110022375" style="position:absolute;left:-9999px;" alt="" /></div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/catalog-main.jsx"></script>
   </body>

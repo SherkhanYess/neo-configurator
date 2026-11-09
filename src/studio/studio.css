@@ -21,6 +21,7 @@
   --st-wa: #128C4A;
   --st-rail: 232px;
   --st-tabbar: 64px;
+  --st-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --st-shadow: 0 1px 2px rgba(6, 27, 27, 0.06), 0 8px 24px -12px rgba(6, 27, 27, 0.18);
 
   font-family: 'Manrope', -apple-system, sans-serif;
@@ -55,7 +56,7 @@
 .st-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--st-muted); }
 .st-muted { margin: 0; color: var(--st-muted); line-height: 1.55; font-size: 13px; }
 .st-muted--s { font-size: 12px; }
-.st-mono, .st-app code { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 0.92em; font-variant-numeric: tabular-nums; }
+.st-mono, .st-app code { font-family: var(--st-mono); font-size: 0.92em; font-variant-numeric: tabular-nums; }
 .st-quote { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.12em; letter-spacing: 0; }
 .st-note { margin: 14px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--st-muted); }
 .st-note--foot { margin-top: 24px; max-width: 80ch; }
@@ -172,7 +173,7 @@
 .st-textarea { resize: vertical; line-height: 1.5; min-height: 72px; }
 select.st-input { appearance: none; padding-right: 36px; background: var(--st-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23476888' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 14px center; cursor: pointer; }
 
-.st-counter { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--st-muted); }
+.st-counter { font-family: var(--st-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--st-muted); }
 .st-counter.is-near { color: var(--st-warn); }
 .st-counter.is-over { color: var(--st-err); font-weight: 600; }
 
@@ -208,7 +209,7 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
   color: var(--st-muted);
   font-size: 13px; font-weight: 600;
 }
-.st-chip span { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--st-muted); }
+.st-chip span { font-family: var(--st-mono); font-size: 11.5px; color: var(--st-muted); }
 .st-chip.is-on { border-color: var(--st-ink); color: var(--st-ink); background: var(--st-ground); }
 
 .st-pill { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: 50px; font-size: 12px; font-weight: 700; white-space: nowrap; }
@@ -339,7 +340,7 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
 .st-list__row.is-drag { z-index: 5; box-shadow: var(--st-shadow), inset 0 0 0 1px var(--st-ink); border-color: var(--st-ink); cursor: grabbing; }
 .st-list__row--intro { padding-left: 12px; }
 .st-list__aa { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--st-ground); font-family: 'Unbounded', sans-serif; font-weight: 300; font-size: 16px; }
-.st-list__n { width: 18px; flex-shrink: 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--st-muted); }
+.st-list__n { width: 18px; flex-shrink: 0; text-align: center; font-family: var(--st-mono); font-size: 12px; color: var(--st-muted); }
 .st-list__body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .st-list__body b { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .st-list__body small { font-size: 12px; color: var(--st-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -374,9 +375,6 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
   .st-editor--single { grid-template-columns: minmax(0, 1fr); }
   .st-editor__preview { position: sticky; top: 24px; margin: 0; }
 }
-
-.st-intro-preview { padding: 24px; border-radius: 20px; background: #F4EFE7; border: 1.5px solid var(--st-line); text-align: center; }
-
 .st-stage { position: relative; border-radius: 24px; }
 .st-stage.is-over { outline: 2px dashed var(--st-info); outline-offset: 4px; }
 .st-stage__frame { position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 4 / 5; border-radius: 24px 24px 0 0; }
@@ -431,7 +429,7 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
 .st-swatch--pick { width: 40px; justify-content: center; color: var(--st-muted); position: relative; }
 .st-swatch--pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .st-tone__meta { display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--st-muted); }
-.st-ratio { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+.st-ratio { font-family: var(--st-mono); font-size: 11.5px; }
 .st-ratio.is-ok { color: var(--st-ok); }
 
 /* Телефон с лентой. */
@@ -471,7 +469,7 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
 .st-hint.is-lost { opacity: 0.75; }
 .st-hint__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .st-hint__name { margin: 0; font-size: 17px; font-weight: 700; }
-.st-hint__phone { display: inline-block; margin-top: 3px; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--st-muted); text-decoration: none; }
+.st-hint__phone { display: inline-block; margin-top: 3px; font-family: var(--st-mono); font-size: 13px; color: var(--st-muted); text-decoration: none; }
 .st-hint__facts { margin: 0; display: grid; gap: 8px; }
 .st-hint__facts div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; }
 .st-hint__facts dt { font-size: 12px; color: var(--st-muted); }
@@ -508,7 +506,7 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
 .st-table th { padding: 0 12px 10px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--st-muted); white-space: nowrap; border-bottom: 1.5px solid var(--st-line); }
 .st-table td { padding: 11px 12px; border-bottom: 1px solid var(--st-line-soft); white-space: nowrap; }
 .st-table .num { text-align: right; font-variant-numeric: tabular-nums; }
-.st-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+.st-table td.num { font-family: var(--st-mono); font-size: 13px; }
 .st-table td small { color: var(--st-muted); }
 .st-table td:first-child { position: relative; min-width: 160px; }
 .st-table__name { position: relative; z-index: 1; font-weight: 600; }
@@ -521,7 +519,7 @@ select.st-input { appearance: none; padding-right: 36px; background: var(--st-su
 .st-pricerow small { display: block; margin-top: 2px; color: var(--st-muted); font-size: 12px; }
 .st-money { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .st-money span { color: var(--st-muted); }
-.st-input--money { width: 150px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--st-champ); font-variant-numeric: tabular-nums; }
+.st-input--money { width: 150px; text-align: right; font-family: var(--st-mono); font-size: 14px; color: var(--st-champ); font-variant-numeric: tabular-nums; }
 .st-itemrow { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--st-line-soft); }
 .st-itemrow:last-child { border-bottom: 0; }
 .st-itemrow__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }

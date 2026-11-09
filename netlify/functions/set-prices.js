@@ -2,6 +2,7 @@
 // Saves updated price configuration to Netlify Blobs (admin-only)
 
 import { getStore } from '@netlify/blobs';
+import { purge } from '../lib/http.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -42,6 +43,7 @@ export default async (req, context) => {
   try {
     const store = getStore({ name: 'nd-prices', context });
     await store.set('config', JSON.stringify(prices));
+    await purge('prices');
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: CORS });
   } catch (err) {
     console.error('set-prices error:', err);

@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
 import { formatPrice } from '../data/priceCalc.js';
-import { useQuoteFont } from '../lib/useQuoteFont.js';
 
 // Карточка ленты и пауза «на руке» — одна разметка для витрины и для
 // предпросмотра в админке: что видно в админке, то и увидит покупатель.
@@ -63,7 +62,6 @@ export function FeedCard({ item, price, priority, as: Tag = 'div', ...rest }) {
 
 /** `cta` — ссылка «Записаться на примерку» или null в предпросмотре. */
 export function FeedBreak({ item, cta }) {
-  useQuoteFont();
   return (
     <div className="feed-break" style={{ '--tone': item.tone }}>
       <img src={item.src} alt="Кольца на руке" loading="lazy" decoding="async"

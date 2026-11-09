@@ -6,10 +6,11 @@ import { REVIEWS } from '../../data/reviews.js';
 import { useReputation } from '../../lib/reputation.js';
 import { useContent } from '../../data/content.js';
 import { feedModels } from '../../data/feed.js';
-import { formatPrice } from '../../data/priceCalc.js';
+import { formatPrice, fromPrice } from '../../data/priceCalc.js';
+import { productPath } from '../../data/models.js';
+import { firstShape } from '../../data/products.js';
 import { track, EVENTS } from '../../lib/track.js';
 import { WA_ICON } from './whatsapp.jsx';
-import { useQuoteFont } from '../../lib/useQuoteFont.js';
 
 // Блоки страницы модели ниже выбора. Порядок и тексты — с холста, ряд
 // «Страница модели — после правок».
@@ -32,7 +33,6 @@ export function WaButton({ children, onClick }) {
 }
 
 export function Engraving() {
-  useQuoteFont();
   return (
     <div className="mp-engr">
       <div className="mp-engr__t">Ваши слова внутри кольца</div>
@@ -149,16 +149,12 @@ export function Service() {
   );
 }
 
-function basePrice(prices, shank, cast) {
-  if (!prices) return null;
-  return (prices.baseByShank?.[shank] ?? 0) + (cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0);
-}
-
 /** Возврат к ленте: кому это кольцо не подошло, тот листает дальше, а не уходит. */
 export function Others({ shank, prices, products }) {
   const { data: feed } = useContent('feed');
   // Та же шинка с ореолом и без — одно кольцо с переключателем: её здесь нет.
   const items = feedModels(products, feed).filter(m => m.shank !== shank);
+  const shape = firstShape(products);   // та же огранка, что открывает лента
   return (
     <>
       <div className="mp-others-h">
@@ -167,10 +163,9 @@ export function Others({ shank, prices, products }) {
       </div>
       <div className="mp-others">
         {items.map(m => {
-          const price = basePrice(prices, m.shank, m.cast);
+          const price = fromPrice(prices, m.shank, m.cast);
           return (
-            <Link key={m.model} className="mp-mini" style={{ '--tone': m.tone }}
-                  to={`/product/${m.shank.toLowerCase().replace(/\s+/g, '-')}/${m.cast}/round`}>
+            <Link key={m.key} className="mp-mini" style={{ '--tone': m.tone }} to={productPath(m.shank, m.cast, shape)}>
               <div className="mp-mini__p"><img src={m.src} alt={`Кольцо ${m.model}`} loading="lazy" decoding="async" style={{ objectPosition: m.position }} /></div>
               <div className="mp-mini__b"><b>{m.model}</b>{price ? <small>от {formatPrice(price)}</small> : null}</div>
             </Link>

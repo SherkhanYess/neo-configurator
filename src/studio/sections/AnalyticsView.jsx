@@ -6,7 +6,7 @@ import { SERIES, BarList, FunnelChart, TrendChart, TrendTable } from '../charts.
 import { UTM_LABELS } from '../utm.js';
 import { FAQ_GROUPS } from '../../catalog/components/Faq.jsx';
 import { fetchProducts, ringName } from '../../catalog/data/products.js';
-import { GUIDES } from '../../catalog/data/guides.js';
+import { guideCards } from '../../catalog/data/guides.js';
 
 // Раздел «Аналитика»: новая воронка витрины.
 //
@@ -143,8 +143,20 @@ function ModelTable({ perModel, products }) {
 // Гиды: открыли карточку в ленте → читали → дочитали до финала → ушли в
 // каталог или написали. «Читали» — все, кто открыл страницу, в том числе
 // из рекламы, поэтому может быть больше «открыли в ленте».
+//
+// Названия — из гидов в админке (переименовали или добавили — таблица знает);
+// гид, которого уже нет, но по нему есть цифры, — строкой с его адресом.
 function GuideTable({ perGuide }) {
-  const rows = GUIDES.map(g => ({ key: g.slug, name: g.title, ...{ open: 0, view: 0, read: 0, cta: 0, wa: 0 }, ...(perGuide?.[g.slug] ?? {}) }));
+  const [doc, setDoc] = useState(null);
+  useEffect(() => { api('/api/content/guides?fresh').then(setDoc).catch(() => {}); }, []);
+  const known = guideCards(doc, { withHidden: true });
+  const slugs = [...new Set([...known.map(g => g.slug), ...Object.keys(perGuide ?? {})])];
+  const rows = slugs.map(slug => ({
+    key: slug,
+    name: known.find(g => g.slug === slug)?.title ?? slug,
+    open: 0, view: 0, read: 0, cta: 0, wa: 0,
+    ...(perGuide?.[slug] ?? {}),
+  }));
   if (!rows.some(r => r.view || r.open)) return <p className="st-muted">Гиды ещё не открывали за этот период.</p>;
   const maxView = Math.max(...rows.map(r => r.view), 1);
   return (

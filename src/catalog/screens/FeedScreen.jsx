@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { SHAPES } from '../data/config.js';
 import { feedModels, feedBreaks, feedHero, typo, DEFAULT_LIST_TITLE } from '../data/feed.js';
 import { useContent } from '../data/content.js';
 import { usePrices, pricesKnown } from '../data/prices.js';
-import { enabledShapes, useProducts } from '../data/products.js';
+import { firstShape, useProducts } from '../data/products.js';
 import { track, EVENTS } from '../lib/track.js';
-import { waMessage } from '../lib/waMessage.js';
-import { currentCity, waNumber } from '../lib/city.js';
+import { fromPrice } from '../data/priceCalc.js';
+import { productPath } from '../data/models.js';
 import { FeedCard, FeedBreak, FeedCardSkeleton } from '../components/FeedCard.jsx';
 import { useWhatsApp } from '../components/model/whatsapp.jsx';
 import { WaButton } from '../components/model/Sections.jsx';
 import GuidesStrip from '../components/GuidesStrip.jsx';
 import { useReputation } from '../lib/reputation.js';
-import { useQuoteFont } from '../lib/useQuoteFont.js';
+import { HOME_TITLE } from '../data/org.js';
 
 // Лента моделей — вход в каталог.
 //
@@ -28,13 +27,6 @@ import { useQuoteFont } from '../lib/useQuoteFont.js';
 // Фото, тексты, порядок и цвета — из админки (раздел «Лента»).
 // Размеры и цвета — в DESIGN.md, раздел «Лента».
 
-function basePrice(prices, shank, cast) {
-  if (!prices) return null;
-  const base = prices.baseByShank?.[shank] ?? 0;
-  const add  = cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0;
-  return base + add;
-}
-
 /**
  * Обложка бренда — первый экран: чёрно-белое фото (загружается в админке,
  * сайт сам делает его чёрно-белым), знак taena и обещание. Две кнопки:
@@ -42,11 +34,10 @@ function basePrice(prices, shank, cast) {
  * тип ИД (кольцо по своему дизайну).
  */
 export function Hero({ hero, onShow, onDesign }) {
-  useQuoteFont();
   return (
     <section className={`feed-hero${hero.photo ? ' has-photo' : ''}`} aria-label="taena">
       {hero.photo && <img className="feed-hero__photo" src={hero.photo} alt="" fetchPriority="high" decoding="async" style={{ objectPosition: hero.position }} />}
-      <img className="feed-hero__sign" src="/assets/taena/sign-pearl.png" alt="taena" />
+      <img className="feed-hero__sign" src="/assets/taena/sign-pearl.webp" alt="taena" />
       <div className="feed-hero__body">
         <h1 className="feed-hero__t">{typo(hero.title)}</h1>
         {hero.sub && <p className="feed-hero__p">{typo(hero.sub)}</p>}
@@ -130,16 +121,15 @@ export default function FeedScreen() {
   };
 
   // Страница модели открывается с первой формой, включённой в админке.
-  const firstShape = useMemo(() => {
-    const allowed = new Set(enabledShapes(productCfg).map(s => s.id));
-    return SHAPES.find(s => allowed.has(s.id))?.id ?? 'round';
-  }, [productCfg]);
+  const shape = firstShape(productCfg);
 
   const cardRefs = useRef(new Map());
   const seen = useRef(new Set());
 
   useEffect(() => {
     track(EVENTS.FEED_VIEW, {});
+    // Вкладка снова называется лентой, а не моделью или гидом, с которых вернулись.
+    document.title = HOME_TITLE;
   }, []);
 
   // Карточка считается просмотренной, если половина её задержалась на экране
@@ -167,16 +157,7 @@ export default function FeedScreen() {
     return () => { io.disconnect(); timers.forEach(clearTimeout); };
   }, [models, ready]);
 
-  const modelHref = (item) => {
-    const slug = item.shank.toLowerCase().replace(/\s+/g, '-');
-    return `/product/${slug}/${item.cast}/${firstShape}`;
-  };
-
-  const utm = (() => {
-    try { return JSON.parse(sessionStorage.getItem('nd_utm') ?? '{}') ?? {}; }
-    catch { return {}; }
-  })();
-  const fittingHref = `https://wa.me/${waNumber(currentCity())}?text=${encodeURIComponent(waMessage('fitting', {}, utm))}`;
+  const modelHref = (item) => productPath(item.shank, item.cast, shape);
 
   return (
     <div className="feed">
@@ -199,16 +180,21 @@ export default function FeedScreen() {
                   to={modelHref(item)}
                   item={item}
                   // Пока цены не пришли, цены нет вовсе — а не цена по умолчанию на миг.
-                  price={pricesKnown() ? basePrice(prices, item.shank, item.cast) : null}
+                  price={pricesKnown() ? fromPrice(prices, item.shank, item.cast) : null}
                   priority={i === 0}
                 />
               </div>
               {pause && (
+                // Через общий WhatsApp: выбор шоурума, wa_click в статистике и
+                // Contact в пикселе — как у всех кнопок «написать».
                 <FeedBreak item={pause} cta={
-                  <a className="feed-card__cta" href={fittingHref} target="_blank" rel="noopener noreferrer"
-                     onClick={() => track(EVENTS.FEED_HELP_CLICK, { kind: 'fitting' })}>
+                  <button type="button" className="feed-card__cta"
+                          onClick={() => {
+                            track(EVENTS.FEED_HELP_CLICK, { kind: 'fitting' });
+                            wa.open('fitting', {}, { place: 'feed_break' });
+                          }}>
                     Записаться на примерку
-                  </a>
+                  </button>
                 } />
               )}
             </div>

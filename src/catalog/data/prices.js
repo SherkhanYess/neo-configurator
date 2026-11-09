@@ -70,7 +70,9 @@ export function fetchPrices() {
   if (cache && fresh) return Promise.resolve(cache);
   if (inflight) return inflight;
 
-  inflight = fetch('/api/get-prices')
+  // Админке — мимо кэша CDN: после сохранения ей нужна свежая версия.
+  const admin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  inflight = fetch(admin ? '/api/get-prices?fresh' : '/api/get-prices')
     .then(r => (r.ok ? r.json() : null))
     .then(data => {
       cache = merge(data);
