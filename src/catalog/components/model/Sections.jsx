@@ -59,7 +59,7 @@ export function Pair({ onHint, onCustom }) {
     <div className="mp-pair">
       <button type="button" className="mp-tile" onClick={onHint}>
         <span className="mp-tile__i">{icon(<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>)}</span>
-        <span className="mp-tile__t">Намекнуть партнёру<small>Напишем ему/ей про это кольцо</small></span>
+        <span className="mp-tile__t">Намекнуть партнёру<small>Пришлём ссылку на кольцо и ваш размер</small></span>
         <span style={{ color: '#061B1B' }}>{ARROW}</span>
       </button>
       <button type="button" className="mp-tile" onClick={onCustom}>

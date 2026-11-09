@@ -74,25 +74,8 @@ export function feedHero(content) {
 /** Тире не начинает строку: пробел перед ним — неразрывный. */
 export const typo = (text) => String(text ?? '').replace(/ +([—–])/g, '\u00A0$1');
 
-const WORDS = ['', 'Одно', 'Два', 'Три', 'Четыре', 'Пять', 'Шесть', 'Семь', 'Восемь', 'Девять', 'Десять', 'Одиннадцать', 'Двенадцать'];
-const plural = (n, one, few, many) => {
-  const d = n % 10, h = n % 100;
-  if (d === 1 && h !== 11) return one;
-  if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return few;
-  return many;
-};
-
 /** Строка над моделями по умолчанию. */
 export const DEFAULT_LIST_TITLE = 'Каталог помолвочных колец';
-
-/** Подзаголовок по умолчанию считает модели сам: скрыли одну — «Восемь колец». */
-export function defaultSub(count) {
-  const n = WORDS[count] ?? String(count);
-  const word = plural(count, 'кольцо', 'кольца', 'колец');
-  // «Одна кольцо» — нельзя: у одного кольца свой вариант.
-  if (count === 1) return 'Одно кольцо. Листайте — может, оно её.';
-  return `${n} ${word}. Листайте — одно из них её.`;
-}
 
 // Тон, в который уходит низ фото: для фото из админки он считается при
 // загрузке, для файлов в public/assets/feed/ — командой `npm run feed:tones`

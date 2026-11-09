@@ -36,7 +36,7 @@ export default function GuidesStrip() {
     <section className="gstrip" aria-labelledby="gstrip-t">
       <div className="gstrip__head">
         <h2 className="gstrip__t" id="gstrip-t">Прежде чем выбрать</h2>
-        <p className="gstrip__p">Короткие гиды: как угадать с кольцом и сделать предложение без стресса</p>
+        <p className="gstrip__p">Короткие гиды: как выбрать кольцо и сделать предложение без стресса</p>
       </div>
       <div className="gstrip__list">
         {guides.map(g => <GuideCard key={g.slug} guide={g} from="feed" />)}

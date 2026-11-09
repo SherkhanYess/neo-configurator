@@ -54,7 +54,7 @@ export function waMessage(type, ctx = {}, utm = {}) {
     case 'fitting':
       return `Здравствуйте! Хотим примерить ${[ctx.model, ctx.shape].filter(Boolean).join(' ')} в шоуруме в ${cityIn(ctx.city)}. Когда можно приехать? ${code}`;
     case 'help':
-      return `Здравствуйте! Хочу сделать предложение и не знаю, какое кольцо ей выбрать. Поможете? ${code}`;
+      return `Здравствуйте! Выбираем помолвочное кольцо и не знаем, какое подойдёт. Поможете? ${code}`;
     case 'custom':
       return `Здравствуйте! Хочу кольцо по своему дизайну. Можно обсудить идею? ${code}`;
     case 'hint':

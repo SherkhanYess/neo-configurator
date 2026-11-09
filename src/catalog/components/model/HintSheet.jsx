@@ -60,13 +60,13 @@ export default function HintSheet({ ring, link, code, city, trackProps, onClose 
         {state === 'done' ? (
           <>
             <div className="mp-sheet__t">Намёк отправлен</div>
-            <p className="mp-sheet__p">Напишем ему в WhatsApp в ближайшее время. О заказе вам не расскажем — сюрприз останется сюрпризом.</p>
+            <p className="mp-sheet__p">Напишем партнёру в WhatsApp в ближайшее время. О заказе вам не расскажем — сюрприз останется сюрпризом.</p>
             <button type="button" className="mp-submit" onClick={onClose}>Готово</button>
           </>
         ) : (
           <>
             <div className="mp-sheet__t">Намекнуть партнёру</div>
-            <p className="mp-sheet__p">Напишем ему в WhatsApp, что вам понравилось это кольцо. Один раз, без звонков.</p>
+            <p className="mp-sheet__p">Напишем партнёру в WhatsApp, что вам понравилось это кольцо. Один раз, без звонков.</p>
             <div className="mp-ring"><b>{ring}</b></div>
             <div className="mp-fields">
               <label className="mp-field"><span>Его имя</span>
