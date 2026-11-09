@@ -267,8 +267,8 @@ function IntroEditor({ intro, hero, update, updateHero }) {
             <input className="st-input" value={hero.title} placeholder={DEFAULT_HERO.title} maxLength={80}
                    onChange={e => updateHero({ title: e.target.value })} />
           </Field>
-          <Field label="Строка под ним" hint="Необязательно — пусто, и строки нет" counter={<Counter value={hero.sub} soft={70} hard={120} />}>
-            <input className="st-input" value={hero.sub} placeholder="Пусто" maxLength={140}
+          <Field label="Строка под ним" counter={<Counter value={hero.sub} soft={70} hard={120} />}>
+            <input className="st-input" value={hero.sub} placeholder={DEFAULT_HERO.sub} maxLength={140}
                    onChange={e => updateHero({ sub: e.target.value })} />
           </Field>
           <div className="st-grid2">
