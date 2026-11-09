@@ -1,14 +1,15 @@
 /* eslint-disable react-refresh/only-export-components -- загрузка и пересчёт цвета живут рядом с карточкой */
 import { useEffect, useRef, useState } from 'react';
 import { uploadImage } from '../../api.js';
-import { autoTone, compress, contrastOf, fromHex, loadImage, readable, readImage, toHex, toneOptions } from '../../image.js';
+import { autoTone, contrastOf, fromHex, loadImage, readable, readImage, toHex, toneOptions } from '../../image.js';
 import { Button, Svg, useToast } from '../../ui.jsx';
+import { useCrop } from '../../crop.jsx';
 
 // Фото в карточке: загрузка, выбор кадра и цвет плашки.
 //
-// Кадр выбирают, двигая само фото в карточке — так же, как кадрируют в
-// телефоне. Сохраняется точка фокуса (object-position), а не обрезанный файл:
-// кадр можно поменять потом, не загружая фото заново.
+// Кадр выбирают в окне кадрирования при загрузке (crop.jsx) — на сервер
+// уходит уже обрезанное 4 : 5. «Кадрировать» у загруженного — то же окно.
+// Старые фото без обрезки по-прежнему можно двигать в карточке (точка фокуса).
 
 // Открытые картинки — чтобы пересчитать цвет после смены кадра, не скачивая
 // фото повторно.
@@ -21,14 +22,16 @@ export function imageFor(url) {
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif';
 
-/** Загрузка: сжать, отправить, посчитать цвет. Возвращает поля для черновика. */
-export async function uploadPhoto(file, focus) {
-  const img = await readImage(file);
-  const { blob, width, height } = await compress(img);
-  const url = await uploadImage(blob, { width, height });
+/** Обрезанное фото: отправить и посчитать цвет по тому, что попало в кадр. */
+async function uploadPrepared(blob, size, focus) {
+  const url = await uploadImage(blob, size);
+  const img = await readImage(blob);
   images.set(url, Promise.resolve(img));
   return { photo: url, toneAuto: autoTone(img, focus), tone: null, focus };
 }
+
+// Карточка ленты и кадр «на руке» — 4 : 5.
+const CARD_ASPECTS = [['4:5 — как в ленте', 4 / 5]];
 
 /**
  * Обёртка над карточкой: перетаскивание файла, кадрирование пальцем,
@@ -116,7 +119,7 @@ export function PhotoStage({ photo, focus, onFocus, onFocusEnd, onFile, busy, ch
   );
 }
 
-export function PhotoButtons({ photo, onFile, onRemove, busy, removeLabel = 'Убрать фото' }) {
+export function PhotoButtons({ photo, onFile, onCrop, onRemove, busy, removeLabel = 'Убрать фото' }) {
   const input = useRef(null);
   return (
     <div className="st-row">
@@ -125,31 +128,54 @@ export function PhotoButtons({ photo, onFile, onRemove, busy, removeLabel = 'У�
       <Button variant={photo ? 'secondary' : 'primary'} onClick={() => input.current?.click()} busy={busy}>
         <Svg name="photo" />{photo ? 'Заменить фото' : 'Загрузить фото'}
       </Button>
+      {photo && onCrop && <Button variant="ghost" onClick={onCrop} disabled={busy}>Кадрировать</Button>}
       {photo && onRemove && <Button variant="ghost" onClick={onRemove} disabled={busy}>{removeLabel}</Button>}
     </div>
   );
 }
 
-/** Хук загрузки с уведомлением об ошибке. */
+/**
+ * Хук загрузки с уведомлением об ошибке. Перед загрузкой — кадрирование под
+ * карточку 4 : 5: что выбрали в окне, то и будет в ленте. recrop — заново
+ * кадрировать уже загруженное фото.
+ */
 export function useUpload(apply) {
   const toast = useToast();
+  const crop = useCrop();
   const [busy, setBusy] = useState(false);
-  async function run(file, focus) {
-    if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) {
-      toast('Это не картинка. Нужен JPEG, PNG, WebP или HEIC.', 'error');
-      return;
-    }
+
+  // Кадр уже точно 4 : 5, поэтому точка фокуса — центр.
+  async function cropThenUpload(src, img) {
+    const out = await crop({ src, img, aspects: CARD_ASPECTS, title: 'Кадр для карточки' });
+    if (!out) return;
     setBusy(true);
     try {
-      apply(await uploadPhoto(file, focus));
-      toast('Фото загружено, цвет подобран');
+      apply(await uploadPrepared(out.blob, { width: out.width, height: out.height }, { x: 50, y: 50 }));
+      toast('Фото сохранено, цвет подобран');
     } catch (e) {
       toast(e.message || 'Не удалось загрузить фото', 'error');
     } finally {
       setBusy(false);
     }
   }
-  return { busy, upload: run };
+
+  async function run(file) {
+    if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) {
+      toast('Это не картинка. Нужен JPEG, PNG, WebP или HEIC.', 'error');
+      return;
+    }
+    const src = URL.createObjectURL(file);
+    try { await cropThenUpload(src, await readImage(file)); }
+    catch (e) { toast(e.message || 'Не удалось открыть фото', 'error'); }
+    finally { URL.revokeObjectURL(src); }
+  }
+
+  async function recrop(url) {
+    try { await cropThenUpload(url, await imageFor(url)); }
+    catch (e) { toast(e.message || 'Не удалось открыть фото', 'error'); }
+  }
+
+  return { busy, upload: run, recrop };
 }
 
 /**

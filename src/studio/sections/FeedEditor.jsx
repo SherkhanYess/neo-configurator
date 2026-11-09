@@ -103,7 +103,7 @@ function ModelList({ draft, setDraft, sel, setSel }) {
 // ─── Правка модели ───────────────────────────────────────────────────────────
 
 function ModelEditor({ m, index, count, update, move, price }) {
-  const { busy, upload } = useUpload((fields) => update(fields));
+  const { busy, upload, recrop } = useUpload((fields) => update(fields));
   const item = previewItem(m);
   const slug = m.shank.toLowerCase().replace(/\s+/g, '-');
 
@@ -135,10 +135,10 @@ function ModelEditor({ m, index, count, update, move, price }) {
         </div>
 
         <Card title="Фото">
-          <PhotoButtons photo={m.photo} busy={busy} onFile={(f) => upload(f, { x: 50, y: 50 })}
+          <PhotoButtons photo={m.photo} busy={busy} onFile={(f) => upload(f)} onCrop={() => recrop(m.photo)}
                         onRemove={() => update({ photo: null, tone: null, toneAuto: null, focus: { x: 50, y: 50 } })}
                         removeLabel="Вернуть рендер" />
-          <p className="st-muted">Перетащите файл прямо на карточку. Большие фото с камеры сожмутся сами — до 1400 px по ширине.</p>
+          <p className="st-muted">Перетащите файл прямо на карточку. После выбора откроется кадрирование под карточку 4 : 5; большие фото с камеры сожмутся сами.</p>
         </Card>
 
         <Card title="Цвет плашки" aside={<span className="st-muted st-muted--s">под текстом внизу карточки</span>}>
@@ -178,7 +178,7 @@ function ModelEditor({ m, index, count, update, move, price }) {
 // ─── Правка кадра «на руке» ──────────────────────────────────────────────────
 
 function BreakEditor({ b, models, update, remove }) {
-  const { busy, upload } = useUpload((fields) => update(fields));
+  const { busy, upload, recrop } = useUpload((fields) => update(fields));
   const visible = models.filter(m => m.enabled);
 
   return (
@@ -211,7 +211,7 @@ function BreakEditor({ b, models, update, remove }) {
         </div>
 
         <Card title="Фото">
-          <PhotoButtons photo={b.photo} busy={busy} onFile={(f) => upload(f, { x: 50, y: 30 })}
+          <PhotoButtons photo={b.photo} busy={busy} onFile={(f) => upload(f)} onCrop={() => recrop(b.photo)}
                         onRemove={() => update({ photo: null, tone: null, toneAuto: null })} />
         </Card>
 
@@ -281,7 +281,7 @@ function IntroEditor({ intro, hero, update, updateHero }) {
                      onChange={e => updateHero({ cta2: e.target.value })} />
             </Field>
           </div>
-          <FieldInput f={{ kind: 'image', label: 'Фото пары', hint: 'Пусто — стоит кольцо с овалом в пальцах. Своё: руки двоих, вертикальное или квадратное.' }}
+          <FieldInput f={{ kind: 'image', label: 'Фото пары', aspects: [['4:5', 4 / 5], ['3:4', 3 / 4], ['1:1', 1]], hint: 'Пусто — стоит кольцо с овалом в пальцах. Своё: руки двоих, вертикальное или квадратное.' }}
                       value={hero.photo ?? ''} onChange={v => updateHero({ photo: v || null })} />
           {hero.photo && (
             <Field label={`Кадр по высоте — ${focusY}%`} hint="Двигайте, пока в кадре не окажутся руки">

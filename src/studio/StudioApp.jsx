@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { api, checkPassword, clearToken, getToken, setToken, UNAUTHORIZED } from './api.js';
 import { Svg, ToastProvider } from './ui.jsx';
+import { CropProvider } from './crop.jsx';
 import { STAFF_KEY } from '../catalog/lib/track.js';
 import FeedEditor from './sections/FeedEditor.jsx';
 import HintsView from './sections/HintsView.jsx';
@@ -172,9 +173,11 @@ export default function StudioApp() {
 
   return (
     <ToastProvider>
+      <CropProvider>
       {authed
         ? <BrowserRouter><Shell onLogout={logout} /></BrowserRouter>
         : <Login onDone={() => setAuthed(true)} />}
+      </CropProvider>
     </ToastProvider>
   );
 }

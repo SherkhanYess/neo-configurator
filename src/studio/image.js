@@ -52,6 +52,23 @@ export async function compress(img) {
   return { blob, width: canvas.width, height: canvas.height };
 }
 
+/**
+ * Вырезает кусок фото (rect — в пикселях оригинала) и сжимает так же, как
+ * compress: до 1400 px по ширине, WebP или JPEG. Это и есть «кадрировать».
+ */
+export async function cropImage(img, rect) {
+  const scale = Math.min(1, MAX_WIDTH / rect.width);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(rect.width * scale));
+  canvas.height = Math.max(1, Math.round(rect.height * scale));
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, rect.x, rect.y, rect.width, rect.height, 0, 0, canvas.width, canvas.height);
+  let blob = await toBlob(canvas, 'image/webp', 0.86);
+  if (!blob || blob.type !== 'image/webp') blob = await toBlob(canvas, 'image/jpeg', 0.88);
+  return { blob, width: canvas.width, height: canvas.height };
+}
+
 // ─── Цвет ────────────────────────────────────────────────────────────────────
 
 const channel = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };

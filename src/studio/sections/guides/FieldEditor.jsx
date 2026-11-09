@@ -1,32 +1,47 @@
 import { useRef, useState } from 'react';
-import { readImage, compress } from '../../image.js';
+import { readImage, loadImage } from '../../image.js';
 import { uploadImage } from '../../api.js';
 import { Button, Field, Svg, Toggle, useToast } from '../../ui.jsx';
+import { ASPECTS_FREE, useCrop } from '../../crop.jsx';
 import { moveItem } from '../../sortable.js';
 
 // Форма по схеме блока (src/catalog/data/guideSchema.js): одно описание
 // полей — и сайт, и сервер, и эта форма знают, что у блока внутри. Новый блок
 // в схеме сразу получает форму без кода здесь.
 
-async function uploadFile(file) {
-  if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) throw new Error('Это не картинка. Нужен JPEG, PNG, WebP или HEIC.');
-  const img = await readImage(file);
-  const { blob, width, height } = await compress(img);
-  return uploadImage(blob, { width, height });
-}
-
-function ImageInput({ value, onChange, label }) {
+/**
+ * Фото: выбрать файл → кадрировать → загрузить обрезанное. «Кадрировать» у
+ * уже загруженного — тот же путь, только с текущим фото.
+ */
+function ImageInput({ value, onChange, label, aspects = ASPECTS_FREE }) {
   const toast = useToast();
+  const crop = useCrop();
   const input = useRef(null);
   const [busy, setBusy] = useState(false);
+
+  async function cropAndUpload(src, img) {
+    const out = await crop({ src, img, aspects, title: label });
+    if (!out) return;
+    setBusy(true);
+    try { onChange(await uploadImage(out.blob, out)); toast('Фото сохранено'); }
+    catch (err) { toast(err.message || 'Не удалось загрузить фото', 'error'); }
+    finally { setBusy(false); }
+  }
+
   async function pick(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    setBusy(true);
-    try { onChange(await uploadFile(file)); toast('Фото загружено'); }
-    catch (err) { toast(err.message || 'Не удалось загрузить фото', 'error'); }
-    finally { setBusy(false); }
+    if (!file.type.startsWith('image/') && !/\.(heic|heif)$/i.test(file.name)) { toast('Это не картинка. Нужен JPEG, PNG, WebP или HEIC.', 'error'); return; }
+    const src = URL.createObjectURL(file);
+    try { await cropAndUpload(src, await readImage(file)); }
+    catch (err) { toast(err.message || 'Не удалось открыть фото', 'error'); }
+    finally { URL.revokeObjectURL(src); }
+  }
+
+  async function recrop() {
+    try { await cropAndUpload(value, await loadImage(value)); }
+    catch (err) { toast(err.message || 'Не удалось открыть фото', 'error'); }
   }
   return (
     <div className="st-gimg">
@@ -35,6 +50,7 @@ function ImageInput({ value, onChange, label }) {
       </button>
       <div className="st-gimg__side">
         <Button variant="secondary" size="s" busy={busy} onClick={() => input.current?.click()}>{value ? 'Заменить' : 'Загрузить фото'}</Button>
+        {value && <Button variant="ghost" size="s" onClick={recrop} disabled={busy}>Кадрировать</Button>}
         {value && <Button variant="ghost" size="s" onClick={() => onChange('')}>Убрать</Button>}
       </div>
       <input ref={input} type="file" accept="image/*,.heic,.heif" hidden onChange={pick} />
@@ -113,7 +129,7 @@ export function FieldInput({ f, value, onChange }) {
       );
     }
     case 'image':
-      return <div className="st-field"><span className="st-field__label">{f.label}</span><ImageInput value={value} onChange={onChange} label={f.label} />{f.hint && <span className="st-field__hint">{f.hint}</span>}</div>;
+      return <div className="st-field"><span className="st-field__label">{f.label}</span><ImageInput value={value} onChange={onChange} label={f.label} aspects={f.aspects} />{f.hint && <span className="st-field__hint">{f.hint}</span>}</div>;
     case 'images': {
       const arr = Array.from({ length: f.count }, (_, i) => (value ?? [])[i] ?? '');
       return (
