@@ -297,6 +297,13 @@ export default function DetailScreen({ ijewel }) {
   const haloExtra = prices?.casts?.halo ? `+ ${formatPrice(prices.casts.halo)}` : '';
   const price = calcPrice(choices, prices);
 
+  // Заголовок вкладки — как у страницы этой пары после пререндера: включили
+  // ореол или сменили огранку — вкладка называет то кольцо, что на экране.
+  const fromPrice = calcPrice({ shankLabel: shankId, cast, carat: 1 }, prices);
+  useEffect(() => {
+    if (fromPrice) document.title = `${productName} — помолвочное кольцо с бриллиантом ${formatPrice(fromPrice)} | Neo Diamond`;
+  }, [productName, fromPrice]);
+
   // Надбавки показываем рядом с заголовком выбора, а не цену целиком: цена
   // уже стоит в стеклянной панели внизу.
   const caratExtra = prices?.caratPrice ? prices.caratPrice * Math.max(0, carat - 1) : 0;
