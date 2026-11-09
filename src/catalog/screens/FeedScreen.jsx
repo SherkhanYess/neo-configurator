@@ -100,7 +100,7 @@ export default function FeedScreen() {
 
   const modelHref = (item) => {
     const slug = item.shank.toLowerCase().replace(/\s+/g, '-');
-    return `/catalog/product/${slug}/${item.cast}/${firstShape}`;
+    return `/product/${slug}/${item.cast}/${firstShape}`;
   };
 
   const utm = (() => {

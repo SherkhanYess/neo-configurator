@@ -13,7 +13,7 @@ import GuidesEditor from './sections/GuidesEditor.jsx';
 import '../catalog/index.css';
 import './studio.css';
 
-// Админка витрины — /catalog/admin.
+// Админка витрины — /admin.
 //
 // Отдельное приложение: витрина его не грузит, а оно не трогает ни витрину,
 // ни конструктор. Всё, что здесь сохраняется, сайт подхватывает сразу, без
@@ -22,7 +22,7 @@ import './studio.css';
 //
 // На компьютере — боковое меню, на телефоне — нижнее.
 
-const BASE = '/catalog/admin';
+const BASE = '/admin';
 
 const NAV = [
   { to: 'feed',    label: 'Лента',     icon: 'feed' },
@@ -108,7 +108,7 @@ function Shell({ onLogout }) {
           ))}
         </nav>
         <div className="st-rail__foot">
-          <a className="st-rail__link" href="/catalog" target="_blank" rel="noopener noreferrer">
+          <a className="st-rail__link" href="/" target="_blank" rel="noopener noreferrer">
             <Svg name="ext" /><span>Открыть сайт</span>
           </a>
           <button type="button" className="st-rail__link" onClick={onLogout}>

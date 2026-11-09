@@ -17,7 +17,7 @@ console.log('кольцо — туда и обратно:');
 const q = encodeBooking(ring);
 console.log('  ' + q);
 eq('конфигурация восстанавливается полностью', decodeBooking(q), ring);
-eq('путь собирается', bookingPath(ring).startsWith('/catalog/booking?'), true);
+eq('путь собирается', bookingPath(ring).startsWith('/booking?'), true);
 
 console.log('\nпусеты:');
 const pus = {

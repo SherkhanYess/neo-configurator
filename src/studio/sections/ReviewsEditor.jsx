@@ -71,7 +71,7 @@ export default function ReviewsEditor() {
     api('/api/content/reviews?fresh')
       .then(doc => load(doc?.items ?? REVIEWS.map(r => ({ ...blank(), ...r }))))
       .catch(e => setError(e.message));
-    fetch('/catalog/reputation.json').then(r => (r.ok ? r.json() : null)).then(setRep).catch(() => {});
+    fetch('/reputation.json').then(r => (r.ok ? r.json() : null)).then(setRep).catch(() => {});
   }, [load]);
 
   const update = (id, patch) => setDraft(list => list.map(r => (r.id === id ? { ...r, ...patch } : r)));

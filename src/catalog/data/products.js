@@ -67,7 +67,7 @@ export function fetchProducts() {
   if (inflight) return inflight;
 
   // Админке — мимо кэша CDN: после сохранения ей нужна свежая версия.
-  const fresh = typeof window !== 'undefined' && window.location.pathname.startsWith('/catalog/admin');
+  const fresh = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   inflight = fetch(fresh ? '/api/get-products?fresh' : '/api/get-products')
     .then(r => (r.ok ? r.json() : null))
     .then(data => { cache = merge(data); return cache; })

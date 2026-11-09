@@ -3,7 +3,7 @@ import { SHANKS, SHAPES } from '../data/config.js';
 // Puts the chosen configuration into the booking URL, and reads it back.
 //
 // The booking screen used to live only in sessionStorage, so opening
-// /catalog/booking directly bounced you to the catalog. That made sharing
+// /booking directly bounced you to the catalog. That made sharing
 // pointless: the recipient would land on an empty catalog. Now the address
 // carries the configuration, so a shared link opens exactly what the sender saw.
 //
@@ -93,5 +93,5 @@ export function decodeBooking(search) {
 
 export function bookingPath(cfg) {
   const q = encodeBooking(cfg);
-  return q ? `/catalog/booking?${q}` : '/catalog/booking';
+  return q ? `/booking?${q}` : '/booking';
 }

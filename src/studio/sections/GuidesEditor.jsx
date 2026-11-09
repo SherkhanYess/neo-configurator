@@ -9,6 +9,7 @@ import { guidePath, minutesLabel } from '../../catalog/data/guides.js';
 import { GuideCover } from '../../catalog/guides/covers.jsx';
 import GuideArticle from '../../catalog/guides/GuideArticle.jsx';
 import { GuideCtx } from '../../catalog/guides/guideCtx.js';
+import { BASE } from '../utm.js';
 
 // Раздел «Гиды»: статьи для мужчин целиком — заголовок, вступление, обложка,
 // описание для превью ссылки и все блоки статьи по порядку. Справа — та же
@@ -238,6 +239,9 @@ export default function GuidesEditor() {
               <div className="st-row" style={{ marginTop: 10 }}>
                 <Button size="s" onClick={() => setEditing(i)}>Редактировать</Button>
                 <a className="st-btn st-btn--ghost st-btn--s" href={guidePath(g.slug)} target="_blank" rel="noopener noreferrer"><Svg name="ext" size={15} />Открыть</a>
+                <Button variant="ghost" size="s" onClick={() => navigator.clipboard?.writeText(`${BASE}${guidePath(g.slug)}`).then(() => toast('Ссылка скопирована. Ссылки с метками для рекламы — в разделе «Ссылки»'), () => {})}>
+                  <Svg name="copy" size={15} />Ссылка
+                </Button>
               </div>
             </div>
             <div className="st-gcard__side">

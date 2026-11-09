@@ -65,7 +65,7 @@ export function FieldInput({ f, value, onChange }) {
     case 'link':
       return (
         <Field label={f.label} hint={f.hint}>
-          <input className="st-input" value={value ?? ''} maxLength={f.max ?? 300} placeholder={f.kind === 'link' ? '/catalog/…' : undefined}
+          <input className="st-input" value={value ?? ''} maxLength={f.max ?? 300} placeholder={f.kind === 'link' ? '/product/…' : undefined}
                  onChange={e => onChange(e.target.value)} />
         </Field>
       );

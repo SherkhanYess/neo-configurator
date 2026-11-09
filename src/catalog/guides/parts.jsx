@@ -33,11 +33,11 @@ const ICONS = {
 export const Icon = ({ name }) => <svg viewBox="0 0 24 24" aria-hidden="true">{ICONS[name] ?? ICONS.spark}</svg>;
 
 /** Кнопка в каталог. Клик считаем — так видно, какой гид приводит к моделям. */
-export function CatalogButton({ children, to = '/catalog', variant = 'ink', place }) {
+export function CatalogButton({ children, to = '/', variant = 'ink', place }) {
   const { slug } = useGuide();
   return (
     <Link to={to} className={`gd-btn gd-btn--${variant}`}
-          onClick={() => track(EVENTS.GUIDE_CTA, { guide: slug, target: to === '/catalog' ? 'catalog' : 'product', place })}>
+          onClick={() => track(EVENTS.GUIDE_CTA, { guide: slug, target: to === '/' ? 'catalog' : 'product', place })}>
       {children}
     </Link>
   );

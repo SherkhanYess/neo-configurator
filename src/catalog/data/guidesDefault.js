@@ -44,10 +44,10 @@ const G1 = {
 
     b('h2', { text: 'Какое кольцо какой девушке' }),
     b('matches', { items: [
-      { img: RING('sirius-round'), to: '/catalog/product/sirius/classic/round', if: 'любит простые вещи и минимум украшений', name: 'Солитер', what: 'Один камень, ничего лишнего' },
-      { img: RING('halo-round'), to: '/catalog/product/sirius/halo/round', if: 'любит блеск и внимание', name: 'Ореол', what: 'Камень в кольце из мелких бриллиантов — на руке крупнее' },
-      { img: RING('bezel-round'), to: '/catalog/product/bezel/bezel/round', if: 'всё время в движении: спорт, работа руками', name: 'Ободок', what: 'Камень в сплошном ободке, ничего не цепляется' },
-      { img: RING('sirius-luxe-round'), to: '/catalog/product/sirius-luxe/classic/round', if: 'хочет, чтобы сверкало со всех сторон', name: 'Дорожка', what: 'Бриллианты идут и по шинке' },
+      { img: RING('sirius-round'), to: '/product/sirius/classic/round', if: 'любит простые вещи и минимум украшений', name: 'Солитер', what: 'Один камень, ничего лишнего' },
+      { img: RING('halo-round'), to: '/product/sirius/halo/round', if: 'любит блеск и внимание', name: 'Ореол', what: 'Камень в кольце из мелких бриллиантов — на руке крупнее' },
+      { img: RING('bezel-round'), to: '/product/bezel/bezel/round', if: 'всё время в движении: спорт, работа руками', name: 'Ободок', what: 'Камень в сплошном ободке, ничего не цепляется' },
+      { img: RING('sirius-luxe-round'), to: '/product/sirius-luxe/classic/round', if: 'хочет, чтобы сверкало со всех сторон', name: 'Дорожка', what: 'Бриллианты идут и по шинке' },
     ] }),
     b('cta', { action: 'catalog', text: 'Посмотреть модели в её стиле', to: '' }),
 

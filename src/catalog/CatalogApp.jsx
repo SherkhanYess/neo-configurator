@@ -22,24 +22,31 @@ function ProductRoute({ ijewel }) {
   const { shank, cast, shape } = useParams();
   const known = VALID_COMBOS.some(c => c.shank.toLowerCase().replace(/\s+/g, '-') === shank && c.cast === cast)
              && SHAPES.some(s => s.id === shape);
-  return known ? <DetailScreen ijewel={ijewel} /> : <Navigate to="/catalog" replace />;
+  return known ? <DetailScreen ijewel={ijewel} /> : <Navigate to="/" replace />;
 }
 
 function BookingRedirect() {
   const location = useLocation();
   const cfg = decodeBooking(location.search);
-  if (!cfg?.shank || cfg.type === 'pusety') return <Navigate to="/catalog" replace />;
+  if (!cfg?.shank || cfg.type === 'pusety') return <Navigate to="/" replace />;
   const slug = cfg.shank.toLowerCase().replace(/\s+/g, '-');
   const q = cfg.carat ? `?ct=${cfg.carat}` : '';
-  return <Navigate to={`/catalog/product/${slug}/${cfg.cast}/${cfg.shape}${q}`} replace />;
+  return <Navigate to={`/product/${slug}/${cfg.cast}/${cfg.shape}${q}`} replace />;
+}
+
+/** Старые адреса с /catalog — с тех пор, как витрина жила в подпапке. Сервер
+ *  перекидывает их сам (_redirects); это — на случай перехода внутри сайта. */
+function LegacyCatalog() {
+  const location = useLocation();
+  const to = (location.pathname.replace(/^\/catalog/, '') || '/') + location.search;
+  return <Navigate to={to} replace />;
 }
 
 function CatalogMain() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const subPath      = location.pathname.replace(/^\/catalog/, '') || '/';
-  const onRingProduct  = subPath.startsWith('/product');
+  const onRingProduct  = location.pathname.startsWith('/product');
 
   const showViewer = onRingProduct;
 
@@ -129,7 +136,7 @@ function CatalogMain() {
         )}
 
         {showViewer && (
-          <button type="button" className="mp-back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/catalog'))}>
+          <button type="button" className="mp-back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}>
             <svg width="7" height="12" viewBox="0 0 8 12" aria-hidden="true"><path d="M7 1L2 6l5 5" fill="none" stroke="#FFFFFF" strokeWidth="1.5"/></svg>
             Назад
           </button>
@@ -137,20 +144,22 @@ function CatalogMain() {
       </div>
 
       <Routes>
-        <Route path="/catalog"                                   element={<FeedScreen />} />
+        <Route path="/"                                   element={<FeedScreen />} />
         {/* Выбор формы на входе и список из девяноста карточек заменены лентой.
             Адреса остаются рабочими: они разосланы в рекламе и в сторис. */}
-        <Route path="/catalog/filter"                            element={<Navigate to="/catalog" replace />} />
-        <Route path="/catalog/list"                              element={<Navigate to="/catalog" replace />} />
-        <Route path="/catalog/product/:shank/:cast/:shape"       element={<ProductRoute ijewel={ijewel} />} />
+        <Route path="/filter"                            element={<Navigate to="/" replace />} />
+        <Route path="/list"                              element={<Navigate to="/" replace />} />
+        <Route path="/product/:shank/:cast/:shape"       element={<ProductRoute ijewel={ijewel} />} />
         {/* Пусет на витрине больше нет, но разосланные ссылки не должны
             упираться в пустую страницу — уводим в каталог. */}
-        <Route path="/catalog/pusety/*"                          element={<Navigate to="/catalog" replace />} />
+        <Route path="/pusety/*"                          element={<Navigate to="/" replace />} />
         {/* «Ваш выбор» слит со страницей модели. Разосланные ссылки ведут на ту
             же модель, форму и каратность. */}
-        <Route path="/catalog/booking"                           element={<BookingRedirect />} />
-        <Route path="/catalog/guides/:slug"                       element={<Suspense fallback={<div style={{ minHeight: '100dvh' }} />}><GuideScreen /></Suspense>} />
-        <Route path="/catalog/guides"                             element={<Navigate to="/catalog" replace />} />
+        <Route path="/booking"                           element={<BookingRedirect />} />
+        <Route path="/guides/:slug"                       element={<Suspense fallback={<div style={{ minHeight: '100dvh' }} />}><GuideScreen /></Suspense>} />
+        <Route path="/guides"                             element={<Navigate to="/" replace />} />
+        <Route path="/catalog/*"                          element={<LegacyCatalog />} />
+        <Route path="*"                                   element={<Navigate to="/" replace />} />
       </Routes>
 
       <SiteFooter />

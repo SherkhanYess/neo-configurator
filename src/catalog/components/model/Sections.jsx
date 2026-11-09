@@ -94,7 +94,7 @@ function useReputation() {
   const [rep, setRep] = useState(null);
   useEffect(() => {
     let alive = true;
-    fetch('/catalog/reputation.json')
+    fetch('/reputation.json')
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (alive && d?.rating) setRep(d); })
       .catch(() => {});
@@ -175,14 +175,14 @@ export function Others({ shank, prices, products }) {
     <>
       <div className="mp-others-h">
         <h2 className="mp-h2">Другие модели</h2>
-        <Link to="/catalog">Все {ARROW}</Link>
+        <Link to="/">Все {ARROW}</Link>
       </div>
       <div className="mp-others">
         {items.map(m => {
           const price = basePrice(prices, m.shank, m.cast);
           return (
             <Link key={m.model} className="mp-mini" style={{ '--tone': m.tone }}
-                  to={`/catalog/product/${m.shank.toLowerCase().replace(/\s+/g, '-')}/${m.cast}/round`}>
+                  to={`/product/${m.shank.toLowerCase().replace(/\s+/g, '-')}/${m.cast}/round`}>
               <div className="mp-mini__p"><img src={m.src} alt={`Кольцо ${m.model}`} loading="lazy" decoding="async" style={{ objectPosition: m.position }} /></div>
               <div className="mp-mini__b"><b>{m.model}</b>{price ? <small>от {formatPrice(price)}</small> : null}</div>
             </Link>

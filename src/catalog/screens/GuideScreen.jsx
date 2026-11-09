@@ -29,7 +29,7 @@ export default function GuideScreen() {
   // Пока не знаем, что в админке, — пустое место, а не текст из кода, который
   // через миг сменится.
   if (!ready) return <div style={{ minHeight: '100dvh' }} />;
-  if (!guide) return <Navigate to="/catalog" replace />;
+  if (!guide) return <Navigate to="/" replace />;
   return <Guide key={slug} guide={guide} others={list.filter(g => g.slug !== slug)} />;
 }
 
@@ -109,11 +109,11 @@ function Guide({ guide, others }) {
     <GuideCtx.Provider value={ctx}>
       <article className="gd">
         <header className="gd-head">
-          <Link to="/catalog" className="gd-head__back">
+          <Link to="/" className="gd-head__back">
             <svg width="7" height="12" viewBox="0 0 8 12" aria-hidden="true"><path d="M7 1L2 6l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
             Кольца
           </Link>
-          <Link to="/catalog" aria-label="aena — каталог"><img src="/assets/aena/sign-bronze.png" alt="aena" /></Link>
+          <Link to="/" aria-label="aena — каталог"><img src="/assets/aena/sign-bronze.png" alt="aena" /></Link>
           <div className="gd-progress" ref={barRef} aria-hidden="true" />
         </header>
 
@@ -130,7 +130,7 @@ function Guide({ guide, others }) {
 
         <div className={`gd-sticky${sticky ? ' is-on' : ''}`} aria-hidden={!sticky}>
           <div className="gd-sticky__in">
-            <Link to="/catalog" className="gd-btn gd-btn--ink" tabIndex={sticky ? 0 : -1}
+            <Link to="/" className="gd-btn gd-btn--ink" tabIndex={sticky ? 0 : -1}
                   onClick={() => track(EVENTS.GUIDE_CTA, { guide: guide.slug, target: 'catalog', place: 'sticky' })}>
               Смотреть кольца
             </Link>

@@ -109,7 +109,7 @@ const sentOnce = new Set();
 
 export function track(event, props = {}, { once = false } = {}) {
   if (typeof window === 'undefined') return;
-  if (!window.location.pathname.startsWith('/catalog')) return;
+  if (window.location.pathname.startsWith('/admin')) return;
   if (isStaff()) return;
 
   if (once) {

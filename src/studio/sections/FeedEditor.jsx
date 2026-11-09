@@ -165,7 +165,7 @@ function ModelEditor({ m, index, count, update, move, price }) {
           </div>
         </Card>
 
-        <a className="st-link" href={`/catalog/product/${slug}/${m.cast}/round`} target="_blank" rel="noopener noreferrer">
+        <a className="st-link" href={`/product/${slug}/${m.cast}/round`} target="_blank" rel="noopener noreferrer">
           Открыть страницу модели <Svg name="ext" size={14} />
         </a>
       </div>

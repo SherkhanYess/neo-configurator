@@ -226,7 +226,7 @@ export default function DetailScreen({ ijewel }) {
   // и обновление страницы откроют то же кольцо. Меняем адрес мимо роутера —
   // иначе он принял бы это за переход на другую модель и перезапустил 3D.
   const syncUrl = useCallback((nextCast, nextShape) => {
-    const url = `/catalog/product/${shankSlug}/${nextCast}/${nextShape}${window.location.search}`;
+    const url = `/product/${shankSlug}/${nextCast}/${nextShape}${window.location.search}`;
     try { window.history.replaceState(window.history.state, '', url); } catch { /* старый браузер — адрес прежний */ }
   }, [shankSlug]);
 
@@ -325,7 +325,7 @@ export default function DetailScreen({ ijewel }) {
 
   const hintLink = (() => {
     const q = new URLSearchParams({ utm_medium: 'hint', utm_source: sourceLatin(utm), ct: String(carat) });
-    return `${window.location.origin}/catalog/product/${shankSlug}/${cast}/${shape}?${q}`;
+    return `${window.location.origin}/product/${shankSlug}/${cast}/${shape}?${q}`;
   })();
 
   return (

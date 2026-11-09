@@ -3,12 +3,10 @@ import { createRoot } from 'react-dom/client';
 import './styles.css';
 import CatalogApp from './catalog/CatalogApp.jsx';
 
-// Вход для страниц /catalog — отдельный от конструктора (src/main.jsx).
-//
-// Каталогу не нужны ни код конструктора, ни 4 МБ скриптов 3D в шапке
-// страницы: со своим входом лента грузит только себя, а 3D подтягивается,
-// когда человек открывает модель. Конструктор на корне сайта не меняется —
-// у него свой index.html и свой вход.
+// Вход витрины aena (aena.neodiamond.kz): лента в корне, модели, гиды и
+// админка /admin. Отдельный от конструктора (src/main.jsx), который живёт на
+// con.neodiamond.kz: витрине не нужны ни его код, ни 4 МБ скриптов 3D в шапке —
+// 3D подтягивается, когда человек открывает модель.
 
 const StudioApp = lazy(() => import('./studio/StudioApp.jsx'));
 
@@ -25,7 +23,7 @@ const StudioApp = lazy(() => import('./studio/StudioApp.jsx'));
 })();
 
 const path = window.location.pathname;
-const isStudio = path === '/catalog/admin' || path.startsWith('/catalog/admin/');
+const isStudio = path === '/admin' || path.startsWith('/admin/');
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

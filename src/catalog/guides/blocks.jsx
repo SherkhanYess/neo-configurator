@@ -56,7 +56,7 @@ function CardB({ b }) {
 function Cta({ b }) {
   const text = t(b.text) || 'Смотреть каталог';
   if (b.action === 'help' || b.action === 'price') return <WaCta type={b.action} place="guide_body">{text}</WaCta>;
-  return <CatalogButton to={b.action === 'page' && b.to ? b.to : '/catalog'} place="body">{text}</CatalogButton>;
+  return <CatalogButton to={b.action === 'page' && b.to ? b.to : '/'} place="body">{text}</CatalogButton>;
 }
 
 function ImageB({ b }) {
@@ -158,7 +158,7 @@ function Matches({ b }) {
   return (
     <div className="gd-row2">
       {(b.items ?? []).map((m, i) => (
-        <Link key={i} to={m.to || '/catalog'} className="gd-match"
+        <Link key={i} to={m.to || '/'} className="gd-match"
               onClick={() => track(EVENTS.GUIDE_CTA, { guide: slug, target: 'product', place: 'match' })}>
           {m.img && <img src={m.img} alt={`Кольцо: ${String(m.name ?? '').toLowerCase()}`} loading="lazy" decoding="async" />}
           <div><small>Если она {t(m.if)}</small><div className="gd-name">{t(m.name)}</div><p>{t(m.what)}</p></div>

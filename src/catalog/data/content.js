@@ -65,7 +65,6 @@ export function useContent(name) {
 
 // Ленту начинаем грузить сразу, как только загрузился код витрины, — не
 // дожидаясь, пока React дойдёт до экрана.
-if (typeof window !== 'undefined' && window.location.pathname.startsWith('/catalog')
-    && !window.location.pathname.startsWith('/catalog/admin')) {
+if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
   fetchContent('feed').catch(() => {});
 }

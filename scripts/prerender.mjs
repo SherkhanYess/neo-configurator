@@ -25,9 +25,9 @@ import { guideList, guidePath, minutesLabel, outlineOf } from '../src/catalog/da
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
 
-// Canonical origin. Change this in one place when the catalog moves onto the
-// main domain — it drives canonical links, Open Graph and the sitemap.
-const SITE = (process.env.SITE_URL || 'https://con.neodiamond.kz').replace(/\/$/, '');
+// Адрес сайта: витрина aena в корне своего домена. От него — канонические
+// ссылки, Open Graph и карта сайта.
+const SITE = (process.env.SITE_URL || 'https://aena.neodiamond.kz').replace(/\/$/, '');
 
 // Песочница: отдельный сайт для разработки новой витрины. В поиске ей делать
 // нечего — это копия каталога, и в индексе она конкурировала бы с основным
@@ -145,7 +145,7 @@ function configuredUrl({ shank, cast, shape, carat, purity = '585', color = 'whi
     line: slug(shank), style: cast, shape,
     ct: String(carat), gold: purity, color, goldColor,
   });
-  return `${SITE}/catalog/booking?${p}`;
+  return `${SITE}/booking?${p}`;
 }
 
 // ─── page assembly ───────────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ function itemListJsonLd(prices) {
   const items = [];
   for (const [shank, cast, model] of COMBOS) {
     for (const [shapeId, shapeLabel] of SHAPES) {
-      const path = `/catalog/product/${slug(shank)}/${cast}/${shapeId}`;
+      const path = `/product/${slug(shank)}/${cast}/${shapeId}`;
       items.push({
         '@type': 'ListItem',
         position: items.length + 1,
@@ -316,13 +316,13 @@ function catalogFeed(prices, rep) {
       ),
       страницы: SHAPES.map(([shapeId, shapeLabel]) => ({
         огранка: shapeLabel,
-        адрес: `${SITE}/catalog/product/${slug(shank)}/${cast}/${shapeId}`,
+        адрес: `${SITE}/product/${slug(shank)}/${cast}/${shapeId}`,
       })),
       пример_ссылки_с_параметрами: configuredUrl({ shank, cast, shape: 'round', carat: 1 }),
     })),
 
     как_собрать_ссылку: {
-      шаблон: `${SITE}/catalog/booking?line=<линия>&style=<оправа>&shape=<огранка>&ct=<караты>&gold=<585|750>&color=<цвет_камня>&goldColor=<цвет_золота>`,
+      шаблон: `${SITE}/booking?line=<линия>&style=<оправа>&shape=<огранка>&ct=<караты>&gold=<585|750>&color=<цвет_камня>&goldColor=<цвет_золота>`,
       пояснение:
         'Адрес открывает страницу украшения с этими параметрами: 3D-просмотр, ' +
         'актуальная цена и кнопка перехода в WhatsApp. Цена в ссылку не ' +
@@ -372,13 +372,13 @@ ${HOURS_NOTE}.
 
 ## Данные
 
-- [Каталог и правила расчёта в JSON](${SITE}/catalog/catalog.json) — модели, цены по каратам, надбавки, адреса страниц.
-- [Каталог с ценами](${SITE}/catalog/list) — та же матрица цен обычным текстом.
+- [Каталог и правила расчёта в JSON](${SITE}/catalog.json) — модели, цены по каратам, надбавки, адреса страниц.
+- [Каталог с ценами](${SITE}/list) — та же матрица цен обычным текстом.
 - [Карта сайта](${SITE}/sitemap.xml)
 
 ## Ссылка на украшение с выбранными параметрами
 
-${SITE}/catalog/booking?line=<линия>&style=<оправа>&shape=<огранка>&ct=<караты>&gold=<585|750>&color=<цвет камня>&goldColor=<цвет золота>
+${SITE}/booking?line=<линия>&style=<оправа>&shape=<огранка>&ct=<караты>&gold=<585|750>&color=<цвет камня>&goldColor=<цвет золота>
 
 Линии: ${[...new Set(COMBOS.map(([s]) => slug(s)))].join(', ')}.
 Оправы: classic, halo, bezel (bezel только для линии bezel).
@@ -480,7 +480,7 @@ async function main() {
     for (const [shank, cast, model] of COMBOS) {
       const price = basePrice(prices, shank, cast);
       const name = `${model} ${shapeLabel}`;
-      const path = `/catalog/product/${slug(shank)}/${cast}/${shapeId}`;
+      const path = `/product/${slug(shank)}/${cast}/${shapeId}`;
       pages.push({
         path,
         title: `${name} — помолвочное кольцо с бриллиантом ${money(price)} | Neo Diamond`,
@@ -503,11 +503,11 @@ async function main() {
   const priceRows = COMBOS.map(([shank, cast, model]) => {
     const cells = CARAT_OPTIONS
       .map(ct => `<td>${esc(money(configuredPrice(prices, shank, cast, ct)))}</td>`).join('');
-    return `<tr><td><a href="/catalog/product/${slug(shank)}/${cast}/round">${esc(model)}</a></td>${cells}</tr>`;
+    return `<tr><td><a href="/product/${slug(shank)}/${cast}/round">${esc(model)}</a></td>${cells}</tr>`;
   }).join('\n        ');
 
   pages.push({
-    path: '/catalog/list',
+    path: '/list',
     title: 'Каталог помолвочных колец с ценами | Neo Diamond, Алматы и Астана',
     description: `Каталог колец с лабораторными бриллиантами: ${COMBOS.length} моделей, ${SHAPES.length} огранок, цены от ${money(Math.min(...COMBOS.map(([s, c]) => basePrice(prices, s, c))))}. Сертификат IGI, примерка в Алматы и Астане.`,
     jsonLd: [organization, itemListJsonLd(prices)],
@@ -539,13 +539,13 @@ async function main() {
 
       <h2>Данные каталога</h2>
       <p>Полный каталог с ценами и правилами расчёта в машиночитаемом виде:
-      <a href="/catalog/catalog.json">catalog.json</a>. Описание для ассистентов:
+      <a href="/catalog.json">catalog.json</a>. Описание для ассистентов:
       <a href="/llms.txt">llms.txt</a>.</p>
       ${SPECS_HTML}`,
   });
 
   pages.push({
-    path: '/catalog',
+    path: '/',
     title: 'Помолвочные кольца с бриллиантами в Алматы и Астане — Neo Diamond',
     description: 'Помолвочные кольца с бриллиантами: цена сразу, срок изготовления 5–10 дней, сертификат IGI. Примерка в шоурумах Алматы и Астаны.',
     jsonLd: organization,
@@ -556,7 +556,7 @@ async function main() {
       <h2>Огранки</h2>
       <ul>${SHAPES.map(([, l]) => `<li>${esc(l)}</li>`).join('')}</ul>
       ${SPECS_HTML}
-      <p><a href="/catalog/list">Смотреть каталог с ценами</a></p>`,
+      <p><a href="/list">Смотреть каталог с ценами</a></p>`,
   });
 
   // Гиды — статьи для рекламы и поиска. Человеку текст рисует React, поисковику
@@ -581,7 +581,7 @@ async function main() {
         <h1>${esc(g.title)}</h1>
         <p>${esc(g.lead ?? '')}</p>
         <ul>${outlineOf(g).map(h => `<li>${esc(h)}</li>`).join('')}</ul>
-        <p><a href="/catalog">Смотреть помолвочные кольца с ценами</a></p>
+        <p><a href="/">Смотреть помолвочные кольца с ценами</a></p>
       </article>`,
     });
   }
@@ -600,6 +600,15 @@ async function main() {
   // Файл рядом с папкой закрывает вопрос в корне: обе формы адреса отдают
   // содержимое сразу, редиректа не возникает ни у посетителя, ни у поисковика.
   for (const p of pages) {
+    // Корень — один файл index.html: формы «со слэшем и без» у него нет.
+    if (p.path === '/') {
+      writeFileSync(join(DIST, 'index.html'), page(shell, {
+        ...p,
+        bodyHtml: p.bodyHtml + footerHtml(rep),
+        jsonLd: [organization, ...[p.jsonLd].flat().filter(x => x && x !== organization)],
+      }));
+      continue;
+    }
     const dir = join(DIST, p.path);
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(DIST, `${p.path}.html`), page(shell, {
@@ -621,14 +630,12 @@ async function main() {
   // Sitemap and robots — both currently return the SPA shell, so crawlers get
   // no map of the site at all.
   const today = new Date().toISOString().slice(0, 10);
-  // Карта сайта описывает весь домен, а не только каталог: главная страница
-  // отдаётся с другого сайта Netlify, но для поисковика это один адрес.
-  const urls = ['/', '/catalog', ...pages.filter(p => p.path.startsWith('/catalog/product') || p.path.startsWith('/catalog/guides')).map(p => p.path)];
+  const urls = ['/', ...pages.filter(p => p.path.startsWith('/product') || p.path.startsWith('/guides')).map(p => p.path)];
   if (!SANDBOX) writeFileSync(join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     [...new Set(urls)].map(u =>
       `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq>` +
-      `<priority>${u === '/' ? '1.0' : u === '/catalog' ? '0.9' : u === '/catalog/list' ? '0.9' : '0.7'}</priority></url>`
+      `<priority>${u === '/' ? '1.0' : u === '/list' ? '0.9' : '0.7'}</priority></url>`
     ).join('\n') + `\n</urlset>\n`);
 
   // Правила маршрутизации. Пишутся здесь, а не лежат статикой, потому что
@@ -647,27 +654,27 @@ async function main() {
   // Обе формы задаются явно: со слэшем и без. Встроенная канонизация адресов
   // Netlify (pretty URLs) отключена в netlify.toml — иначе она успевает
   // развернуть одну форму в другую редиректом раньше любых правил.
-  const routes = pages.flatMap(p => [
+  const routes = pages.filter(p => p.path !== '/').flatMap(p => [
     `${p.path}     ${p.path}.html    200`,
     `${p.path}/    ${p.path}.html    200`,
   ]).join('\n');
   writeFileSync(join(DIST, '_redirects'),
     `# Обе формы адреса отдают страницу напрямую — редиректов между ними нет.\n` +
     `${routes}\n\n` +
-    `# Остальные адреса каталога (админка, старые ссылки) — его же вход.\n` +
-    `/catalog/*    /catalog-shell.html    200\n\n` +
-    `# Всё остальное — конструктор.\n` +
-    `/*    /index.html    200\n`);
+    `# Старые адреса с /catalog — с тех пор, как витрина жила в подпапке.\n` +
+    `/catalog       /         301\n` +
+    `/catalog/*     /:splat   301\n\n` +
+    `# Остальные адреса (админка, гиды из админки, старые ссылки) — вход витрины.\n` +
+    `/*    /catalog-shell.html    200\n`);
 
   // Машиночитаемый каталог и справка для ассистентов. В песочнице их нет: они
   // описывают основной сайт и ссылаются на его адреса.
-  mkdirSync(join(DIST, 'catalog'), { recursive: true });
   if (!SANDBOX) {
-    writeFileSync(join(DIST, 'catalog', 'catalog.json'), JSON.stringify(catalogFeed(prices, rep), null, 2));
+    writeFileSync(join(DIST, 'catalog.json'), JSON.stringify(catalogFeed(prices, rep), null, 2));
     writeFileSync(join(DIST, 'llms.txt'), llmsTxt(prices, rep));
   }
   // Футер читает это при загрузке: цифра обновляется со сборкой, а не руками.
-  writeFileSync(join(DIST, 'catalog', 'reputation.json'),
+  writeFileSync(join(DIST, 'reputation.json'),
     JSON.stringify(rep ? { ...rep, line: reputationLine(rep) } : null));
 
   if (SANDBOX) {
@@ -686,7 +693,7 @@ async function main() {
       .map(a => `User-agent: ${a}\nAllow: /`).join('\n\n') +
     `\n\nSitemap: ${SITE}/sitemap.xml\n` +
     `\n# Справка для ассистентов и машиночитаемый каталог с ценами:\n` +
-    `# ${SITE}/llms.txt\n# ${SITE}/catalog/catalog.json\n`);
+    `# ${SITE}/llms.txt\n# ${SITE}/catalog.json\n`);
 
   console.log(`  страниц: ${pages.length}, sitemap: ${new Set(urls).size} адресов`);
 }

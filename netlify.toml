@@ -16,7 +16,7 @@
   to     = "/.netlify/functions/:splat"
   status = 200
 
-# Catalog imagery only (/catalog uses these; the configurator does not).
+# Картинки витрины.
 # A changed render ships under a new filename, so these can be cached for good.
 [[headers]]
   for = "/assets/rings/*"
@@ -30,5 +30,5 @@
 
 [[redirects]]
   from   = "/*"
-  to     = "/index.html"
+  to     = "/catalog-shell.html"
   status = 200

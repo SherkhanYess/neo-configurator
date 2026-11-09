@@ -9,10 +9,9 @@
 // «Источники» keys on source AND medium together, so instagram/bio and
 // instagram/stories stay separate rows instead of collapsing into «instagram».
 
-// Каталог теперь живёт на основном домене. Ссылки для рекламы должны вести
-// именно туда: поддомен для поисковика — отдельный сайт, и переходы по старому
-// адресу пойдут мимо основного домена.
-export const BASE = 'https://neodiamond.kz/catalog';
+// Витрина aena живёт в корне своего домена, без /catalog. Ссылки для рекламы
+// ведут сюда.
+export const BASE = 'https://aena.neodiamond.kz';
 
 export const UTM_PRESETS = [
   // Реклама Meta. Кампания подставляется в ссылку объявления перформанс-
@@ -27,7 +26,7 @@ export const UTM_PRESETS = [
   {
     id: 'meta_vitrina',
     title: 'Реклама Meta — «Витрина»',
-    note: 'Тест. Ведёт сразу на страницу модели: /catalog/product/sirius/halo/oval.',
+    note: 'Тест. Ведёт сразу на страницу модели: /product/sirius/halo/oval.',
     params: { utm_source: 'meta', utm_medium: 'paid', utm_campaign: 'vitrina' },
   },
   {
@@ -38,8 +37,8 @@ export const UTM_PRESETS = [
   },
   {
     id: 'guide',
-    title: 'Страница-гайд',
-    note: 'Кнопка «Посмотреть модели» на гайде.',
+    title: 'Внешний гайд (PDF, статья не на сайте)',
+    note: 'Кнопка «Посмотреть модели» в гайде, который живёт не на этом сайте. Для гидов сайта — блок «Гиды» выше.',
     params: { utm_source: 'guide', utm_medium: 'page' },
   },
   {

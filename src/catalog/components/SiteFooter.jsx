@@ -145,7 +145,7 @@ function Reputation() {
 
   useEffect(() => {
     let alive = true;
-    fetch('/catalog/reputation.json')
+    fetch('/reputation.json')
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (alive && d?.line) setRep(d); })
       .catch(() => {});

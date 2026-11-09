@@ -2,7 +2,7 @@
 //
 // Одна схема на троих: сайт рисует блоки по типу, админка строит по ней форму
 // редактирования, сервер по ней же чистит то, что прислала админка. Поэтому
-// новый блок — это строка здесь и компонент в src/catalog/guides/blocks.jsx.
+// новый блок — это строка здесь и компонент в src/guides/blocks.jsx.
 //
 // Поля:  text — строка, area — абзац, bool, num, select, image — фото из
 // админки или из assets, link — адрес внутри сайта, strings — список строк,
@@ -45,7 +45,7 @@ export const BLOCKS = {
     title: T('Заголовок', 140), subtitle: T('Подзаголовок', 140), kind: S('Значок списка', MARKS), items: SL('Пункты'),
     quote: A('Цитата курсивом', 320), note: A('Мелкая приписка', 400), pick: B('Выделить рамкой'),
   } },
-  cta:     { label: 'Кнопка', group: 'Текст', fields: { action: S('Куда ведёт', ACTIONS), text: T('Надпись', 60), to: L('Адрес страницы', 'Только для «Страница сайта», например /catalog/product/sirius/classic/round') } },
+  cta:     { label: 'Кнопка', group: 'Текст', fields: { action: S('Куда ведёт', ACTIONS), text: T('Надпись', 60), to: L('Адрес страницы', 'Только для «Страница сайта», например /product/sirius/classic/round') } },
   image:   { label: 'Фото', group: 'Фото', fields: { src: I('Фото'), alt: T('Что на фото (для незрячих)', 160), caption: T('Подпись', 200) } },
   collage: { label: 'Коллаж из пяти фото', group: 'Фото', fields: { images: { kind: 'images', label: 'Фото', count: 5 } } },
   compare: { label: 'Сравнение рядом', group: 'Текст', fields: { items: LIST('Колонки', item({
@@ -118,7 +118,9 @@ export const GUIDE_FIELDS = {
 // ─── Чистка на сервере ──────────────────────────────────────────────────────
 
 const IMAGE_RE = /^\/(api\/media\/[a-z0-9-]+\.(webp|jpg|png|avif)|assets\/[\w./-]+\.(webp|jpg|jpeg|png|svg))$/;
-const LINK_RE = /^\/catalog(\/[\w./?=&%-]*)?$/;
+// Только адреса этого сайта: «/product/…», «/guides/…», «/». Чужой сайт и
+// «//домен» не пройдут.
+const LINK_RE = /^\/(?!\/)[\w./?=&%-]*$/;
 
 function cleanValue(f, v) {
   switch (f.kind) {

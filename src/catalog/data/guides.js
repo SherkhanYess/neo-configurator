@@ -13,7 +13,7 @@ import { DEFAULT_GUIDES } from './guidesDefault.js';
 
 export const GUIDES = DEFAULT_GUIDES;
 
-export const guidePath = (slug) => `/catalog/guides/${slug}`;
+export const guidePath = (slug) => `/guides/${slug}`;
 
 /** Гиды из документа админки, а без него — из кода. Скрытые не показываем. */
 export function guideList(doc, { withHidden = false } = {}) {
