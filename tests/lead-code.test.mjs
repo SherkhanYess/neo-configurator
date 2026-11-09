@@ -8,7 +8,7 @@ const is = (name, got, want) => {
 };
 
 console.log('\nкод источника:');
-is('реклама Meta',        sourceCode({ utm_medium: 'paid', utm_source: 'meta' }), 'К');
+is('реклама Instagram, performance', sourceCode({ utm_medium: 'performance', utm_source: 'instagram', utm_content: 'retarget' }), 'К');
 is('профиль, шапка',      sourceCode({ utm_source: 'instagram', utm_medium: 'bio' }), 'П');
 is('профиль, сторис',     sourceCode({ utm_source: 'instagram', utm_medium: 'stories' }), 'П');
 is('страница-гайд',       sourceCode({ utm_source: 'guide' }), 'Г');
@@ -22,18 +22,18 @@ is('от гайда',     sourceCode({ utm_medium: 'hint', utm_source: 'G' }), '
 is('без источника',sourceCode({ utm_medium: 'hint' }), 'С');
 
 console.log('\nобратное преобразование для ссылки-намёка:');
-is('реклама → K', sourceLatin({ utm_medium: 'paid' }), 'K');
+is('реклама → K', sourceLatin({ utm_medium: 'performance' }), 'K');
 is('профиль → P', sourceLatin({ utm_source: 'instagram', utm_medium: 'post' }), 'P');
 
 console.log('\nкод целиком:');
-is('с кампанией',  leadCode('fitting', { utm_medium: 'paid', utm_campaign: 'vitrina' }), '[К-ПР·vitrina]');
+is('с кампанией',  leadCode('fitting', { utm_medium: 'performance', utm_campaign: 'vitrina' }), '[К-ПР·vitrina]');
 is('без кампании', leadCode('price',   { utm_source: 'instagram', utm_medium: 'bio' }), '[П-ОБ]');
 is('подбор',       leadCode('help',    {}), '[С-ПД]');
 
 console.log('\nтексты сообщений:');
 is('стоимость',
   waMessage('price', { model: 'Sirius', shape: 'Овал', carat: 1, metalLabel: 'Белое золото', purity: '585' },
-            { utm_medium: 'paid', utm_campaign: 'obraz' }),
+            { utm_medium: 'performance', utm_campaign: 'obraz' }),
   'Здравствуйте! Понравилось кольцо Sirius Овал, 1 ct, Белое золото 585. Подскажите по наличию и деталям? [К-ОБ·obraz]');
 is('цветной камень',
   waMessage('price', { model: 'Neo', shape: 'Груша', carat: 1.5, gemLabel: 'Розовый', metalLabel: 'Белое золото', purity: '585' }, {}),

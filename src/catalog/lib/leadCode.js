@@ -39,7 +39,7 @@ export function sourceCode(utm = {}) {
     const inherited = LATIN_TO_SOURCE[String(utm.utm_source ?? '').toUpperCase()];
     return inherited ?? 'С';
   }
-  if (medium === 'paid')   return 'К';
+  if (medium === 'performance') return 'К';   // реклама
   if (source === 'guide')  return 'Г';
   if (source === 'instagram' && PROFILE_MEDIUMS.has(medium)) return 'П';
   if (!source && !medium)  return 'С';

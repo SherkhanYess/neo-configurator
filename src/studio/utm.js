@@ -13,27 +13,37 @@
 // ведут сюда.
 export const BASE = 'https://aena.neodiamond.kz';
 
+// Реклама: площадка — instagram, размещение — performance. Тип рекламы — utm_content: target (новые люди) или retarget (кто
+// уже был на сайте). Кампания подставляется перформанс-менеджером и приезжает
+// в код источника внутри сообщения WhatsApp, поэтому её имя — короткое
+// слово: obraz, vitrina, vybor.
+export const AD = { utm_source: 'instagram', utm_medium: 'performance' };
+export const AD_TYPES = [['target', 'Таргет'], ['retarget', 'Ретаргет']];
+
+/** Метки рекламной ссылки: площадка, размещение, кампания и тип рекламы. */
+export const adParams = (campaign, adType) => ({ ...AD, utm_campaign: campaign, utm_content: adType });
+
 export const UTM_PRESETS = [
-  // Реклама Meta. Кампания подставляется в ссылку объявления перформанс-
-  // менеджером и приезжает в код источника внутри сообщения WhatsApp, поэтому
-  // её имя должно быть коротким словом: obraz, vitrina, vybor.
   {
-    id: 'meta_obraz',
-    title: 'Реклама Meta — «Образ»',
+    id: 'ad_obraz',
+    title: 'Реклама Instagram — «Образ»',
     note: 'Основной трафик. Ведёт в ленту, можно добавить &style=halo.',
-    params: { utm_source: 'meta', utm_medium: 'paid', utm_campaign: 'obraz' },
+    ad: true,
+    params: { ...AD, utm_campaign: 'obraz' },
   },
   {
-    id: 'meta_vitrina',
-    title: 'Реклама Meta — «Витрина»',
+    id: 'ad_vitrina',
+    title: 'Реклама Instagram — «Витрина»',
     note: 'Тест. Ведёт сразу на страницу модели: /product/sirius/halo/oval.',
-    params: { utm_source: 'meta', utm_medium: 'paid', utm_campaign: 'vitrina' },
+    ad: true,
+    params: { ...AD, utm_campaign: 'vitrina' },
   },
   {
-    id: 'meta_vybor',
-    title: 'Реклама Meta — «Выбор»',
+    id: 'ad_vybor',
+    title: 'Реклама Instagram — «Выбор»',
     note: 'Кампания vybor.',
-    params: { utm_source: 'meta', utm_medium: 'paid', utm_campaign: 'vybor' },
+    ad: true,
+    params: { ...AD, utm_campaign: 'vybor' },
   },
   {
     id: 'guide',
@@ -73,9 +83,13 @@ export function buildUtmUrl(params, path = '') {
   return `${BASE}${path}${q.toString() ? `?${q}` : ''}`;
 }
 
+/** Метки готовой ссылки; у рекламной — ещё тип рекламы. */
+export const presetParams = (p, adType) => (p.ad ? { ...p.params, utm_content: adType } : p.params);
+
 // Подписи для разбивки «Источники» — по тому же ключу, что и сервер:
-// «источник / размещение». У трёх кампаний Meta ключ общий (meta / paid),
-// поэтому для него — общее название без имени кампании.
+// «источник / размещение». У рекламных кампаний ключ общий
+// (instagram / performance), поэтому для него — общее название без имени
+// кампании.
 export const UTM_LABELS = (() => {
   const out = {};
   for (const p of UTM_PRESETS) {
