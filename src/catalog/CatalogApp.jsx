@@ -56,12 +56,30 @@ function CatalogMain() {
   // модели, человек не ждёт загрузку сцены заново.
   const showViewer = location.pathname.startsWith('/product');
 
-  // 3D — только там, где оно есть: на странице модели скрипты подключаются,
-  // на ленте — тихо скачиваются в кэш, пока человек листает.
+  // Прогрев: сразу после загрузки ленты сцену 3D поднимаем заранее — за
+  // краем экрана, невидимо, на любой сети и любом телефоне (решение владельца,
+  // 10.11.2026: на сайте сидят 5–15 минут, скорость модели важнее). Лента
+  // ещё и подставляет шинку модели, на которой человек задержался
+  // (onPrepare). Все шаги открытия модели (двойная подстановка, поза камеры,
+  // пауза перед показом) — те же, они идут уже на странице модели.
+  const [warm, setWarm] = useState(false);
   useEffect(() => {
-    if (showViewer) loadIjewel().catch(() => {});
+    if (showViewer || warm) return;
+    let timer;
+    const start = () => { timer = setTimeout(() => setWarm(true), 300); };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+    return () => { clearTimeout(timer); window.removeEventListener('load', start); };
+  }, [showViewer, warm]);
+  const sceneWanted = showViewer || warm;
+
+  // 3D-скрипты: на странице модели и при прогреве — подключаем, иначе на ленте
+  // только тихо качаем в кэш. Не загрузились — сразу честно говорим об этом.
+  const [scriptsFailed, setScriptsFailed] = useState(false);
+  useEffect(() => {
+    if (sceneWanted) loadIjewel().then(() => setScriptsFailed(false), () => setScriptsFailed(true));
     else prefetchIjewel();
-  }, [showViewer]);
+  }, [sceneWanted]);
 
   const ijewel        = useIjewel(RING_FILE_ID);
   const viewerRef     = useRef(null);
@@ -92,7 +110,7 @@ function CatalogMain() {
   // (и начнём заново при следующем заходе); скрипт так и не пришёл — через
   // минуту тоже перестаём, надпись «Не удалось загрузить 3D» уже стоит.
   useEffect(() => {
-    if (!showViewer || !viewerRef.current || viewerInitRef.current) return;
+    if (!sceneWanted || !viewerRef.current || viewerInitRef.current) return;
     let timer, tries = 0;
     const tryInit = () => {
       if (window.ijewelViewer) {
@@ -104,13 +122,28 @@ function CatalogMain() {
     };
     tryInit();
     return () => clearTimeout(timer);
-  }, [showViewer]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sceneWanted]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Рисует сцена только на странице модели. Прогретую — даём дорисовать
+  // первый кадр (шейдеры компилируются один раз, это тоже часть прогрева),
+  // потом усыпляем.
+  useEffect(() => {
+    if (!ijewel.isReady) return;
+    if (showViewer) { ijewel.setRendering(true); return; }
+    const t = setTimeout(() => ijewel.setRendering(false), 2500);
+    return () => clearTimeout(t);
+  }, [ijewel.isReady, showViewer]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <div
-        className={`cfg-viewer-panel${showViewer ? ' mp-viewer' : ''}`}
-        style={{ display: showViewer ? undefined : 'none', position: 'relative', flexShrink: 0 }}
+        className={`cfg-viewer-panel${sceneWanted ? ' mp-viewer' : ''}`}
+        // На ленте сцена (прогретая) живёт за краем экрана — того же размера,
+        // что на странице модели, чтобы камера встала так же. Нет сцены — нет и блока.
+        style={showViewer ? { position: 'relative', flexShrink: 0 }
+          : warm ? { position: 'fixed', left: '-200vw', top: 0, width: 'min(536px, calc(100vw - 24px))', margin: 0, visibility: 'hidden', pointerEvents: 'none' }
+            : { display: 'none' }}
+        aria-hidden={showViewer ? undefined : true}
       >
         <div
           ref={viewerRef}
@@ -122,7 +155,7 @@ function CatalogMain() {
           <div className="cfg-viewer-loader">
             <div className="cfg-viewer-loader-inner">
               <p className="cfg-viewer-loader-text">
-                {viewerStalled && !ijewel.isConfigured
+                {(scriptsFailed || viewerStalled) && !ijewel.isConfigured
                   ? 'Не удалось загрузить 3D-просмотр. Характеристики и цена — ниже.'
                   : 'Загрузка украшения...'}
               </p>
@@ -142,7 +175,7 @@ function CatalogMain() {
       </div>
 
       <Routes>
-        <Route path="/"                                   element={<FeedScreen />} />
+        <Route path="/"                                   element={<FeedScreen onPrepare={ijewel.prepare} />} />
         {/* Выбор формы на входе и список из девяноста карточек заменены лентой.
             Адреса остаются рабочими: они разосланы в рекламе и в сторис. */}
         <Route path="/filter"                            element={<Navigate to="/" replace />} />

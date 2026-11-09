@@ -101,7 +101,7 @@ function HelpBlock({ onWa }) {
   );
 }
 
-export default function FeedScreen() {
+export default function FeedScreen({ onPrepare }) {
   const wa = useWhatsApp();
   const prices = usePrices();
 
@@ -141,8 +141,11 @@ export default function FeedScreen() {
         const order = Number(e.target.dataset.order);
         const item = models.find(m => m.order === order);
         if (!item) continue;
-        if (e.isIntersecting && !seen.current.has(order)) {
+        if (e.isIntersecting) {
           timers.set(order, setTimeout(() => {
+            // Задержался на карточке — готовим её модель в 3D заранее.
+            onPrepare?.(item.shank);
+            if (seen.current.has(order)) return;
             seen.current.add(order);
             track(EVENTS.FEED_CARD_VIEW, { model: item.shank, cast: item.cast, name: item.model, position: order + 1 });
           }, 1000));
@@ -155,7 +158,7 @@ export default function FeedScreen() {
 
     for (const el of cardRefs.current.values()) if (el?.isConnected) io.observe(el);
     return () => { io.disconnect(); timers.forEach(clearTimeout); };
-  }, [models, ready]);
+  }, [models, ready, onPrepare]);
 
   const modelHref = (item) => productPath(item.shank, item.cast, shape);
 
@@ -178,6 +181,8 @@ export default function FeedScreen() {
                 <FeedCard
                   as={Link}
                   to={modelHref(item)}
+                  // Коснулся — тоже готовим: от касания до перехода есть доля секунды.
+                  onPointerDown={() => onPrepare?.(item.shank)}
                   item={item}
                   // Пока цены не пришли, цены нет вовсе — а не цена по умолчанию на миг.
                   price={pricesKnown() ? fromPrice(prices, item.shank, item.cast) : null}

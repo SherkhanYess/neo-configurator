@@ -106,6 +106,10 @@ export function useIjewel(fileId = RING_FILE_ID) {
 
   const isReadyRef = useRef(false);
   const pollRef    = useRef(null);
+  // Шинка: движок уже знает, какая стоит (первая «двойная подстановка»
+  // сделана), и заранее подставленная на ленте — см. prepare.
+  const shankKnownRef = useRef(false);
+  const prepRef       = useRef({ running: null, wanted: null });
   const pendingRef = useRef([]);
   const lastRef    = useRef({});
   isReadyRef.current = isReady;
@@ -122,6 +126,7 @@ export function useIjewel(fileId = RING_FILE_ID) {
     viewerRef.current = null;
     pendingRef.current = [];
     lastRef.current   = {};
+    shankKnownRef.current = false;
     setIsReady(false);
     setIsConfigured(false);
   }, [fileId]);
@@ -317,7 +322,54 @@ export function useIjewel(fileId = RING_FILE_ID) {
   // so RC has nothing registered as "current" — applyVariation adds the new variation ON TOP
   // instead of replacing. Fix: apply the default variation first to register it, then apply
   // the desired one so RC correctly hides the default and shows only the target.
-  const applyInitial = useCallback(async ({ shapeTag, castTag, shankName }) => {
+  //
+  // Головка подставляется за ~10 мс — для неё всё как было: каждый раз сначала
+  // по умолчанию, потом нужная. Шинка — дорогая (Neo ~3 с), поэтому для неё
+  // «двойная подстановка» делается один раз (движок запомнил текущую), а нужная
+  // ставится, только если стоит другая (ensureShank).
+  const shankName = (x) => (x.title ?? x.name ?? '').replace('.glb', '');
+
+  const ensureShank = async (name) => {
+    const shanks = getComponent('shank');
+    if (!shanks || !name) return;
+    if (!shankKnownRef.current) {
+      const defaultShank = shanks.variations?.find(x => shankName(x).toLowerCase() === 'sirius') ?? shanks.variations?.[0];
+      if (defaultShank) {
+        await applyVariation(shanks, defaultShank);
+        lastRef.current.shank = shankName(defaultShank);
+      }
+      shankKnownRef.current = true;
+    }
+    if (lastRef.current.shank === name) return;
+    const v = shanks.variations?.find(x => shankName(x) === name);
+    if (v) {
+      await applyVariation(shanks, v);
+      lastRef.current.shank = name;
+    }
+  };
+
+  // Заранее, пока человек в ленте: подставить шинку модели, на которой он
+  // задержался или которой коснулся, — к нажатию она уже стоит. Берётся
+  // последняя просьба: пролистал дальше — готовится уже следующая.
+  const prepare = useCallback((name) => {
+    if (!isReadyRef.current || !name) return;
+    prepRef.current.wanted = name;
+    if (prepRef.current.running) return;
+    prepRef.current.running = (async () => {
+      while (prepRef.current.wanted) {
+        const next = prepRef.current.wanted;
+        prepRef.current.wanted = null;
+        try { await ensureShank(next); } catch (e) { console.warn('[iJewel prepare]', e); }
+      }
+      prepRef.current.running = null;
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const applyInitial = useCallback(async ({ shapeTag, castTag, shankName: targetShank }) => {
+    // Начатую на ленте подготовку дожидаемся (две подстановки разом движок
+    // путает), очередную — отменяем.
+    prepRef.current.wanted = null;
+    if (prepRef.current.running) await prepRef.current.running;
     try {
       const heads = getComponent('head');
       if (heads && shapeTag) {
@@ -325,7 +377,13 @@ export function useIjewel(fileId = RING_FILE_ID) {
         const defaultHead = heads.variations?.find(
           x => matchTag(x, 'shape: round') && matchTag(x, 'cast: classic')
         ) ?? heads.variations?.[0];
-        if (defaultHead) await applyVariation(heads, defaultHead);
+        if (defaultHead) {
+          await applyVariation(heads, defaultHead);
+          // Сцена теперь с головкой по умолчанию — так и запоминаем. Раньше
+          // память оставалась от прошлой модели, и выбор той же огранки на
+          // новой модели не срабатывал.
+          lastRef.current.head = 'shape: round|cast: classic';
+        }
 
         const v = heads.variations?.find(x => matchTag(x, shapeTag) && matchTag(x, castTag));
         if (v && v !== defaultHead) {
@@ -334,27 +392,12 @@ export function useIjewel(fileId = RING_FILE_ID) {
         }
       }
 
-      const shanks = getComponent('shank');
-      if (shanks && shankName) {
-        // Register the default shank (Sirius) so RC knows what to replace
-        const defaultShank = shanks.variations?.find(
-          x => (x.title ?? x.name ?? '').replace('.glb', '').toLowerCase() === 'sirius'
-        ) ?? shanks.variations?.[0];
-        if (defaultShank) await applyVariation(shanks, defaultShank);
-
-        const v = shanks.variations?.find(
-          x => (x.title ?? x.name ?? '').replace('.glb', '') === shankName
-        );
-        if (v && v !== defaultShank) {
-          lastRef.current.shank = shankName;
-          await applyVariation(shanks, v);
-        }
-      }
+      await ensureShank(targetShank);
     } finally {
       await new Promise(r => setTimeout(r, 350));
       setIsConfigured(true);
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // For user-triggered shape changes (shape picker).
   const applyHead = useCallback((shapeTag, castTag) => {
@@ -495,8 +538,19 @@ export function useIjewel(fileId = RING_FILE_ID) {
 
   const resetConfigured = useCallback(() => setIsConfigured(false), []);
 
+  // Сцена рисует, только пока её видно: на ленте (прогретая заранее или после
+  // возврата со страницы модели) она спит и не тратит процессор и батарею.
+  const setRendering = useCallback((on) => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    try {
+      viewer.renderEnabled = on;
+      if (on) viewer.setDirty?.();
+    } catch (e) { console.warn('[iJewel render]', e); }
+  }, []);
+
   return {
-    init, isReady, isConfigured, resetConfigured, fitScene, startInteractionHint,
+    init, isReady, isConfigured, resetConfigured, fitScene, startInteractionHint, setRendering, prepare,
     shankVariations, gem1Options, gem2Options, shankMetalOptions, castMetalOptions,
     debugInfo,
     applyInitial, applyHead, applyCarat, applyShankMetal, applyCastMetal, applyGem,
