@@ -41,12 +41,15 @@ export const DEFAULT_TITLE = 'То, что между вами, — в одно�
 
 // Обложка бренда — первое, что видит человек: знак aena, обещание бренда и
 // чёрно-белое фото рук двоих (брендбук aena: «герой — двое, а не кольцо»).
-// Фото загружают в админке; сайт сам делает его чёрно-белым. Без фото
-// обложка остаётся тёмной «глубиной» со знаком.
+// Фото загружают в админке; сайт сам делает его чёрно-белым. Пока своего
+// нет — кольцо с овалом в пальцах (выбор владельца, 09.11.2026; фото из
+// Pinterest — до своей съёмки).
 export const DEFAULT_HERO = {
   title: 'То, что между вами, должно остаться',
   sub: 'Помолвочные кольца с бриллиантами. Шоурумы в Алматы и Астане',
   cta: 'Смотреть кольца',
+  photo: '/assets/aena/hero-oval.webp',
+  focus: { x: 50, y: 40 },
 };
 
 /** Обложка: что сохранено в админке, а пустое — по умолчанию. */
@@ -56,8 +59,8 @@ export function feedHero(content) {
     title: h.title || DEFAULT_HERO.title,
     sub: h.sub || DEFAULT_HERO.sub,
     cta: h.cta || DEFAULT_HERO.cta,
-    photo: h.photo || null,
-    position: position(h.focus),
+    photo: h.photo || DEFAULT_HERO.photo,
+    position: position(h.photo ? h.focus : DEFAULT_HERO.focus),
   };
 }
 

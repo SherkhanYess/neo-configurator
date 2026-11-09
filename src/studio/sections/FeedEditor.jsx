@@ -275,7 +275,7 @@ function IntroEditor({ intro, hero, count, update, updateHero }) {
             <input className="st-input" value={hero.cta} placeholder={DEFAULT_HERO.cta} maxLength={40}
                    onChange={e => updateHero({ cta: e.target.value })} />
           </Field>
-          <FieldInput f={{ kind: 'image', label: 'Фото пары', hint: 'Руки двоих, кольцо — на втором плане. Вертикальное или квадратное.' }}
+          <FieldInput f={{ kind: 'image', label: 'Фото пары', hint: 'Пусто — стоит кольцо с овалом в пальцах. Своё: руки двоих, вертикальное или квадратное.' }}
                       value={hero.photo ?? ''} onChange={v => updateHero({ photo: v || null })} />
           {hero.photo && (
             <Field label={`Кадр по высоте — ${focusY}%`} hint="Двигайте, пока в кадре не окажутся руки">
