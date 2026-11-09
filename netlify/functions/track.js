@@ -38,6 +38,12 @@ const ALLOWED_EVENTS = new Set([
   'feed_help_click',
   'hint_open',
   'hint_submit',
+
+  // Гиды.
+  'guide_open',
+  'guide_view',
+  'guide_read',
+  'guide_cta',
 ]);
 
 // Keeps a malformed or hostile payload from bloating storage.

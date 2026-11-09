@@ -6,6 +6,7 @@ import { SERIES, BarList, FunnelChart, TrendChart, TrendTable } from '../charts.
 import { UTM_LABELS } from '../utm.js';
 import { FAQ_GROUPS } from '../../catalog/components/Faq.jsx';
 import { fetchProducts, ringName } from '../../catalog/data/products.js';
+import { GUIDES } from '../../catalog/data/guides.js';
 
 // Раздел «Аналитика»: новая воронка витрины.
 //
@@ -24,11 +25,11 @@ const STEP_LABELS = {
 };
 
 const WA_LABELS = {
-  price:   '«Понравилось кольцо?»',
+  price:   '«Понравилось кольцо?», подвал, гиды',
   hint:    'Пришёл по ссылке-намёку',
   custom:  'Кольцо по своему дизайну',
   fitting: 'Живой показ',
-  help:    'Подбор: «Не знаете, какое…» и «Остались вопросы?»',
+  help:    'Подбор: «Не знаете, какое…», «Остались вопросы?», гиды',
   other:   'Прочее',
 };
 
@@ -131,6 +132,46 @@ function ModelTable({ perModel, products }) {
               <td className="num">{fmt(r.wa)}</td>
               <td className="num">{fmt(r.hint)}</td>
               <td className="num"><b>{pct(r.contacts, r.open)}</b></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Гиды: открыли карточку в ленте → читали → дочитали до финала → ушли в
+// каталог или написали. «Читали» — все, кто открыл страницу, в том числе
+// из рекламы, поэтому может быть больше «открыли в ленте».
+function GuideTable({ perGuide }) {
+  const rows = GUIDES.map(g => ({ key: g.slug, name: g.title, ...{ open: 0, view: 0, read: 0, cta: 0, wa: 0 }, ...(perGuide?.[g.slug] ?? {}) }));
+  if (!rows.some(r => r.view || r.open)) return <p className="st-muted">Гиды ещё не открывали за этот период.</p>;
+  const maxView = Math.max(...rows.map(r => r.view), 1);
+  return (
+    <div className="st-table-wrap">
+      <table className="st-table">
+        <thead>
+          <tr>
+            <th>Гид</th>
+            <th className="num" title="Нажали на карточку гида в ленте или в «Читайте также»">Открыли в ленте</th>
+            <th className="num" title="Зашли на страницу гида — из ленты, рекламы или по ссылке">Читали</th>
+            <th className="num" title="Долистали до финального блока">Дочитали</th>
+            <th className="num">В каталог</th>
+            <th className="num">WhatsApp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.key}>
+              <td>
+                <span className="st-table__name">{r.name}</span>
+                <span className="st-table__bar" style={{ width: `${(r.view / maxView) * 100}%` }} />
+              </td>
+              <td className="num">{fmt(r.open)}</td>
+              <td className="num">{fmt(r.view)}</td>
+              <td className="num">{fmt(r.read)}<small>{r.view ? ` · ${pct(r.read, r.view)}` : ''}</small></td>
+              <td className="num">{fmt(r.cta)}</td>
+              <td className="num"><b>{fmt(r.wa)}</b></td>
             </tr>
           ))}
         </tbody>
@@ -252,6 +293,10 @@ export default function AnalyticsView() {
 
           <Card title="Модели: от ленты до обращения">
             <ModelTable perModel={view.perModel} products={products} />
+          </Card>
+
+          <Card title="Гиды: читают ли до конца">
+            <GuideTable perGuide={view.perGuide} />
           </Card>
 
           <div className="st-grid st-grid--3">

@@ -14,12 +14,13 @@
 // what the admin last set, falling back to the defaults compiled into the app.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { generateOgCards } from './og-cards.mjs';
+import { generateOgCards, generateGuideCards } from './og-cards.mjs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 // Адреса, телефоны и условия берутся из того же файла, что и видимый футер, —
 // чтобы текст на странице и разметка для машин не разошлись.
 import { ORG, SHOWROOMS, HOURS_NOTE, INSTAGRAM_HANDLE, showroomLine, organizationJsonLd } from '../src/catalog/data/org.js';
+import { GUIDES, guidePath, minutesLabel } from '../src/catalog/data/guides.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
@@ -430,6 +431,13 @@ async function main() {
   }
   const ogImage = (key) => (ogDone.has(key) ? `${SITE}/assets/og/${key}.jpg` : undefined);
 
+  let guideOg = new Set();
+  try {
+    guideOg = await generateGuideCards({ dist: DIST, guides: GUIDES, minutesLabel });
+  } catch (e) {
+    console.warn('og-карточки гидов пропущены:', e.message);
+  }
+
   const pages = [];
 
   // Каждое сочетание модели и огранки — своя страница с ценой.
@@ -516,6 +524,33 @@ async function main() {
       <p><a href="/catalog/list">Смотреть каталог с ценами</a></p>`,
   });
 
+  // Гиды — статьи для рекламы и поиска. Человеку текст рисует React, поисковику
+  // и превью ссылки — заголовок, вступление и оглавление в разметке.
+  for (const g of GUIDES) {
+    pages.push({
+      path: guidePath(g.slug),
+      title: `${g.title} — Neo Diamond`,
+      description: g.description,
+      image: guideOg.has(g.slug) ? `${SITE}/assets/og/guide-${g.slug}.jpg` : ogImage('default'),
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: g.title,
+        description: g.description,
+        inLanguage: 'ru',
+        url: `${SITE}${guidePath(g.slug)}`,
+        publisher: { '@type': 'Organization', name: ORG.name },
+      },
+      bodyHtml: `
+      <article>
+        <h1>${esc(g.title)}</h1>
+        <p>${esc(g.lead)}</p>
+        <ul>${g.outline.map(h => `<li>${esc(h)}</li>`).join('')}</ul>
+        <p><a href="/catalog">Смотреть помолвочные кольца с ценами</a></p>
+      </article>`,
+    });
+  }
+
   // Контакты идут на каждую страницу — и текстом, и разметкой. На карточке
   // товара к описанию организации добавляется описание самого товара: ассистент,
   // попавший сразу на карточку, должен узнать и цену, и куда за ней приходить.
@@ -553,7 +588,7 @@ async function main() {
   const today = new Date().toISOString().slice(0, 10);
   // Карта сайта описывает весь домен, а не только каталог: главная страница
   // отдаётся с другого сайта Netlify, но для поисковика это один адрес.
-  const urls = ['/', '/catalog', ...pages.filter(p => p.path.startsWith('/catalog/product')).map(p => p.path)];
+  const urls = ['/', '/catalog', ...pages.filter(p => p.path.startsWith('/catalog/product') || p.path.startsWith('/catalog/guides')).map(p => p.path)];
   if (!SANDBOX) writeFileSync(join(DIST, 'sitemap.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     [...new Set(urls)].map(u =>

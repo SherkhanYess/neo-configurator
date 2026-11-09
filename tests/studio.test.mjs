@@ -78,5 +78,24 @@ const back = mergeDays([wed]);
 eq('в среду Анна — вернувшаяся', back.people.returning, 1);
 eq('номера не уходят в ответ', 'peopleIds' in week, false);
 
+console.log('гиды:');
+const ge = (sid, event, props) => ({ sessionId: sid, event, props, utm: {} });
+const gday = rollUp('2026-11-09', [
+  ge('a', 'guide_open', { guide: 'kak-ugadat-kolco', from: 'feed' }),
+  ge('a', 'guide_view', { guide: 'kak-ugadat-kolco' }),
+  ge('a', 'guide_view', { guide: 'kak-ugadat-kolco' }),               // вернулся к статье — та же сессия
+  ge('a', 'guide_read', { guide: 'kak-ugadat-kolco', seconds: 140 }),
+  ge('a', 'wa_click', { guide: 'kak-ugadat-kolco', type: 'help' }),
+  ge('b', 'guide_view', { guide: 'kak-ugadat-kolco' }),                // пришёл из рекламы, не дочитал
+  ge('c', 'guide_view', { guide: 'kolco-za-5-minut' }),
+  ge('c', 'guide_cta', { guide: 'kolco-za-5-minut', target: 'catalog' }),
+  ge('c', 'guide_cta', { guide: 'kolco-za-5-minut', target: 'checklist_done' }), // не переход в каталог
+  ge('d', 'wa_click', { type: 'price' }),                               // не из гида
+]);
+eq('гид 1: открыли 1, читали 2, дочитали 1, написали 1', gday.perGuide['kak-ugadat-kolco'], { open: 1, view: 2, read: 1, cta: 0, wa: 1 });
+eq('гид 2: в каталог 1, чек-лист не считается переходом', gday.perGuide['kolco-za-5-minut'].cta, 1);
+eq('WhatsApp без гида в гиды не попадает', Object.keys(gday.perGuide).length, 2);
+eq('дни по гидам складываются', mergeDays([gday, gday]).perGuide['kak-ugadat-kolco'].view, 4);
+
 console.log(`\nитого: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

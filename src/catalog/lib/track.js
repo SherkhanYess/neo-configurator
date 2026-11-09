@@ -42,6 +42,13 @@ export const EVENTS = {
   // Страница модели: «Намекнуть партнёру» — открыла форму и отправила.
   HINT_OPEN:   'hint_open',
   HINT_SUBMIT: 'hint_submit',
+
+  // Гиды: открыл карточку гида, зашёл на страницу, дочитал до финала,
+  // перешёл из гида в каталог. WhatsApp из гида — обычный wa_click с полем guide.
+  GUIDE_OPEN: 'guide_open',
+  GUIDE_VIEW: 'guide_view',
+  GUIDE_READ: 'guide_read',
+  GUIDE_CTA:  'guide_cta',
 };
 
 function randomId() {

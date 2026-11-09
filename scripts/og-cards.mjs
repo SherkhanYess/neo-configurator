@@ -122,3 +122,44 @@ export async function generateOgCards({ dist, combos, shapes, modelSlug, priceFo
   console.log(`  og-карточки: ${done.size} готово${failures ? `, ${failures} пропущено` : ''}`);
   return done;
 }
+
+// ─── Гиды ───────────────────────────────────────────────────────────────────
+// Превью ссылки на гид — тёмная карточка с заголовком статьи и кольцом справа:
+// по ней из ленты Instagram и из WhatsApp видно, что это статья, а не товар.
+const GUIDE_RING = { secret: 'halo-round', anatomy: 'sirius-oval', tomorrow: 'neo-oval' };
+
+async function buildGuideCard({ ringPath, title, minutes, out }) {
+  const base = sharp({ create: { width: W, height: H, channels: 4, background: INK } });
+  const ring = await sharp(ringPath).resize({ width: 440, height: 440, fit: 'cover' }).png().toBuffer();
+  const rounded = await sharp(ring)
+    .composite([{ input: Buffer.from('<svg width="440" height="440"><rect width="440" height="440" rx="36" ry="36"/></svg>'), blend: 'dest-in' }])
+    .png().toBuffer();
+  const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  // Короткий предлог не висит в конце строки: «о помолвочном», а не «о» / «помолвочном».
+  title = String(title).replace(/(^|\s)(о|в|с|к|и|а|за|на|не|без)\s/giu, '$1$2\u00A0');
+  const titlePng = await sharp({ text: { text: `<span foreground="#FFFFFF">${esc(title)}</span>`, font: 'Jost 50', fontfile: FONT, rgba: true, width: 560, spacing: 6 } }).png().toBuffer();
+  await base.composite([
+    { input: rounded, left: W - 440 - 80, top: Math.round((H - 440) / 2) },
+    { input: await textPng(`<span foreground="#DCC29B" letter_spacing="5000">ГИД ДЛЯ МУЖЧИН</span>`, 'Jost 22'), left: 80, top: 96 },
+    { input: titlePng, left: 80, top: 150 },
+    { input: await textPng(`<span foreground="#C2D1DE">${minutes} · Neo Diamond</span>`, 'Jost 24'), left: 80, top: H - 120 },
+  ]).jpeg({ quality: 88, mozjpeg: true }).toFile(out);
+}
+
+/** По карточке на гид в <dist>/assets/og/guide-<slug>.jpg. Возвращает готовые slug. */
+export async function generateGuideCards({ dist, guides, minutesLabel }) {
+  const outDir = join(dist, 'assets', 'og');
+  mkdirSync(outDir, { recursive: true });
+  const done = new Set();
+  for (const g of guides) {
+    const ringPath = join(dist, 'assets', 'rings', `${GUIDE_RING[g.cover] ?? 'neo-halo-round'}.webp`);
+    if (!existsSync(ringPath)) continue;
+    try {
+      await buildGuideCard({ ringPath, title: g.title, minutes: `${minutesLabel(g.minutes)} чтения`, out: join(outDir, `guide-${g.slug}.jpg`) });
+      done.add(g.slug);
+    } catch (e) {
+      console.warn(`  og-card guide ${g.slug}: ${e.message}`);
+    }
+  }
+  return done;
+}

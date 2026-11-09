@@ -22,6 +22,12 @@
 - Экран считается готовым после скриншота на 390 px, а не после успешной
   сборки.
 
+## Гиды
+
+`/catalog/guides/:slug` — статьи для мужчин, `src/catalog/guides/`. Новый гид:
+запись в `data/guides.js`, файл с текстом в `guides/` и строка в `BODIES`
+(`screens/GuideScreen.jsx`). Подробности — DESIGN.md, «Гиды».
+
 ## Админка
 
 `/catalog/admin` — `src/studio/`. Фото, тексты и порядок ленты, отзывы,

@@ -1,9 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { VALID_COMBOS, SHAPES } from './data/config.js';
 import FeedScreen         from './screens/FeedScreen.jsx';
 import DetailScreen       from './screens/DetailScreen.jsx';
 import SiteFooter         from './components/SiteFooter.jsx';
+
+// Гиды — отдельный кусок кода: ленте и странице модели он не нужен.
+const GuideScreen = lazy(() => import('./screens/GuideScreen.jsx'));
 import { useIjewel, RING_FILE_ID } from './hooks/useIjewel.js';
 import { track, EVENTS } from './lib/track.js';
 import { REVEAL_TIMEOUT_MS } from './lib/useContentReveal.js';
@@ -146,6 +149,8 @@ function CatalogMain() {
         {/* «Ваш выбор» слит со страницей модели. Разосланные ссылки ведут на ту
             же модель, форму и каратность. */}
         <Route path="/catalog/booking"                           element={<BookingRedirect />} />
+        <Route path="/catalog/guides/:slug"                       element={<Suspense fallback={<div style={{ minHeight: '100dvh' }} />}><GuideScreen /></Suspense>} />
+        <Route path="/catalog/guides"                             element={<Navigate to="/catalog" replace />} />
       </Routes>
 
       <SiteFooter />

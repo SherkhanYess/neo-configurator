@@ -18,4 +18,10 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // В текстах гидов перед тире стоит неразрывный пробел — чтобы тире не
+    // начинало строку. Это типографика, а не опечатка.
+    files: ['src/catalog/guides/**/*.jsx'],
+    rules: { 'no-irregular-whitespace': ['error', { skipStrings: true, skipJSXText: true, skipComments: true, skipTemplates: true }] },
+  },
 ])

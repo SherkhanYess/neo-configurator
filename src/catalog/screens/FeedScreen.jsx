@@ -11,6 +11,7 @@ import { currentCity, waNumber } from '../lib/city.js';
 import { FeedCard, FeedBreak, FeedCardSkeleton } from '../components/FeedCard.jsx';
 import { useWhatsApp } from '../components/model/whatsapp.jsx';
 import { WaButton } from '../components/model/Sections.jsx';
+import GuidesStrip from '../components/GuidesStrip.jsx';
 
 // Лента моделей — вход в каталог.
 //
@@ -146,6 +147,7 @@ export default function FeedScreen() {
             </div>
           );
         })}
+        {ready && <GuidesStrip />}
         {ready && <HelpBlock onWa={() => wa.open('help', {}, { place: 'feed_end' })} />}
       </div>
       {wa.sheet}

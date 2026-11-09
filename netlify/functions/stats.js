@@ -55,6 +55,10 @@ const ENGAGEMENT = [
   'booking_share_click',
   'booking_share_success',
   'booking_other_models_click',
+  'guide_open',
+  'guide_view',
+  'guide_read',
+  'guide_cta',
 ];
 
 const TRACKED = [...FUNNEL, ...ENGAGEMENT];
@@ -109,6 +113,7 @@ function core(records) {
   const faq           = new Map();    // какие вопросы раскрывают
   const waTypes       = new Map();    // с какой кнопки ушли в WhatsApp
   const perModel      = new Map();    // модель → кто открыл, написал, намекнул
+  const perGuide      = new Map();    // гид → кто открыл карточку, читал, дочитал, ушёл в каталог, написал
   const people        = Object.fromEntries(PEOPLE_STEPS.map(s => [s, new Set()]));
   const allPeople     = new Set();
   const knownPeople   = new Set();    // с номером браузера — для «новые / вернувшиеся»
@@ -162,6 +167,14 @@ function core(records) {
       if (!perModel.has(key)) perModel.set(key, { seen: new Set(), open: new Set(), wa: new Set(), hint: new Set() });
       perModel.get(key)[step].add(sid);
     }
+
+    // Гид: тот же человек, что открыл и дочитал, — одна сессия на каждом шаге.
+    const gstep = { guide_open: 'open', guide_view: 'view', guide_read: 'read', guide_cta: 'cta', wa_click: 'wa' }[event];
+    if (gstep && r.props?.guide && !(event === 'guide_cta' && r.props?.target === 'checklist_done')) {
+      const g = String(r.props.guide);
+      if (!perGuide.has(g)) perGuide.set(g, { open: new Set(), view: new Set(), read: new Set(), cta: new Set(), wa: new Set() });
+      perGuide.get(g)[gstep].add(sid);
+    }
   }
 
   const countMap  = (m) => Object.fromEntries([...m.entries()].sort((a, b) => b[1] - a[1]));
@@ -206,6 +219,9 @@ function core(records) {
     perModel: Object.fromEntries([...perModel.entries()].map(([k, v]) => [k, {
       seen: v.seen.size, open: v.open.size, wa: v.wa.size, hint: v.hint.size,
     }])),
+    perGuide: Object.fromEntries([...perGuide.entries()].map(([k, v]) => [k, {
+      open: v.open.size, view: v.view.size, read: v.read.size, cta: v.cta.size, wa: v.wa.size,
+    }])),
   };
 }
 
@@ -213,7 +229,7 @@ function core(records) {
 // can rescope the whole page — funnel included — without re-reading raw events.
 // Source cardinality is a handful, so this costs little and keeps the daily
 // rollups cacheable.
-export const ROLLUP_VERSION = 4;
+export const ROLLUP_VERSION = 5;
 
 export function rollUp(day, records) {
   const groups = new Map();
@@ -275,7 +291,7 @@ function mergeCores(days) {
     openEvents: 0,
     openSessions: 0,
     cities: {}, utm: {}, shapes: {}, models: {}, categories: {}, carats: {}, faq: {},
-    waTypes: {}, perModel: {},
+    waTypes: {}, perModel: {}, perGuide: {},
   };
   const addInto = (target, src) => {
     for (const [k, v] of Object.entries(src ?? {})) target[k] = (target[k] ?? 0) + v;
@@ -299,6 +315,10 @@ function mergeCores(days) {
     for (const [k, v] of Object.entries(d.perModel ?? {})) {
       const t = total.perModel[k] ??= { seen: 0, open: 0, wa: 0, hint: 0 };
       t.seen += v.seen ?? 0; t.open += v.open; t.wa += v.wa; t.hint += v.hint;
+    }
+    for (const [k, v] of Object.entries(d.perGuide ?? {})) {
+      const t = total.perGuide[k] ??= { open: 0, view: 0, read: 0, cta: 0, wa: 0 };
+      for (const f of Object.keys(t)) t[f] += v[f] ?? 0;
     }
   }
 
