@@ -1,0 +1,162 @@
+<title>Метки рекламы taena</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+  /* Короткая памятка: одна колонка ~65 знаков, шаги — по порядку настройки объявления. */
+  :root {
+    --deep: #061B1B;      /* глубина — заголовки, плашки строк */
+    --malachite: #122D2E;
+    --bronze: #896E4C;    /* знак и крупное */
+    --bronze-dk: #6B5538; /* мелкий акцент на светлом */
+    --pearl: #E9E1D3;
+    --ivory: #F4EFE7;     /* фон */
+    --bg: var(--ivory);
+    --fg: #1B2A28;
+    --muted: #52615B;
+    --line: #DDD3C3;
+    --panel: #FBF8F3;
+    --code-bg: var(--deep);
+    --code-fg: var(--pearl);
+    --accent: var(--bronze-dk);
+    --warn-bg: #F1E6D4;
+    --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
+    --font-body: 'Manrope', -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #061B1B; --fg: #E9E1D3; --muted: #A9B3AD; --line: #1F3D3E; --panel: #0C2526;
+      --code-bg: #122D2E; --code-fg: #F4EFE7; --accent: #C2A47C; --warn-bg: #1E2F25; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #061B1B; --fg: #E9E1D3; --muted: #A9B3AD; --line: #1F3D3E; --panel: #0C2526;
+    --code-bg: #122D2E; --code-fg: #F4EFE7; --accent: #C2A47C; --warn-bg: #1E2F25; color-scheme: dark;
+  }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 400 15.5px/1.65 var(--font-body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px 64px;
+  }
+  main { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 36px; }
+  header { display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); }
+  h1 { font: 300 clamp(34px, 7vw, 52px)/1.08 var(--font-display); margin: 0; text-wrap: balance; }
+  h2 { font: 400 28px/1.2 var(--font-display); margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  .lead { color: var(--muted); max-width: 60ch; }
+  section { display: flex; flex-direction: column; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+  .field b { font-weight: 600; }
+  .field small { color: var(--muted); font-size: 13px; }
+  .codebox { display: flex; gap: 10px; align-items: flex-start; padding: 12px 12px 12px 16px; border-radius: 14px; background: var(--code-bg); color: var(--code-fg); }
+  .codebox code { flex: 1; min-width: 0; font: 400 13px/1.6 var(--font-mono); overflow-wrap: anywhere; }
+  button.copy {
+    flex: none; font: 600 12.5px/1 var(--font-body); color: var(--deep); background: var(--pearl);
+    border: 0; border-radius: 999px; padding: 9px 14px; cursor: pointer;
+  }
+  button.copy:focus-visible { outline: 2px solid var(--bronze); outline-offset: 2px; }
+  ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .names { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .name { padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); font-size: 14px; }
+  .name.ok::before { content: "Да"; display: block; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .name.no { color: var(--muted); }
+  .name.no::before { content: "Нет"; display: block; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 4px; }
+  .note { padding: 14px 16px; border-radius: 14px; background: var(--warn-bg); font-size: 14px; }
+  .mono { font-family: var(--font-mono); font-size: 13px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 500; color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 18px; }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">taena · реклама в Instagram</span>
+    <h1>Метки рекламы taena</h1>
+    <p class="lead">Как настроить объявления, чтобы мы видели, какая кампания и какой креатив приводят людей на сайт и в WhatsApp. Настройка одна на все объявления, вручную ничего собирать не нужно.</p>
+  </header>
+
+  <section>
+    <h2>В каждом объявлении — два поля</h2>
+
+    <div class="field">
+      <b>1. Веб-сайт</b>
+      <p>Чистый адрес страницы, куда ведёт объявление, без меток. Брать в админке сайта: «Ссылки» → «Реклама в Ads Manager» → выбрать ленту, модель или гид → «Копировать».</p>
+      <div class="codebox"><code id="site-example">https://aena.neodiamond.kz</code><button class="copy" type="button" data-copy="site-example">Копировать</button></div>
+      <small>Лента — главная страница. Модели — /product/…, гиды — /guides/… Точный адрес даёт админка.</small>
+    </div>
+
+    <div class="field">
+      <b>2. Параметры URL</b>
+      <p>Одна и та же строка во всех объявлениях. Кампанию, креатив и номер объявления Meta подставит сама.</p>
+      <div class="codebox"><code id="params">utm_source=instagram&amp;utm_medium=performance&amp;utm_campaign={{campaign.name}}&amp;utm_content={{ad.name}}&amp;utm_term={{ad.id}}</code><button class="copy" type="button" data-copy="params">Копировать</button></div>
+      <small>В Ads Manager: объявление → «Отслеживание» → «Параметры URL». Строку не меняйте и не дописывайте.</small>
+    </div>
+  </section>
+
+  <section>
+    <h2>Как называть кампании</h2>
+    <p>По шаблону <span class="mono">РК Тема_Таргет</span> или <span class="mono">РК Тема_Ретаргет</span>. Тип рекламы мы берём из названия, поэтому шаблон строгий: один знак <span class="mono">_</span> и одно из двух слов в конце.</p>
+    <div class="names">
+      <div class="name ok">РК Образ_Таргет</div>
+      <div class="name ok">РК Образ_Ретаргет</div>
+      <div class="name no">Образ ретаргет 2</div>
+      <div class="name no">РК Образ - ретаргет</div>
+    </div>
+    <p class="note">Не переименовывайте кампанию после запуска. Meta подставляет текущее название, и в аналитике одна кампания распадётся на две. Нужна новая — создайте новую.</p>
+    <p>Креативы и группы объявлений называйте как удобно: мы различаем их по номеру объявления, а не по названию.</p>
+  </section>
+
+  <section>
+    <h2>Чего не делать</h2>
+    <ul>
+      <li>Не добавлять свои метки в поле «Веб-сайт»: метки только в «Параметрах URL».</li>
+      <li>Не ставить сокращатели и сторонние ссылки (bit.ly, Taplink): метки по дороге теряются.</li>
+      <li>Не менять <span class="mono">utm_source</span> и <span class="mono">utm_medium</span>: по ним сайт отличает рекламу от профиля.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Пиксель на сайте</h2>
+    <p>Пиксель Meta <span class="mono">1510327033925046</span> стоит на aena.neodiamond.kz. Для столбцов в Ads Manager и для оптимизации доступны события:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Событие</th><th>Когда срабатывает</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Contact</td><td>Человек нажал «Написать в WhatsApp» — главное целевое действие</td></tr>
+          <tr><td class="mono">Lead</td><td>Отправили намёк партнёру со страницы кольца</td></tr>
+          <tr><td class="mono">ViewContent</td><td>Открыл страницу модели</td></tr>
+          <tr><td class="mono">GuideRead</td><td>Дочитал гид до конца (своё событие, для рекламы гидов)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Как проверить</h2>
+    <ul>
+      <li>Откройте предпросмотр объявления и перейдите по ссылке. В адресе страницы должны быть <span class="mono">utm_campaign=РК…</span> и <span class="mono">utm_term=</span> с номером объявления.</li>
+      <li>Нажмите на сайте «Написать в WhatsApp». В готовом сообщении в конце будет код вида <span class="mono">[К-ОБ·РК Образ_Ретаргет]</span>: «К» значит, что человек пришёл с рекламы, дальше — кампания. Этот код менеджер переносит в amoCRM.</li>
+    </ul>
+  </section>
+
+  <footer>Вопросы по сайту и меткам — владельцу. Адреса страниц и строка параметров всегда актуальны в админке сайта, раздел «Ссылки».</footer>
+</main>
+
+<script>
+  document.querySelectorAll('button.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var el = document.getElementById(btn.dataset.copy);
+      var text = el.textContent;
+      var done = function () { var t = btn.textContent; btn.textContent = 'Скопировано'; setTimeout(function () { btn.textContent = t; }, 1600); };
+      var select = function () { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Выделено — нажмите ⌘C'; };
+      try { navigator.clipboard.writeText(text).then(done, select); } catch (e) { select(); }
+    });
+  });
+</script>
