@@ -14,16 +14,16 @@ import { useQuoteFont } from '../../lib/useQuoteFont.js';
 // «Страница модели — после правок».
 
 const CHEV = (
-  <svg width="12" height="8" viewBox="0 0 14 9" aria-hidden="true"><path d="M1 1l6 6 6-6" fill="none" stroke="#476888" strokeWidth="1.5"/></svg>
+  <svg width="12" height="8" viewBox="0 0 14 9" aria-hidden="true"><path d="M1 1l6 6 6-6" fill="none" stroke="#52615B" strokeWidth="1.5"/></svg>
 );
 const ARROW = (
   <svg width="18" height="10" viewBox="0 0 18 10" aria-hidden="true"><path d="M0 5h16M12 1l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.4"/></svg>
 );
 const STAR = (
-  <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="#C4A177" d="M12 2l3 6.9 7.5.7-5.7 5 1.7 7.4L12 18.3 5.5 22l1.7-7.4-5.7-5 7.5-.7z"/></svg>
+  <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="#896E4C" d="M12 2l3 6.9 7.5.7-5.7 5 1.7 7.4L12 18.3 5.5 22l1.7-7.4-5.7-5 7.5-.7z"/></svg>
 );
 const icon = (d) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B2040" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#061B1B" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
 );
 
 export function WaButton({ children, onClick }) {
@@ -59,12 +59,12 @@ export function Pair({ onHint, onCustom }) {
       <button type="button" className="mp-tile" onClick={onHint}>
         <span className="mp-tile__i">{icon(<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/>)}</span>
         <span className="mp-tile__t">Намекнуть партнёру<small>Напишем ему/ей про это кольцо</small></span>
-        <span style={{ color: '#0B2040' }}>{ARROW}</span>
+        <span style={{ color: '#061B1B' }}>{ARROW}</span>
       </button>
       <button type="button" className="mp-tile" onClick={onCustom}>
         <span className="mp-tile__i">{icon(<><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></>)}</span>
         <span className="mp-tile__t">Кольцо по вашему дизайну<small>Обсудим идею в WhatsApp</small></span>
-        <span style={{ color: '#0B2040' }}>{ARROW}</span>
+        <span style={{ color: '#061B1B' }}>{ARROW}</span>
       </button>
     </div>
   );
@@ -79,7 +79,7 @@ export function Fitting({ model, onWa }) {
       <div className="mp-addr">
         {SHOWROOMS.map(s => (
           <a key={s.city} href={s.twogis} target="_blank" rel="noopener noreferrer">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DCC29B" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }}><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E9E1D3" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }}><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <span><b>{s.city}</b><small>{s.streetAddress.replace(/^(проспект|улица)\s+/, '')} ({s.place})</small></span>
           </a>
         ))}
@@ -126,8 +126,8 @@ export function Proof() {
           {reviews.map((r, i) => (
             <div key={i} className="mp-review">
               <div style={{ display: 'flex', gap: 2 }}>{STAR}{STAR}{STAR}{STAR}{STAR}</div>
-              <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: '#1E3149' }}>{r.text}</p>
-              <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 600, color: '#476888' }}>{r.name} · 2ГИС</div>
+              <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: '#122D2E' }}>{r.text}</p>
+              <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 600, color: '#52615B' }}>{r.name} · 2ГИС</div>
             </div>
           ))}
         </div>

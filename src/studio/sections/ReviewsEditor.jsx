@@ -11,7 +11,7 @@ import { REVIEWS } from '../../catalog/data/reviews.js';
 // и одна найденная подделка стоит дороже всех настоящих.
 
 const URL_OK = (u) => /^https:\/\/([\w-]+\.)*2gis\.(kz|ru|com)\//.test(u ?? '');
-const STAR = <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="#C4A177" d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" /></svg>;
+const STAR = <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="#896E4C" d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" /></svg>;
 
 const blank = () => ({ id: Math.random().toString(36).slice(2, 10), name: '', text: '', url: '', date: '', hidden: false });
 
@@ -23,8 +23,8 @@ function ReviewRow({ r, index, count, update, move, remove }) {
       <div className="st-review__preview">
         <div className="mp-review">
           <div style={{ display: 'flex', gap: 2 }}>{STAR}{STAR}{STAR}{STAR}{STAR}</div>
-          <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: '#1E3149' }}>{r.text || 'Текст отзыва'}</p>
-          <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 600, color: '#476888' }}>{r.name || 'Имя'} · 2ГИС</div>
+          <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: '#122D2E' }}>{r.text || 'Текст отзыва'}</p>
+          <div style={{ marginTop: 8, fontSize: 12.5, fontWeight: 600, color: '#52615B' }}>{r.name || 'Имя'} · 2ГИС</div>
         </div>
       </div>
       <div className="st-review__form">

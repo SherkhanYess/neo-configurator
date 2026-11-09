@@ -16,10 +16,10 @@ export const SERIES = {
 };
 
 const T = {
-  primary:   '#0B2040',
-  secondary: '#1E3149',
-  muted:     '#5B81A1',
-  grid:      '#E9EDF3',
+  primary:   '#061B1B',
+  secondary: '#122D2E',
+  muted:     '#5F6E68',
+  grid:      '#E9E1D3',
   surface:   '#FFFFFF',
 };
 
@@ -34,7 +34,7 @@ function fmt(n) {
 export function StatTile({ label, value, hint, accent }) {
   return (
     <div style={{
-      background: T.surface, border: '1.5px solid #DBE2EB', borderRadius: 18,
+      background: T.surface, border: '1.5px solid #DDD3C3', borderRadius: 18,
       padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 6,
     }}>
       <div style={{
@@ -305,9 +305,9 @@ export function TrendTable({ daily, series }) {
 const th = {
   textAlign: 'left', fontSize: '0.66rem', letterSpacing: '0.12em',
   textTransform: 'uppercase', color: T.muted, fontWeight: 700,
-  padding: '0 12px 8px 0', borderBottom: '1.5px solid #DBE2EB', whiteSpace: 'nowrap',
+  padding: '0 12px 8px 0', borderBottom: '1.5px solid #DDD3C3', whiteSpace: 'nowrap',
 };
 const td = {
-  padding: '8px 12px 8px 0', borderBottom: '1px solid #F2F5F9',
+  padding: '8px 12px 8px 0', borderBottom: '1px solid #EEE8DE',
   color: T.secondary, whiteSpace: 'nowrap',
 };

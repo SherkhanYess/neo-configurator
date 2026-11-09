@@ -135,13 +135,13 @@ function OneFriend() {
   return (
     <Card className="gd-friends" >
       <div>
-        <svg viewBox="0 0 140 110" aria-hidden="true"><path d="M50 55H90" stroke="#DBE2EB" strokeWidth="1.5" /><circle cx="44" cy="55" r="12" fill="#0B2040" /><circle cx="96" cy="55" r="12" fill="#EFE4D2" /></svg>
+        <svg viewBox="0 0 140 110" aria-hidden="true"><path d="M50 55H90" stroke="#DDD3C3" strokeWidth="1.5" /><circle cx="44" cy="55" r="12" fill="#061B1B" /><circle cx="96" cy="55" r="12" fill="#E9E1D3" /></svg>
         <b>Одна подруга</b><small>секрет</small>
       </div>
       <div>
         <svg viewBox="0 0 140 110" aria-hidden="true">
-          {links.map(([a, b]) => <path key={`${a}-${b}`} d={`M${pts[a][0]} ${pts[a][1]}L${pts[b][0]} ${pts[b][1]}`} stroke="#DBE2EB" strokeWidth="1.2" />)}
-          {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={i < 2 ? 8 : 5} fill={i < 2 ? '#EFE4D2' : '#DBE2EB'} />)}
+          {links.map(([a, b]) => <path key={`${a}-${b}`} d={`M${pts[a][0]} ${pts[a][1]}L${pts[b][0]} ${pts[b][1]}`} stroke="#DDD3C3" strokeWidth="1.2" />)}
+          {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={i < 2 ? 8 : 5} fill={i < 2 ? '#E9E1D3' : '#DDD3C3'} />)}
         </svg>
         <b>Две подруги</b><small>к вечеру знают все</small>
       </div>

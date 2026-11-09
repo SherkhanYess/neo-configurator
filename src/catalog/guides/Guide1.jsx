@@ -163,11 +163,11 @@ function Size() {
       <Wide className="gd-gap">
         <Card className="gd-sizer">
           <svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true">
-            <circle cx="52" cy="52" r="44" fill="none" stroke="#E9EDF3" strokeWidth="12" />
-            <circle cx="52" cy="52" r="38" fill="none" stroke="#0B2040" strokeWidth="1" />
-            <path d="M14 52h76" stroke="#7C6035" strokeWidth="1.2" />
-            <path d="M19 48l-5 4 5 4M85 48l5 4-5 4" fill="none" stroke="#7C6035" strokeWidth="1.2" />
-            <text x="52" y="44" textAnchor="middle" fontSize="11" fill="#0B2040" fontFamily="Manrope, sans-serif">16,5 мм</text>
+            <circle cx="52" cy="52" r="44" fill="none" stroke="#E9E1D3" strokeWidth="12" />
+            <circle cx="52" cy="52" r="38" fill="none" stroke="#061B1B" strokeWidth="1" />
+            <path d="M14 52h76" stroke="#6B5538" strokeWidth="1.2" />
+            <path d="M19 48l-5 4 5 4M85 48l5 4-5 4" fill="none" stroke="#6B5538" strokeWidth="1.2" />
+            <text x="52" y="44" textAnchor="middle" fontSize="11" fill="#061B1B" fontFamily="Manrope, sans-serif">16,5 мм</text>
           </svg>
           <div><b className="gd-b">Размер — это диаметр</b><p>Внутренний диаметр её кольца в миллиметрах и есть размер: 16,5 мм — размер 16,5.</p></div>
         </Card>

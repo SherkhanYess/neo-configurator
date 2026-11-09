@@ -94,8 +94,8 @@ function Shapes() {
 
 const GLASSES = (
   <svg viewBox="0 0 70 22" aria-hidden="true">
-    <path d="M2 6h66" stroke="#0B2040" strokeWidth="2" />
-    <rect x="6" y="5" width="24" height="14" rx="6" fill="#0B2040" /><rect x="40" y="5" width="24" height="14" rx="6" fill="#0B2040" />
+    <path d="M2 6h66" stroke="#061B1B" strokeWidth="2" />
+    <rect x="6" y="5" width="24" height="14" rx="6" fill="#061B1B" /><rect x="40" y="5" width="24" height="14" rx="6" fill="#061B1B" />
   </svg>
 );
 

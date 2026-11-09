@@ -3,12 +3,16 @@ import { ORG, SHOWROOMS, INSTAGRAM_HANDLE } from '../data/org.js';
 import { waMessage } from '../lib/waMessage.js';
 import { leadCode } from '../lib/leadCode.js';
 import { track, EVENTS } from '../lib/track.js';
+import { useQuoteFont } from '../lib/useQuoteFont.js';
 
 function readUtm() {
   try { return JSON.parse(sessionStorage.getItem('nd_utm') ?? '{}') ?? {}; }
   catch { return {}; }
 }
 
+// Футер aena. Бренд дочерний: шоурумы, телефоны и отзывы — компании Neo
+// Diamond, поэтому её имя стоит рядом со знаком и в строке рейтинга.
+//
 // Футер решает две задачи сразу.
 //
 // Для человека — это конец страницы, где написано, куда приходить и как
@@ -23,13 +27,13 @@ function readUtm() {
 // рядом, на узком — друг под другом, без табличной сетки.
 
 const C = {
-  ink800:   '#0B2040',
-  ink600:   '#1E3149',
-  ink200:   '#C2D1DE',
-  paper050: '#FAFBFC',
-  paper300: '#DBE2EB',
-  champ700: '#7C6035',
-  champ400: '#C9A961',
+  ink800:   '#061B1B',
+  ink600:   '#122D2E',
+  ink200:   '#C9BFAE',
+  paper050: '#F4EFE7',
+  paper300: '#DDD3C3',
+  champ700: '#6B5538',
+  champ400: '#896E4C',
   wa:       '#25D366',
 };
 
@@ -162,7 +166,7 @@ function Reputation() {
     >
       <StarIcon />
       <span>
-        <span style={{ color: C.paper050, fontWeight: 600 }}>{rep.rating}</span> из 5 в 2ГИС —{' '}
+        <span style={{ color: C.paper050, fontWeight: 600 }}>{rep.rating}</span> из 5 — {ORG.name} в 2ГИС,{' '}
         {rep.ratings} оценок{rep.reviews ? `, ${rep.reviews} отзывов` : ''}
       </span>
     </a>
@@ -170,6 +174,7 @@ function Reputation() {
 }
 
 export default function SiteFooter() {
+  useQuoteFont();
   return (
     <footer
       style={{
@@ -183,14 +188,23 @@ export default function SiteFooter() {
     >
       <div style={{ maxWidth: 760, margin: '0 auto', display: 'grid', gap: 26 }}>
 
+        {/* Знак и слово aena жемчугом на глубине — как «знак отдельно» и
+            «слово отдельно» в брендбуке. aena — дочерний бренд Neo Diamond:
+            адреса, телефоны и отзывы в 2ГИС у них общие. */}
         <div>
-          <div style={{
-            fontFamily: 'var(--font-display, Unbounded, sans-serif)',
-            fontSize: '1.05rem', fontWeight: 600, color: C.paper050, letterSpacing: '0.01em',
-          }}>
-            {ORG.name}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <img src="/assets/aena/sign-pearl.png" alt="" width="41" height="32" style={{ display: 'block' }} />
+            <img src="/assets/aena/word-pearl.png" alt="aena" width="85" height="22" style={{ display: 'block' }} />
           </div>
-          <div style={{ color: C.ink200, marginTop: 4, fontSize: '0.84rem' }}>{ORG.tagline}</div>
+          <div style={{
+            marginTop: 14, fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontWeight: 300,
+            fontSize: '1.45rem', lineHeight: 1.2, color: C.paper050,
+          }}>
+            То, что между вами, должно остаться
+          </div>
+          <div style={{ color: C.ink200, marginTop: 8, fontSize: '0.84rem' }}>
+            Дочерний бренд компании {ORG.name}
+          </div>
           <div style={{ marginTop: 10 }}><Reputation /></div>
         </div>
 
@@ -219,6 +233,10 @@ export default function SiteFooter() {
             <span style={{ color: C.champ400 }}>{INSTAGRAM_HANDLE}</span>
           </a>
         )}
+
+        <div style={{ borderTop: `1px solid ${C.ink600}`, paddingTop: 16, fontSize: '0.78rem', color: C.ink200 }}>
+          © {new Date().getFullYear()} aena — дочерний бренд компании {ORG.name}
+        </div>
 
       </div>
     </footer>

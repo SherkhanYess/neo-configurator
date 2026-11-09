@@ -284,7 +284,7 @@ function PhonePreview({ draft, products, prices, onPick }) {
       <div className="st-phone__label">Так увидит покупатель</div>
       <div className="st-phone__screen">
         <div className="feed">
-          <header className="feed-head"><img src="/assets/logo-ink.png" alt="" className="feed-logo" /></header>
+          <header className="feed-head"><img src="/assets/aena/sign-bronze.png" alt="" className="feed-logo" /></header>
           <div className="feed-intro" onClick={() => onPick({ type: 'intro' })}>
             <h1 className="feed-title">{typo(draft.intro.title || DEFAULT_TITLE)}</h1>
             <p className="feed-sub">{typo(draft.intro.sub || defaultSub(models.length))}</p>

@@ -19,7 +19,7 @@ import { Engraving, Like, Pair, Fitting, Proof, Others, Questions, Final } from 
 const CARAT_OPTIONS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 5];
 
 const CHEV = (
-  <svg width="12" height="8" viewBox="0 0 14 9" aria-hidden="true"><path d="M1 1l6 6 6-6" fill="none" stroke="#476888" strokeWidth="1.5"/></svg>
+  <svg width="12" height="8" viewBox="0 0 14 9" aria-hidden="true"><path d="M1 1l6 6 6-6" fill="none" stroke="#52615B" strokeWidth="1.5"/></svg>
 );
 
 // The base price already covers a 1 ct stone, so 1 ct starts selected: the

@@ -55,7 +55,7 @@ function Login({ onDone }) {
   return (
     <div className="st-login">
       <form className="st-login__card" onSubmit={submit}>
-        <img src="/assets/logo-ink.png" alt="Neo Diamond" className="st-login__logo" />
+        <img src="/assets/aena/sign-bronze.png" alt="aena" className="st-login__logo" />
         <h1 className="st-h1">Админка витрины</h1>
         <p className="st-sub">Лента, фото, намёки, отзывы и цены — всё, что видит покупатель на сайте.</p>
         <input
@@ -93,7 +93,7 @@ function Shell({ onLogout }) {
     <div className="st-app">
       <aside className="st-rail">
         <div className="st-rail__brand">
-          <img src="/assets/logo-ink.png" alt="Neo Diamond" />
+          <img src="/assets/aena/sign-bronze.png" alt="aena" />
           <span>Витрина</span>
         </div>
         <nav className="st-rail__nav">

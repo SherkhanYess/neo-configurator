@@ -57,7 +57,7 @@ export function useWhatsApp() {
           {SHOWROOMS.map(s => (
             <button key={s.city} type="button" className="mp-city" onClick={() => choose(s.city)}>
               <span><b>{s.city}</b><small>{s.streetAddress} ({s.place})</small></span>
-              <svg width="8" height="14" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" fill="none" stroke="#476888" strokeWidth="1.5"/></svg>
+              <svg width="8" height="14" viewBox="0 0 8 14" aria-hidden="true"><path d="M1 1l6 6-6 6" fill="none" stroke="#52615B" strokeWidth="1.5"/></svg>
             </button>
           ))}
         </div>

@@ -11,11 +11,11 @@ import { track, EVENTS } from '../lib/track.js';
 // across both groups), so the analytics line up with the source document.
 
 const C = {
-  paper300: '#DBE2EB',
-  ink800:   '#0B2040',
-  ink600:   '#1E3149',
-  ink400:   '#5B81A1',
-  champ700: '#7C6035',
+  paper300: '#DDD3C3',
+  ink800:   '#061B1B',
+  ink600:   '#122D2E',
+  ink400:   '#5F6E68',
+  champ700: '#6B5538',
 };
 
 export const FAQ_GROUPS = [

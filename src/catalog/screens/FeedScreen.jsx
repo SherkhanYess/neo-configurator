@@ -112,7 +112,7 @@ export default function FeedScreen() {
   return (
     <div className="feed">
       <header className="feed-head">
-        <img src="/assets/logo-ink.png" alt="Neo Diamond" className="feed-logo" />
+        <img src="/assets/aena/sign-bronze.png" alt="aena" className="feed-logo" />
       </header>
 
       <div className="feed-intro">
