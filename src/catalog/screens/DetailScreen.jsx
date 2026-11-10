@@ -8,7 +8,7 @@ import { useProducts, enabledShapes, ringName, shapeLabel as adminShapeLabel } f
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
 import { track, EVENTS } from '../lib/track.js';
 import { waMessage } from '../lib/waMessage.js';
-import { leadCode, sourceLatin } from '../lib/leadCode.js';
+import { leadCode, sourceLatin, PAGES } from '../lib/leadCode.js';
 import { currentCity } from '../lib/city.js';
 import { useWhatsApp } from '../components/model/whatsapp.jsx';
 import { readUtm } from '../lib/track.js';
@@ -316,7 +316,7 @@ export default function DetailScreen({ ijewel }) {
   const [moreOpen, setMoreOpen]     = useState(false);
   const [colorsOpen, setColorsOpen] = useState(false);
   const [hintOpen, setHintOpen]     = useState(false);
-  const wa = useWhatsApp();
+  const wa = useWhatsApp(PAGES.model);
 
   // Пришёл по ссылке-намёку — над пультом плашка для него.
   const fromHint = new URLSearchParams(location.search).get('utm_medium') === 'hint';
@@ -463,7 +463,7 @@ export default function DetailScreen({ ijewel }) {
         <HintSheet
           ring={[productName, `${String(carat).replace('.', ',')} ct`, String(metalLabel ?? '').toLowerCase()].filter(Boolean).join(' · ')}
           link={hintLink}
-          code={leadCode('hint', { utm_medium: 'hint', utm_source: sourceLatin(utm) })}
+          code={leadCode('hint', { utm_medium: 'hint', utm_source: sourceLatin(utm) }, PAGES.model)}
           city={currentCity()}
           trackProps={props}
           onClose={() => setHintOpen(false)}

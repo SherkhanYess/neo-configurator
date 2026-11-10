@@ -9,6 +9,8 @@
 // «Источники» keys on source AND medium together, so instagram/bio and
 // instagram/stories stay separate rows instead of collapsing into «instagram».
 
+import { entryCode } from '../catalog/lib/leadCode.js';
+
 // Витрина taena живёт в корне своего домена, без /catalog. Ссылки для рекламы
 // ведут сюда.
 export const BASE = 'https://taena.neodiamond.kz';
@@ -60,6 +62,9 @@ export const UTM_PRESETS = [
     params: { utm_source: 'whatsapp', utm_medium: 'manager' },
   },
 ];
+
+// Какой вход даст ссылка в коде обращения ([T·ib-…]) — подсказка в «Ссылках».
+for (const p of UTM_PRESETS) p.code = entryCode(p.params);
 
 export function buildUtmUrl(params, path = '') {
   const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => String(v ?? '').trim()));

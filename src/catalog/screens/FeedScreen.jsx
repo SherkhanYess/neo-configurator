@@ -9,6 +9,7 @@ import { fromPrice } from '../data/priceCalc.js';
 import { productPath } from '../data/models.js';
 import { FeedCard, FeedBreak, FeedCardSkeleton } from '../components/FeedCard.jsx';
 import { useWhatsApp } from '../components/model/whatsapp.jsx';
+import { PAGES } from '../lib/leadCode.js';
 import { WaButton } from '../components/model/Sections.jsx';
 import GuidesStrip from '../components/GuidesStrip.jsx';
 import { useReputation } from '../lib/reputation.js';
@@ -102,7 +103,7 @@ function HelpBlock({ onWa }) {
 }
 
 export default function FeedScreen({ onPrepare }) {
-  const wa = useWhatsApp();
+  const wa = useWhatsApp(PAGES.feed);
   const prices = usePrices();
 
   const productCfg = useProducts();

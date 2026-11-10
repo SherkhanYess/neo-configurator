@@ -2,6 +2,7 @@ import { StrictMode, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import './catalog/base.css';
 import CatalogApp from './catalog/CatalogApp.jsx';
+import { captureUtm } from './catalog/lib/utmStore.js';
 
 // Вход витрины taena (taena.neodiamond.kz): лента в корне, модели, гиды и
 // админка /admin. Отдельный от конструктора (src/main.jsx), который живёт на
@@ -10,17 +11,10 @@ import CatalogApp from './catalog/CatalogApp.jsx';
 
 const StudioApp = lazy(() => import('./studio/StudioApp.jsx'));
 
-// Метки UTM запоминаем на визит, чтобы они не терялись при переходах.
-(function captureUtm() {
-  try {
-    const p = new URLSearchParams(window.location.search);
-    const utm = {};
-    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(k => {
-      if (p.get(k)) utm[k] = p.get(k);
-    });
-    if (Object.keys(utm).length) sessionStorage.setItem('nd_utm', JSON.stringify(utm));
-  } catch { /* приватный режим */ }
-})();
+// Метки UTM: на визит и на 30 дней (правила — lib/utmStore.js).
+try {
+  captureUtm({ search: window.location.search, session: window.sessionStorage, local: window.localStorage });
+} catch { /* хранилище недоступно — визит без меток */ }
 
 const path = window.location.pathname;
 const isStudio = path === '/admin' || path.startsWith('/admin/');

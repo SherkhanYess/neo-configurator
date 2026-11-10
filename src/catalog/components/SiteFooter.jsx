@@ -1,6 +1,6 @@
 import { ORG, SHOWROOMS, INSTAGRAM_HANDLE } from '../data/org.js';
 import { waMessage } from '../lib/waMessage.js';
-import { leadCode } from '../lib/leadCode.js';
+import { leadCode, PAGES } from '../lib/leadCode.js';
 import { track, EVENTS, readUtm } from '../lib/track.js';
 import { useReputation } from '../lib/reputation.js';
 
@@ -75,11 +75,11 @@ function InstagramIcon() {
 }
 
 function Showroom({ s }) {
-  // Код источника в тексте — как у всех кнопок сайта: менеджер переносит его
-  // в amoCRM. Тип — ОБ (общий вопрос), шоурум — тот, на который нажали.
+  // Код обращения в тексте — как у всех кнопок сайта. Тип — ОБ (общий
+  // вопрос), страница — «остальное», шоурум — тот, на который нажали.
   const utm = readUtm();
-  const waHref = `https://wa.me/${s.wa}?text=${encodeURIComponent(waMessage('price', { city: s.city }, utm))}`;
-  const onWa = () => track(EVENTS.WA_CLICK, { type: 'price', place: 'footer', city: s.city, code: leadCode('price', utm) });
+  const waHref = `https://wa.me/${s.wa}?text=${encodeURIComponent(waMessage('price', { city: s.city }, utm, PAGES.other))}`;
+  const onWa = () => track(EVENTS.WA_CLICK, { type: 'price', place: 'footer', city: s.city, code: leadCode('price', utm, PAGES.other) });
 
   return (
     <div style={{ display: 'grid', gap: 9, alignContent: 'start' }}>

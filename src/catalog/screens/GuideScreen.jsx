@@ -7,6 +7,7 @@ import GuideArticle from '../guides/GuideArticle.jsx';
 import { GuideCtx } from '../guides/guideCtx.js';
 import { GuideCard } from '../components/GuidesStrip.jsx';
 import { useWhatsApp, WA_ICON } from '../components/model/whatsapp.jsx';
+import { PAGES } from '../lib/leadCode.js';
 import { track, EVENTS } from '../lib/track.js';
 
 // Страница гида — посадочная для рекламы: человек пришёл читать, а не
@@ -33,7 +34,7 @@ export default function GuideScreen() {
 }
 
 function Guide({ guide, others }) {
-  const wa = useWhatsApp();
+  const wa = useWhatsApp(PAGES.guide);
   const { open: openWa } = wa;
   const ctx = useMemo(() => ({ slug: guide.slug, wa: { open: openWa } }), [guide.slug, openWa]);
 

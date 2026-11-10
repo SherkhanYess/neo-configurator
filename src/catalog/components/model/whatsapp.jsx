@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { CITIES, currentCity, hasChosenCity, rememberCity, waNumber } from '../../lib/city.js';
-import { leadCode } from '../../lib/leadCode.js';
+import { leadCode, PAGES } from '../../lib/leadCode.js';
 import { waMessage } from '../../lib/waMessage.js';
 import { track, EVENTS, readUtm } from '../../lib/track.js';
 import { SHOWROOMS } from '../../data/org.js';
@@ -19,18 +19,20 @@ export const WA_ICON = (
 );
 
 /**
+ * useWhatsApp(page) — page: страница в коде обращения (PAGES из leadCode.js:
+ * лента, модель, гид; по умолчанию «остальное»).
  * open(type, ctx, props) — показывает окно города (если ещё не выбран) и ведёт в чат.
  * sheet — элемент окна; его нужно отрисовать на странице.
  */
-export function useWhatsApp() {
+export function useWhatsApp(page = PAGES.other) {
   const [pending, setPending] = useState(null);
 
   const go = useCallback((city, { type, ctx, props }) => {
     const utm  = readUtm();
-    const text = waMessage(type, { ...ctx, city }, utm);
-    track(EVENTS.WA_CLICK, { ...props, type, city, code: leadCode(type, utm) });
+    const text = waMessage(type, { ...ctx, city }, utm, page);
+    track(EVENTS.WA_CLICK, { ...props, type, city, code: leadCode(type, utm, page) });
     window.location.href = `https://wa.me/${waNumber(city)}?text=${encodeURIComponent(text)}`;
-  }, []);
+  }, [page]);
 
   const open = useCallback((type, ctx = {}, props = {}) => {
     const req = { type, ctx, props };

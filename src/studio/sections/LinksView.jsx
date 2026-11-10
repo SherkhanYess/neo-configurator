@@ -9,9 +9,8 @@ import { api } from '../api.js';
 // Раздел «Ссылки»: готовые ссылки с метками для мест, откуда идут люди.
 //
 // Метки пишутся один раз и правильно: опечатка в utm_source молча заводит
-// второй источник, который в аналитике уже не сойдётся с первым. Кампания
-// попадает в код источника в сообщении WhatsApp, поэтому её имя — одно
-// короткое латинское слово.
+// второй источник, который в аналитике уже не сойдётся с первым. У каждой
+// готовой ссылки — подсказка, какой вход она даст в коде обращения WhatsApp.
 
 function useCopy() {
   const toast = useToast();
@@ -117,6 +116,7 @@ export default function LinksView() {
               <div className="st-linkrow__text">
                 <b>{p.title}</b>
                 <small>{p.note}</small>
+                <small>В коде обращения: <b>{p.code}</b> — <span className="st-mono">[T·{p.code}-…]</span></small>
                 <code>{url}</code>
               </div>
               <Button variant="secondary" onClick={() => copy(url)}><Svg name="copy" size={16} />Копировать</Button>

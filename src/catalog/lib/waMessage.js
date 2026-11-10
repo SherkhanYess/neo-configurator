@@ -3,8 +3,8 @@ import { leadCode } from './leadCode.js';
 // Тексты сообщений, с которыми человек приходит в WhatsApp.
 //
 // Короткий живой текст от первого лица: менеджер читает его как начало
-// разговора, а не как заявку из формы. В конце — код источника, который
-// менеджер переносит в amoCRM.
+// разговора, а не как заявку из формы. В конце — код обращения, который
+// инфоцентр читает из сделки amoCRM (lib/leadCode.js).
 //
 // Гравировку в текст не добавляем: она в подарок к каждой заявке, и менеджер
 // упоминает её сам — в сообщении от клиента это выглядело бы как требование.
@@ -42,9 +42,10 @@ function piece({ model, shape, carat, metalLabel, purity, gemLabel }) {
  * @param {'price'|'fitting'|'help'|'hint'|'custom'} type
  * @param {object} ctx  модель, форма, карат, металл, проба, город
  * @param {object} utm  метки входа, из которых берётся код
+ * @param {'f'|'m'|'g'|'o'} page  страница, с которой нажали
  */
-export function waMessage(type, ctx = {}, utm = {}) {
-  const code = leadCode(type, utm);
+export function waMessage(type, ctx = {}, utm = {}, page) {
+  const code = leadCode(type, utm, page);
 
   switch (type) {
     case 'price':
