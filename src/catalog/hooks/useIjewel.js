@@ -2,7 +2,10 @@ import { useRef, useCallback, useState, useMemo, useEffect } from 'react';
 export const RING_FILE_ID   = 'MBYHa_BtQluSyH-pAufiAg';
 const INSTANCE = 'neodiamondkz';
 
-const normalizeTag = (t) => (t ?? '').replace(/:\s*/, ': ').toLowerCase().trim();
+// Метки вариаций из 3D-сцены. Ашер в сцене iJewel подписан «shape: asher»
+// (с одной s), а на сайте — «asscher»: приводим оба к одному, чтобы огранка
+// находилась при любом написании (и не сломалась, если в сцене исправят).
+const normalizeTag = (t) => (t ?? '').replace(/:\s*/, ': ').toLowerCase().trim().replace('asscher', 'asher');
 
 const METAL_RU = {
   'white gold':  'Белое золото',
