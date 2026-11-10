@@ -65,7 +65,7 @@ function Trust() {
   const facts = [
     rep ? { v: <>{Number(rep.rating).toFixed(1).replace('.', ',')}{STAR_ICON}</>, c: `в 2ГИС, ${ratings(Number(rep.ratings))}`, href: rep.url } : null,
     { v: '5–10', c: 'дней на изготовление' },
-    { v: 'IGI', c: 'сертификат на каждый камень' },
+    { v: 'IGI/GIA', c: 'сертификат на каждый камень' },
     { v: GIFT_ICON, c: 'гравировка в подарок' },
   ].filter(Boolean);
   return (

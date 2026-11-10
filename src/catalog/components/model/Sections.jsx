@@ -76,7 +76,7 @@ export function Fitting({ model, onWa }) {
   return (
     <div className="mp-dark mp-fit" data-dark>
       <h2 className="mp-h2">Оцените вживую,<br />прежде чем решать</h2>
-      <p className="mp-p">Примерьте {model} и другие модели на своей руке, посмотрите камень под правильным светом и сверьте сертификат IGI под микроскопом.</p>
+      <p className="mp-p">Примерьте {model} и другие модели на своей руке, посмотрите камень под правильным светом и сверьте сертификат IGI/GIA под микроскопом.</p>
       <div className="mp-addr">
         {SHOWROOMS.map(s => (
           <a key={s.city} href={s.twogis} target="_blank" rel="noopener noreferrer">
