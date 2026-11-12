@@ -1,38 +1,14 @@
-import { useLayoutEffect, useRef } from 'react';
 import { formatPrice } from '../data/priceCalc.js';
 import WasPrice from './WasPrice.jsx';
 
 // Карточка ленты и пауза «на руке» — одна разметка для витрины и для
 // предпросмотра в админке: что видно в админке, то и увидит покупатель.
 
-/**
- * Имя и цена в одну строку через черту. Длинному имени (на узком
- * телефоне) цена уступает строку и встаёт под него; черта тогда прячется,
- * иначе она повисает в конце строки.
- */
+/** Имя, под ним цена — всегда две строки, у всех моделей одинаково. */
 function NameRow({ name, price, was }) {
-  const rowRef = useRef(null);
-
-  useLayoutEffect(() => {
-    const row = rowRef.current;
-    if (!row) return;
-    const [nameEl, divider, priceEl] = row.children;
-    const fit = () => {
-      if (!priceEl) return;
-      divider.hidden = false;
-      divider.hidden = priceEl.offsetTop >= nameEl.offsetTop + nameEl.offsetHeight;
-    };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(row);
-    document.fonts?.ready.then(fit);
-    return () => ro.disconnect();
-  }, [name, price, was]);
-
   return (
-    <div className="feed-card__row" ref={rowRef}>
+    <div className="feed-card__row">
       <h2 className="feed-card__name">{name}</h2>
-      {price ? <span className="feed-card__divider" aria-hidden="true" /> : null}
       {price ? <span className="feed-card__price">от {formatPrice(price)}<WasPrice price={was} /></span> : null}
     </div>
   );
@@ -82,6 +58,7 @@ export function FeedCardSkeleton() {
       <div className="feed-card__photo" />
       <div className="feed-card__body">
         <div className="feed-skel feed-skel--name" />
+        <div className="feed-skel feed-skel--price" />
         <div className="feed-skel feed-skel--text" />
         <div className="feed-skel feed-skel--text feed-skel--short" />
         <div className="feed-skel feed-skel--cta" />

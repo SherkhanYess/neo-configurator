@@ -217,13 +217,12 @@ img { display: block; max-width: 100%; }
   text-align: center;
 }
 
+/* Имя, под ним цена — всегда две строки (DESIGN.md, «Строка имени»). */
 .feed-card__row {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  column-gap: 14px;
-  row-gap: 8px;
+  row-gap: 10px;
 }
 .feed-card__name {
   margin: 0;
@@ -235,14 +234,7 @@ img { display: block; max-width: 100%; }
   color: var(--champagne-400, #E9E1D3);
   white-space: nowrap;
 }
-.feed-card__divider {
-  width: 1px;
-  height: 18px;
-  background: rgba(233, 225, 211, 0.45);
-}
-.feed-card__divider[hidden] { display: none; }
 .feed-card__price {
-  padding-top: 2px;
   font-family: var(--font-body);
   font-weight: 500;
   font-size: 16px;
@@ -302,7 +294,8 @@ img { display: block; max-width: 100%; }
 .feed-card--skeleton .feed-card__photo { background: linear-gradient(180deg, var(--paper-100, #EEE8DE), var(--paper-200, #E9E1D3)); }
 .feed-card--skeleton .feed-card__body { margin-top: 0; padding-top: 4px; }
 .feed-skel { border-radius: 50px; background: var(--paper-300, #DDD3C3); animation: feed-skel 1.4s ease-in-out infinite; }
-.feed-skel--name  { width: 58%; height: 26px; }
+.feed-skel--name  { width: 50%; height: 28px; }
+.feed-skel--price { width: 34%; height: 16px; margin-top: 10px; }
 .feed-skel--text  { width: 82%; height: 12px; margin-top: 14px; }
 .feed-skel--short { width: 60%; margin-top: 8px; }
 .feed-skel--cta   { width: 168px; height: 46px; margin-top: 20px; }
