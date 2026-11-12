@@ -1,11 +1,31 @@
 /**
+ * Скидка на модель, ₸: базовая цена минус цена со скидкой.
+ *
+ * Цена со скидкой задаётся в админке на базовую модель (шинку) —
+ * `saleByShank`. Скидка — разница, и она вычитается из любой конфигурации
+ * этой шинки: с ореолом, с другим каратом или пробой кольцо дешевле на ту же
+ * сумму. Нет цены со скидкой, она 0 или не ниже базовой — скидки нет.
+ */
+export function discountOf(prices, shank) {
+  const base = Number(prices?.baseByShank?.[shank]) || 0;
+  const sale = Number(prices?.saleByShank?.[shank]) || 0;
+  return sale > 0 && sale < base ? base - sale : 0;
+}
+
+/** Цена без скидки для зачёркивания — или null, если скидки нет. */
+export function wasPrice(price, prices, shank) {
+  const off = discountOf(prices, shank);
+  return price && off ? price + off : null;
+}
+
+/**
  * Цена «от» — модель с камнем 1 ct, 585 проба, белый: база шинки плюс
- * доплата за оправу (ореол, ободок). Её показывают лента, «Другие модели»,
- * админка и пререндер — одна формула на всех.
+ * доплата за оправу (ореол, ободок), минус скидка. Её показывают лента,
+ * «Другие модели», админка и пререндер — одна формула на всех.
  */
 export function fromPrice(prices, shank, cast) {
   if (!prices) return null;
-  return (prices.baseByShank?.[shank] ?? 0) + (cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0);
+  return (prices.baseByShank?.[shank] ?? 0) + (cast !== 'classic' ? (prices.casts?.[cast] ?? 0) : 0) - discountOf(prices, shank);
 }
 
 /**
@@ -60,6 +80,8 @@ export function calcPrice(choices, prices) {
       total += prices.scatterFancySurcharge;
     }
   }
+
+  total -= discountOf(prices, choices.shankLabel);
 
   return Math.round(total);
 }

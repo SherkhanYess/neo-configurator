@@ -7,7 +7,7 @@ import { PhotoButtons, PhotoStage, TonePicker, retone, useUpload } from './feed/
 import { FeedCard, FeedBreak } from '../../catalog/components/FeedCard.jsx';
 import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
 import { fetchPrices } from '../../catalog/data/prices.js';
-import { fromPrice } from '../../catalog/data/priceCalc.js';
+import { fromPrice, wasPrice } from '../../catalog/data/priceCalc.js';
 import { mergeProducts, pruneFeed, shankSlug } from '../../catalog/data/models.js';
 import { DEFAULT_HERO, DEFAULT_LIST_TITLE, feedHero, typo } from '../../catalog/data/feed.js';
 import { Hero } from '../../catalog/screens/FeedScreen.jsx';
@@ -100,7 +100,7 @@ function ModelList({ draft, setDraft, sel, setSel }) {
 
 // ─── Правка модели ───────────────────────────────────────────────────────────
 
-function ModelEditor({ m, index, count, update, move, price }) {
+function ModelEditor({ m, index, count, update, move, price, was }) {
   const { busy, upload, recrop } = useUpload((fields) => update(fields));
   const item = previewItem(m);
   const slug = shankSlug(m.shank);
@@ -116,7 +116,7 @@ function ModelEditor({ m, index, count, update, move, price }) {
           onFocus={(focus) => update({ focus })}
           onFocusEnd={async (focus) => { const toneAuto = await retone(m.photo, focus); if (toneAuto) update({ toneAuto }); }}
         >
-          <FeedCard item={item} price={price} />
+          <FeedCard item={item} price={price} was={was} />
         </PhotoStage>
       </div>
 
@@ -320,6 +320,7 @@ function PhonePreview({ draft, products, prices, onPick }) {
               return (
                 <div key={item.key} className="feed-slot">
                   <FeedCard item={item} price={fromPrice(prices, item.shank, item.cast)}
+                            was={wasPrice(fromPrice(prices, item.shank, item.cast), prices, item.shank)}
                             onClick={() => onPick({ type: 'model', key: item.key })} />
                   {pause && <div onClick={() => onPick({ type: 'break', id: pause.id })}><FeedBreak item={pause} /></div>}
                 </div>
@@ -406,6 +407,7 @@ export default function FeedEditor() {
         index={visible.indexOf(model) + 1}
         count={visible.length}
         price={fromPrice(prices, model.shank, model.cast)}
+        was={wasPrice(fromPrice(prices, model.shank, model.cast), prices, model.shank)}
         update={(p) => updateModel(model.key, p)}
         move={(dir) => setDraft(d => ({ ...d, models: moveItem(d.models, i, i + dir) }))}
       />

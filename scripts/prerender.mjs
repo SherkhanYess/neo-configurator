@@ -23,7 +23,7 @@ import { HOME_TITLE, ORG, SHOWROOMS, HOURS_NOTE, INSTAGRAM_HANDLE, showroomLine,
 import { guidePath, minutesLabel, outlineOf } from '../src/catalog/data/guides.js';
 import { guideList } from '../src/catalog/data/guidesDefault.js';
 import { mergeProducts, shankSlug as slug } from '../src/catalog/data/models.js';
-import { fromPrice as basePrice } from '../src/catalog/data/priceCalc.js';
+import { fromPrice as basePrice, wasPrice } from '../src/catalog/data/priceCalc.js';
 import { renderSlug } from '../src/catalog/data/config.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -312,6 +312,8 @@ function catalogFeed(prices, rep) {
       линия: slug(shank),
       оправа: cast,
       база: basePrice(prices, shank, cast),
+      // Скидка из админки: «база» — уже со скидкой, здесь — цена без неё.
+      ...(wasPrice(basePrice(prices, shank, cast), prices, shank) ? { база_без_скидки: wasPrice(basePrice(prices, shank, cast), prices, shank) } : {}),
       цены_по_каратам: Object.fromEntries(
         CARAT_OPTIONS.map(ct => [String(ct), configuredPrice(prices, shank, cast, ct)])
       ),

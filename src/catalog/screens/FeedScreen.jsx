@@ -5,7 +5,7 @@ import { useContent } from '../data/content.js';
 import { usePrices, pricesKnown } from '../data/prices.js';
 import { firstShape, useProducts } from '../data/products.js';
 import { track, EVENTS } from '../lib/track.js';
-import { fromPrice } from '../data/priceCalc.js';
+import { fromPrice, wasPrice } from '../data/priceCalc.js';
 import { productPath } from '../data/models.js';
 import { FeedCard, FeedBreak, FeedCardSkeleton } from '../components/FeedCard.jsx';
 import { useWhatsApp } from '../components/model/whatsapp.jsx';
@@ -176,6 +176,8 @@ export default function FeedScreen({ onPrepare }) {
         {!ready && [0, 1].map(i => <FeedCardSkeleton key={i} />)}
         {ready && models.map((item, i) => {
           const pause = breaks.find(b => b.after === i + 1);
+          // Пока цены не пришли, цены нет вовсе — а не цена по умолчанию на миг.
+          const price = pricesKnown() ? fromPrice(prices, item.shank, item.cast) : null;
           return (
             <div key={item.key} className="feed-slot">
               <div data-order={item.order} ref={(el) => { if (el) cardRefs.current.set(item.order, el); }}>
@@ -185,8 +187,8 @@ export default function FeedScreen({ onPrepare }) {
                   // Коснулся — тоже готовим: от касания до перехода есть доля секунды.
                   onPointerDown={() => onPrepare?.(item.shank)}
                   item={item}
-                  // Пока цены не пришли, цены нет вовсе — а не цена по умолчанию на миг.
-                  price={pricesKnown() ? fromPrice(prices, item.shank, item.cast) : null}
+                  price={price}
+                  was={wasPrice(price, prices, item.shank)}
                   priority={i === 0}
                 />
               </div>

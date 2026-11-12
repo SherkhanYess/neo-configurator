@@ -252,6 +252,16 @@ img { display: block; max-width: 100%; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Цена без скидки — рядом с новой, тише неё (components/WasPrice.jsx). */
+.price-was {
+  margin-left: 8px;
+  font-weight: 400;
+  font-size: 0.86em;
+  text-decoration-thickness: 1px;
+  color: rgba(233, 225, 211, 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Ровно две строки: все карточки одной высоты. */
 .feed-card__text {
   margin: 14px auto 0;
@@ -656,7 +666,10 @@ img { display: block; max-width: 100%; }
 .mp-title__p {
   flex-shrink: 0; font-family: var(--font-body); font-weight: 700; font-size: clamp(19px, 5.4vw, 22px);
   color: var(--champagne-700); white-space: nowrap; font-variant-numeric: tabular-nums;
+  display: flex; flex-direction: column; align-items: flex-end;
 }
+/* Под новой ценой, как подпись огранки под именем слева. */
+.mp-title__p .price-was { margin: 4px 0 0; font-weight: 500; font-size: 13.5px; color: #52615B; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .mp-glass { background: rgba(244,239,231,0.94); }
   .mp-glass.is-dark { background: rgba(6,27,27,0.94); }

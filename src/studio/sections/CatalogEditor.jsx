@@ -5,7 +5,7 @@ import { fetchProducts, saveProducts } from '../../catalog/data/products.js';
 import { fetchPrices, savePrices } from '../../catalog/data/prices.js';
 import { SHAPES, shapeImage } from '../../catalog/data/config.js';
 import { mergeProducts, modelShanks, prunePrices } from '../../catalog/data/models.js';
-import { formatPrice } from '../../catalog/data/priceCalc.js';
+import { calcPrice, formatPrice } from '../../catalog/data/priceCalc.js';
 import { addModelToSite, clearLeftovers, findLeftovers, planRemoval, removeModelEverywhere } from '../models.js';
 
 // Раздел «Модели и цены»: какие модели и огранки есть на сайте, как они
@@ -20,13 +20,16 @@ const CAST_NAMES = { classic: 'на лапках', halo: 'с ореолом', be
 
 const CAST_LABELS = { halo: 'Ореол (Halo)', bezel: 'Ободок (Bezel)' };
 
-/** Сумма с пробелами между тысячами; пока поле в фокусе — просто цифры. */
-function Money({ value, onChange }) {
+/**
+ * Сумма с пробелами между тысячами; пока поле в фокусе — просто цифры.
+ * placeholder — для необязательной суммы: пустое поле вместо «0».
+ */
+function Money({ value, onChange, placeholder, label }) {
   const [text, setText] = useState(null);
   return (
     <span className="st-money">
-      <input className="st-input st-input--money" inputMode="numeric"
-             value={text ?? (value ? value.toLocaleString('ru-RU') : '0')}
+      <input className="st-input st-input--money" inputMode="numeric" placeholder={placeholder} aria-label={label}
+             value={text ?? (value ? value.toLocaleString('ru-RU') : (placeholder ? '' : '0'))}
              onFocus={() => setText(String(value || ''))}
              onChange={e => { const d = e.target.value.replace(/\D/g, ''); setText(d); onChange(Number(d || 0)); }}
              onBlur={() => setText(null)} />
@@ -39,9 +42,41 @@ function PriceRow({ label, hint, value, onChange }) {
   return (
     <div className="st-pricerow">
       <span><b>{label}</b>{hint && <small>{hint}</small>}</span>
-      <Money value={value} onChange={onChange} />
+      <Money value={value} onChange={onChange} label={label} />
     </div>
   );
+}
+
+/**
+ * Базовая цена модели и цена со скидкой под ней. Пустая цена со скидкой —
+ * скидки нет. Подпись сразу считает, сколько это в тенге и процентах, и
+ * предупреждает, если цена со скидкой не ниже базовой (тогда сайт её не
+ * покажет).
+ */
+function ModelPriceRow({ label, hint, base, sale, onBase, onSale }) {
+  const off = sale > 0 && sale < base ? base - sale : 0;
+  const note = !sale ? 'пусто — без скидки'
+    : off ? `−${formatPrice(off)} · −${Math.round((off / base) * 100)}%`
+    : 'должна быть меньше базовой — сейчас скидки нет';
+  return (
+    <div className="st-pricerow st-pricerow--model">
+      <span><b>{label}</b>{hint && <small>{hint}</small>}</span>
+      <span className="st-pricerow__fields">
+        <Money value={base} onChange={onBase} label={`${label}: базовая цена`} />
+        <span className="st-pricerow__sale">
+          <small className={sale && !off ? 'st-pricerow__warn' : undefined}>Со скидкой: {note}</small>
+          <Money value={sale} onChange={onSale} placeholder="—" label={`${label}: цена со скидкой`} />
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/** Цена со скидкой: 0 стирает запись, чтобы в документе не копились нули. */
+function withSale(prices, shank, v) {
+  const sale = { ...(prices.saleByShank ?? {}) };
+  if (v) sale[shank] = v; else delete sale[shank];
+  return { ...prices, saleByShank: sale };
 }
 
 export default function CatalogEditor() {
@@ -119,7 +154,8 @@ export default function CatalogEditor() {
     finally { setBusyLeft(false); }
   }
 
-  const example = (prices.baseByShank?.Sirius ?? 0) + (prices.caratPrice ?? 0) * 1 + (prices.purity750surcharge ?? 0);
+  // Та же формула, что на сайте, — со скидкой, если она есть.
+  const example = calcPrice({ shankLabel: 'Sirius', cast: 'classic', carat: 2, purity: '750' }, prices);
 
   return (
     <div className="st-catalog">
@@ -129,10 +165,17 @@ export default function CatalogEditor() {
         <div className="st-stack">
           <Card title="Базовая цена модели" aside={<span className="st-muted st-muted--s">1 ct, белый бриллиант, 585 проба</span>}>
             {modelShanks(products).map(shank => (
-              <PriceRow key={shank} label={mainName(products, shank)} hint={mainName(products, shank) !== shank ? `шинка ${shank}` : undefined}
-                        value={prices.baseByShank?.[shank] ?? 0}
-                        onChange={v => setPrices(p => ({ ...p, baseByShank: { ...p.baseByShank, [shank]: v } }))} />
+              <ModelPriceRow key={shank} label={mainName(products, shank)} hint={mainName(products, shank) !== shank ? `шинка ${shank}` : undefined}
+                             base={prices.baseByShank?.[shank] ?? 0}
+                             sale={prices.saleByShank?.[shank] ?? 0}
+                             onBase={v => setPrices(p => ({ ...p, baseByShank: { ...p.baseByShank, [shank]: v } }))}
+                             onSale={v => setPrices(p => withSale(p, shank, v))} />
             ))}
+            <p className="st-note">
+              Скидка — разница между базовой ценой и ценой со скидкой. Она вычитается из всех вариантов модели: с ореолом,
+              с другим каратом и пробой. На сайте новая цена стоит рядом со старой зачёркнутой — в ленте, на странице модели и
+              в «Других моделях». Убрать скидку — стереть цену со скидкой.
+            </p>
           </Card>
 
           <Card title="Доплаты">

@@ -133,8 +133,10 @@ export function removeModel(products, shank) {
 /** Цены только тех моделей, что остались. */
 export function prunePrices(prices, products) {
   const keep = new Set(modelShanks(products));
-  const baseByShank = Object.fromEntries(Object.entries(prices?.baseByShank ?? {}).filter(([k]) => keep.has(k)));
-  return { ...prices, baseByShank };
+  const only = (o) => Object.fromEntries(Object.entries(o ?? {}).filter(([k]) => keep.has(k)));
+  const out = { ...prices, baseByShank: only(prices?.baseByShank) };
+  if (prices?.saleByShank) out.saleByShank = only(prices.saleByShank);
+  return out;
 }
 
 /** Лента только тех моделей, что остались. */

@@ -147,7 +147,7 @@ export async function findLeftovers() {
   const docs = await loadDocs();
   const shanks = new Set(modelShanks(docs.products));
   const keys = new Set(docs.products.rings.map(r => keyOf(r.shank, r.cast)));
-  const prices = Object.keys(docs.prices?.baseByShank ?? {}).filter(k => !shanks.has(k));
+  const prices = [...Object.keys(docs.prices?.baseByShank ?? {}), ...Object.keys(docs.prices?.saleByShank ?? {})].filter(k => !shanks.has(k));
   const feed = (docs.feed?.models ?? []).filter(m => !keys.has(m.key)).map(m => m.key.split('|')[0]);
   const rings = (docs.raw?.rings ?? []).filter(r => !keys.has(keyOf(r.shank, r.cast))).map(r => r.shank);
   const names = [...new Set([...prices, ...feed, ...rings])];

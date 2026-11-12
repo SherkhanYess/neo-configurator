@@ -2,7 +2,8 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react
 import { useParams, useLocation } from 'react-router-dom';
 import { SHAPES, SHAPE_IJEWEL, CAST_IJEWEL, shapeImage } from '../data/config.js';
 import { ringOf, shankFromSlug } from '../data/models.js';
-import { calcPrice, formatPrice } from '../data/priceCalc.js';
+import { calcPrice, formatPrice, wasPrice } from '../data/priceCalc.js';
+import WasPrice from '../components/WasPrice.jsx';
 import { usePrices } from '../data/prices.js';
 import { useProducts, enabledShapes, ringName, shapeLabel as adminShapeLabel } from '../data/products.js';
 import { LABEL_COLORS } from '../hooks/useIjewel.js';
@@ -338,7 +339,7 @@ export default function DetailScreen({ ijewel }) {
           не замечают. Цена — только здесь, меняется вместе с выбором. */}
       <div className="mp-title">
         <h1 className="mp-title__n">{model}<span className="mp-title__s">{shapeLabel}</span></h1>
-        {price ? <span className="mp-title__p" aria-live="polite">{formatPrice(price)}</span> : null}
+        {price ? <span className="mp-title__p" aria-live="polite">{formatPrice(price)}<WasPrice price={wasPrice(price, prices, shankId)} /></span> : null}
       </div>
 
       {fromHint && (

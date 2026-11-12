@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { formatPrice } from '../data/priceCalc.js';
+import WasPrice from './WasPrice.jsx';
 
 // Карточка ленты и пауза «на руке» — одна разметка для витрины и для
 // предпросмотра в админке: что видно в админке, то и увидит покупатель.
@@ -9,7 +10,7 @@ import { formatPrice } from '../data/priceCalc.js';
  * телефоне) цена уступает строку и встаёт под него; черта тогда прячется,
  * иначе она повисает в конце строки.
  */
-function NameRow({ name, price }) {
+function NameRow({ name, price, was }) {
   const rowRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -26,19 +27,19 @@ function NameRow({ name, price }) {
     ro.observe(row);
     document.fonts?.ready.then(fit);
     return () => ro.disconnect();
-  }, [name, price]);
+  }, [name, price, was]);
 
   return (
     <div className="feed-card__row" ref={rowRef}>
       <h2 className="feed-card__name">{name}</h2>
       {price ? <span className="feed-card__divider" aria-hidden="true" /> : null}
-      {price ? <span className="feed-card__price">от {formatPrice(price)}</span> : null}
+      {price ? <span className="feed-card__price">от {formatPrice(price)}<WasPrice price={was} /></span> : null}
     </div>
   );
 }
 
-/** `as` — Link на витрине, div в админке. */
-export function FeedCard({ item, price, priority, as: Tag = 'div', ...rest }) {
+/** `as` — Link на витрине, div в админке. was — цена без скидки, если скидка есть. */
+export function FeedCard({ item, price, was, priority, as: Tag = 'div', ...rest }) {
   return (
     <Tag className="feed-card" style={{ '--tone': item.tone }} {...rest}>
       <div className="feed-card__photo">
@@ -52,7 +53,7 @@ export function FeedCard({ item, price, priority, as: Tag = 'div', ...rest }) {
         />
       </div>
       <div className="feed-card__body">
-        <NameRow name={item.model} price={price} />
+        <NameRow name={item.model} price={price} was={was} />
         <p className="feed-card__text">{item.text}</p>
         <span className="feed-card__cta">Смотреть модель</span>
       </div>

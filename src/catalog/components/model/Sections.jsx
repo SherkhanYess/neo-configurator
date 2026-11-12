@@ -6,7 +6,8 @@ import { REVIEWS } from '../../data/reviews.js';
 import { useReputation } from '../../lib/reputation.js';
 import { useContent } from '../../data/content.js';
 import { feedModels } from '../../data/feed.js';
-import { formatPrice, fromPrice } from '../../data/priceCalc.js';
+import { formatPrice, fromPrice, wasPrice } from '../../data/priceCalc.js';
+import WasPrice from '../WasPrice.jsx';
 import { productPath } from '../../data/models.js';
 import { firstShape } from '../../data/products.js';
 import { track, EVENTS } from '../../lib/track.js';
@@ -167,7 +168,7 @@ export function Others({ shank, prices, products }) {
           return (
             <Link key={m.key} className="mp-mini" style={{ '--tone': m.tone }} to={productPath(m.shank, m.cast, shape)}>
               <div className="mp-mini__p"><img src={m.src} alt={`Кольцо ${m.model}`} loading="lazy" decoding="async" style={{ objectPosition: m.position }} /></div>
-              <div className="mp-mini__b"><b>{m.model}</b>{price ? <small>от {formatPrice(price)}</small> : null}</div>
+              <div className="mp-mini__b"><b>{m.model}</b>{price ? <small>от {formatPrice(price)}<WasPrice price={wasPrice(price, prices, m.shank)} /></small> : null}</div>
             </Link>
           );
         })}
