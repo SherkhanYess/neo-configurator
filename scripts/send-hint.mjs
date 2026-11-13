@@ -5,7 +5,7 @@
 //   node scripts/send-hint.mjs <ключ намёка>          — показать, что уйдёт
 //   node scripts/send-hint.mjs <ключ намёка> --send   — отправить
 //
-// Ключи берутся у сайта конструктора (netlify env) и из файла инфоцентра — в процессе,
+// Ключи берутся из ~/.config (Kelesu — neo-diamond-lenta, инфоцентр — neo-diamond-hub) — в процессе,
 // на экран не выводятся. Имя и телефон в выводе скрыты.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -14,7 +14,6 @@ import { kelesuPayload, sendHintWa } from '../netlify/lib/hintWa.js';
 import { hubPayload, toHub } from '../netlify/functions/hint.js';
 
 const SITE = '3e62802d-a497-4770-885f-231a79f56e0f';
-const KELESU_SITE = 'bbe68535-2cdd-4fcd-8087-e88265c9c5f1'; // con.neodiamond.kz
 const [key, flag] = process.argv.slice(2);
 if (!key) { console.error('нужен ключ намёка, например 2026-11-13T16:24:43.342Z-0r9iv0'); process.exit(2); }
 const send = flag === '--send';
@@ -35,11 +34,10 @@ if (!h.leadId) console.log('инфоцентр:', mask(hubPayload(h, key)));
 else console.log('сделка уже есть:', h.leadId);
 if (!send) { console.log('\nпроверка — ничего не отправлено. Отправить: добавьте --send'); process.exit(0); }
 
-// У сайта taena ключи Kelesu секретные — CLI отдаёт их только маской. Берём
-// у сайта конструктора: оттуда они и скопированы, канал тот же.
-for (const k of ['KELESU_API_KEY', 'KELESU_CHANNEL_ID']) {
-  process.env[k] = netlify('env:get', k, '--context', 'production', '--site', KELESU_SITE).split('\n').pop();
-}
+// У сайта taena ключи Kelesu секретные — CLI отдаёт их только маской. Копия
+// лежит на этом Mac в ~/.config/neo-diamond-lenta (права 600).
+process.env.KELESU_API_KEY = readFileSync(`${homedir()}/.config/neo-diamond-lenta/kelesu_key`, 'utf8').trim();
+process.env.KELESU_CHANNEL_ID = readFileSync(`${homedir()}/.config/neo-diamond-lenta/kelesu_channel`, 'utf8').trim();
 process.env.HUB_SITE_KEY = readFileSync(`${homedir()}/.config/neo-diamond-hub/site_lead_key`, 'utf8').trim();
 
 const [wa, hub] = await Promise.allSettled([
