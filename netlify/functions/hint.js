@@ -5,9 +5,13 @@
 // сообщение не идёт — чтобы узнать его, он пишет нам сам.
 //
 // Каждый намёк сохраняется в Blobs (store nd-hints) — это журнал, из которого
-// его видно, даже если CRM недоступна. Если включено HINT_TO_AMO=1 и заданы
-// ключи amoCRM, намёк ещё и создаётся сделкой с контактом парня. На песочнице
-// флаг не ставится: тестовые намёки не должны попадать в рабочую воронку.
+// его видно, даже если CRM недоступна. Затем намёк уходит в инфоцентр
+// (Supabase, функция site-lead): тот сам создаёт сделку в amoCRM — контакт
+// парня, код обращения, UTM, «Источник лида», тег taena — и считает её как
+// обращение с сайта. Ключа amoCRM на этом сайте нет и не нужно. Ключ к
+// инфоцентру — HUB_SITE_KEY; на песочнице его нет, тестовые намёки в рабочую
+// воронку не попадают. Инфоцентр недоступен — форма всё равно «отправлена»,
+// намёк остаётся в журнале.
 //
 // GET с ADMIN_TOKEN отдаёт последние намёки для админки, PATCH меняет статус
 // работы с намёком («написали ему», «пришёл», «купил») и заметку менеджера.
@@ -42,42 +46,42 @@ export function normalizeSize(raw) {
   return Math.round(n * 4) / 4;
 }
 
-async function toAmo(h) {
-  const domain = process.env.AMO_DOMAIN;
-  const token  = process.env.AMO_LONG_TOKEN;
-  if (process.env.HINT_TO_AMO !== '1' || !domain || !token) return null;
+export const HUB_SITE_LEAD_URL = 'https://kpsvtmryzzjwtkmlnruy.supabase.co/functions/v1/site-lead';
+const HUB_TIMEOUT_MS = 8000;
 
-  const base = `https://${domain}.amocrm.ru/api/v4`;
-  const hdrs = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+/** Город для инфоцентра: almaty | astana | null. */
+export function hubCity(city) {
+  return { 'Алматы': 'almaty', 'Астана': 'astana' }[city] ?? null;
+}
 
-  const contact = await fetch(`${base}/contacts`, {
-    method: 'POST', headers: hdrs,
-    body: JSON.stringify([{ name: h.name, custom_fields_values: [{ field_code: 'PHONE', values: [{ value: h.phone, enum_code: 'WORK' }] }] }]),
-  }).then(r => (r.ok ? r.json() : null));
-  const contactId = contact?._embedded?.contacts?.[0]?.id;
+/** Тело запроса в инфоцентр (site-lead). hint_id — защита от дублей. */
+export function hubPayload(h, hintId) {
+  return {
+    type: 'hint',
+    code: h.code,
+    name: h.name,
+    phone: h.phone,
+    ring: h.ring,
+    link: h.link,
+    size: h.size === null || h.size === undefined ? null : String(h.size),
+    city: hubCity(h.city),
+    hint_id: hintId,
+  };
+}
 
-  const lead = await fetch(`${base}/leads`, {
-    method: 'POST', headers: hdrs,
-    body: JSON.stringify([{
-      name: `Намёк — ${h.ring} — ${h.name}`,
-      ...(contactId ? { _embedded: { contacts: [{ id: contactId }] } } : {}),
-    }]),
-  }).then(r => (r.ok ? r.json() : null));
-  const leadId = lead?._embedded?.leads?.[0]?.id;
-
-  if (leadId) {
-    const text = [
-      `Намёк от девушки ${h.code}`,
-      `Кольцо: ${h.ring}`,
-      h.size ? `Её размер: ${h.size} — говорим, только когда он напишет сам` : 'Размер она не знает — зовём их вдвоём на примерку',
-      `Ссылка для него: ${h.link}`,
-    ].join('\n');
-    await fetch(`${base}/leads/${leadId}/notes`, {
-      method: 'POST', headers: hdrs,
-      body: JSON.stringify([{ note_type: 'common', params: { text } }]),
-    }).catch(() => {});
-  }
-  return leadId ?? null;
+/** Сделка в amoCRM через инфоцентр. Нет ключа — молча пропускаем. */
+export async function toHub(h, hintId) {
+  const key = process.env.HUB_SITE_KEY;
+  if (!key) return null;
+  const res = await fetch(HUB_SITE_LEAD_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-site-key': key },
+    body: JSON.stringify(hubPayload(h, hintId)),
+    signal: AbortSignal.timeout(HUB_TIMEOUT_MS),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.ok) throw new Error(`site-lead ${res.status}: ${JSON.stringify(data).slice(0, 200)}`);
+  return data.lead_id ?? null;
 }
 
 export default async (req, context) => {
@@ -134,12 +138,15 @@ export default async (req, context) => {
     city: String(body.city ?? '').slice(0, 20),
   };
 
-  await store.setJSON(`${hint.at}-${Math.random().toString(36).slice(2, 8)}`, hint);
+  const key = `${hint.at}-${Math.random().toString(36).slice(2, 8)}`;
+  await store.setJSON(key, hint);
 
-  let leadId = null;
-  try { leadId = await toAmo(hint); } catch (e) { console.warn('hint → amo failed:', e); }
+  try {
+    const leadId = await toHub(hint, key);
+    if (leadId) await store.setJSON(key, { ...hint, leadId });
+  } catch (e) { console.warn('hint → инфоцентр:', e?.message ?? e); }
 
-  return json(200, { ok: true, leadId });
+  return json(200, { ok: true });
 };
 
 export const config = { path: '/api/hint' };

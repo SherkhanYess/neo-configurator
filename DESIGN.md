@@ -337,8 +337,8 @@ Meta Pixel: `product_open` → ViewContent, `wa_click` → Contact,
 Типы: `price` ОБ, `fitting` ПР, `help` ПД, `hint` НМ, `custom` ИД.
 
 **Намёк.** Форма: его имя, его WhatsApp, её размер или «Не знаю размер».
-Уходит в `/api/hint` (журнал в Blobs `nd-hints`; в amoCRM — только при
-`HINT_TO_AMO=1`). Размер ему не отправляем — чтобы узнать, он пишет нам.
+Уходит в `/api/hint`: журнал в Blobs `nd-hints`, затем в инфоцентр
+(`site-lead` в Supabase, ключ `HUB_SITE_KEY`) — он создаёт сделку в amoCRM. Размер ему не отправляем — чтобы узнать, он пишет нам.
 Ссылка для него несёт `utm_medium=hint` и карат; на странице над пультом
 плашка «Вам показали это кольцо…».
 

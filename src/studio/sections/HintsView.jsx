@@ -83,6 +83,7 @@ function HintCard({ h, template, onPatch }) {
         <div><dt>Её размер</dt><dd className="st-mono">{h.size ? String(h.size).replace('.', ',') : 'не знает'}</dd></div>
         <div><dt>Когда</dt><dd>{when(h.at)}{h.city ? ` · ${h.city}` : ''}</dd></div>
         {h.code && <div><dt>Код</dt><dd className="st-mono">{h.code}</dd></div>}
+        {h.leadId && <div><dt>amoCRM</dt><dd><a href={`https://neodiamondkz.amocrm.ru/leads/detail/${h.leadId}`} target="_blank" rel="noopener noreferrer">Сделка {h.leadId}</a></dd></div>}
       </dl>
 
       <div className="st-hint__actions">
