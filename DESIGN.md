@@ -338,7 +338,10 @@ Meta Pixel: `product_open` → ViewContent, `wa_click` → Contact,
 
 **Намёк.** Форма: его имя, его WhatsApp, её размер или «Не знаю размер».
 Уходит в `/api/hint`: журнал в Blobs `nd-hints`, затем в инфоцентр
-(`site-lead` в Supabase, ключ `HUB_SITE_KEY`) — он создаёт сделку в amoCRM. Размер ему не отправляем — чтобы узнать, он пишет нам.
+(`site-lead` в Supabase, ключ `HUB_SITE_KEY`) — он создаёт сделку в amoCRM.
+Одновременно ему в WhatsApp сразу уходит шаблон Meta через Kelesu
+(`netlify/lib/hintWa.js`): `taena_hint`, если размер указан, иначе
+`taena_hint_nosize`; кнопка ведёт на кольцо. Без ключей Kelesu не шлём. Размер ему не отправляем — чтобы узнать, он пишет нам.
 Ссылка для него несёт `utm_medium=hint` и карат; на странице над пультом
 плашка «Вам показали это кольцо…».
 

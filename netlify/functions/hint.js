@@ -11,13 +11,15 @@
 // обращение с сайта. Ключа amoCRM на этом сайте нет и не нужно. Ключ к
 // инфоцентру — HUB_SITE_KEY; на песочнице его нет, тестовые намёки в рабочую
 // воронку не попадают. Инфоцентр недоступен — форма всё равно «отправлена»,
-// намёк остаётся в журнале.
+// намёк остаётся в журнале. Ему в WhatsApp сразу уходит шаблон Meta через
+// Kelesu (lib/hintWa.js) — если на сайте есть ключи Kelesu.
 //
 // GET с ADMIN_TOKEN отдаёт последние намёки для админки, PATCH меняет статус
 // работы с намёком («написали ему», «пришёл», «купил») и заметку менеджера.
 
 import { getStore } from '@netlify/blobs';
 import { isAdmin } from '../lib/http.js';
+import { sendHintWa } from '../lib/hintWa.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -141,10 +143,23 @@ export default async (req, context) => {
   const key = `${hint.at}-${Math.random().toString(36).slice(2, 8)}`;
   await store.setJSON(key, hint);
 
-  try {
-    const leadId = await toHub(hint, key);
-    if (leadId) await store.setJSON(key, { ...hint, leadId });
-  } catch (e) { console.warn('hint → инфоцентр:', e?.message ?? e); }
+  // Сделка в amoCRM и сообщение ему в WhatsApp — параллельно: каждое ждёт
+  // до 8 с, вместе укладываются в лимит функции. Сбой любого не ломает форму.
+  const [hub, wa] = await Promise.allSettled([toHub(hint, key), sendHintWa(hint)]);
+  const extra = {};
+  if (hub.status === 'fulfilled' && hub.value) extra.leadId = hub.value;
+  if (hub.status === 'rejected') console.warn('hint → инфоцентр:', hub.reason?.message ?? hub.reason);
+  if (wa.status === 'fulfilled' && wa.value) {
+    extra.waSentAt = new Date().toISOString();
+    extra.waReply = wa.value;
+    extra.status = 'written';
+    extra.statusAt = extra.waSentAt;
+  }
+  if (wa.status === 'rejected') {
+    extra.waError = String(wa.reason?.message ?? wa.reason).slice(0, 300);
+    console.warn('hint → WhatsApp:', extra.waError);
+  }
+  if (Object.keys(extra).length) await store.setJSON(key, { ...hint, ...extra });
 
   return json(200, { ok: true });
 };
